@@ -1,7 +1,10 @@
 package com.github.mdr.ascii
 
+class GraphParserException(message: String) extends RuntimeException(message)
+
 trait DiagramParser {
 
+  @throws(classOf[GraphParserException])
   def parse(s: String): Diagram
 
 }
@@ -24,16 +27,16 @@ sealed trait Container {
 trait Diagram extends Container {
 
   /**
-   * @return all boxes in diagram, regardless of which container they are in containers
+   * @return all boxes in diagram, whether top level or nested
    */
   def allBoxes: List[Box]
-  
+
   def allEdges: List[Edge]
-  
+
   def parent: Option[Container] = None
 
-  def boxAt(point: Point): Option[Box] 
-  
+  def boxAt(point: Point): Option[Box]
+
 }
 
 trait Box extends Container {
@@ -49,9 +52,15 @@ trait Edge {
 
   def points: List[Point]
 
+  def parent: Container
+  
   def box1: Box
 
   def box2: Box
+
+  val arrow1: Boolean
+
+  val arrow2: Boolean
 
   def label: Option[String]
 
@@ -73,6 +82,8 @@ case class Point(row: Int, column: Int) {
     case Left  ⇒ left
     case Right ⇒ right
   }
+  
+  def neighbours: List[Point] = List(up, right, down, left)
 
 }
 
@@ -113,10 +124,10 @@ case class Region(topLeft: Point, bottomRight: Point) {
 
   def intersects(region: Region): Boolean = {
     val disjoint =
-      bottomRight.column < region.topLeft.column ||
-        region.bottomRight.column < topLeft.column ||
-        bottomRight.row < region.topLeft.row ||
-        region.bottomRight.row < topLeft.row
+      this.bottomRight.column < region.topLeft.column ||
+        region.bottomRight.column < this.topLeft.column ||
+        this.bottomRight.row < region.topLeft.row ||
+        region.bottomRight.row < this.topLeft.row
     !disjoint
   }
 

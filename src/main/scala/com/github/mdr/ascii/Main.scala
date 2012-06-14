@@ -31,6 +31,6 @@ object Main extends App {
         -------------------------
   """
 
-  new DiagramParserImpl().parse(diagram2)
+  new DiagramParserImpl().parse(diagram)
 
 }

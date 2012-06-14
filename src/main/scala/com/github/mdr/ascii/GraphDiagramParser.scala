@@ -14,6 +14,7 @@ class DiagramParse(s: String) {
   private val numberOfRows = rows.length
 
   private def charAt(point: Point): Char = rows(point.row)(point.column)
+  private def charAtOpt(point: Point): Option[Char] = if (inDiagram(point)) Some(charAt(point)) else None
 
   private def inDiagram(point: Point) = point match {
     case Point(row, column) ⇒
@@ -93,19 +94,13 @@ class DiagramParse(s: String) {
     val currentPoint = edgeSoFar.head
     if (!inDiagram(currentPoint))
       return None
-    //    if (edgeSoFar.size > 2)
-    //    println("(" + edgeSoFar.size + ") Tracing edge " + currentPoint + " heading " + direction)
-    def charAtOpt(point: Point): Option[Char] = if (inDiagram(point)) Some(charAt(point)) else None
     def isBoxEdge(point: Point) = inDiagram(point) && allBoxes.exists(_.boundaryPoints.contains(point))
     def finaliseEdge(connectPoint: Point): Option[EdgeImpl] = {
       val points = (connectPoint :: edgeSoFar).reverse
       if (points.size <= 2)
         None
-      else {
-        val e = new EdgeImpl(points)
-        //        println("Found edge " + e.points.mkString(", "))
-        Some(e)
-      }
+      else 
+        Some(new EdgeImpl(points))
     }
     val ahead: Point = currentPoint.go(direction)
 
@@ -121,13 +116,13 @@ class DiagramParse(s: String) {
         case (Some('v' | 'V'), _, _, _)                             ⇒ followEdge(Down, ahead :: edgeSoFar)
         case (Some('^'), _, _, _)                                   ⇒ followEdge(Up, ahead :: edgeSoFar)
         case (Some('-'), _, _, Some(c)) if isEdgeChar(c)            ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case (Some('-' | '|'), Some('^'), Some('v' | 'V'), _)       ⇒ throw new RuntimeException("Ambiguous turn at " + ahead)
+        case (Some('-' | '|'), Some('^'), Some('v' | 'V'), _)       ⇒ throw new GraphParserException("Ambiguous turn at " + ahead)
         case (Some('-' | '|'), Some('^'), _, _)                     ⇒ followEdge(Up, ahead :: edgeSoFar)
         case (Some('-' | '|'), _, Some('v' | 'V'), _)               ⇒ followEdge(Down, ahead :: edgeSoFar)
-        case (Some('-' | '|'), Some('|' | '+'), Some('|' | '+'), _) ⇒ throw new RuntimeException("Ambiguous turn at " + ahead)
+        case (Some('-' | '|'), Some('|' | '+'), Some('|' | '+'), _) ⇒ throw new GraphParserException("Ambiguous turn at " + ahead)
         case (Some('-' | '|'), Some('|' | '+'), _, _)               ⇒ followEdge(Up, ahead :: edgeSoFar)
         case (Some('-' | '|'), _, Some('|' | '+'), _)               ⇒ followEdge(Down, ahead :: edgeSoFar)
-        case (Some('|'), Some('-'), Some('-'), _)                   ⇒ throw new RuntimeException("Ambiguous turn at " + ahead)
+        case (Some('|'), Some('-'), Some('-'), _)                   ⇒ throw new GraphParserException("Ambiguous turn at " + ahead)
         case (Some('|'), Some('-'), _, _)                           ⇒ followEdge(Up, ahead :: edgeSoFar)
         case (Some('|'), _, Some('-'), _)                           ⇒ followEdge(Down, ahead :: edgeSoFar)
         case (Some('<'), _, _, _) if direction == Left              ⇒ followEdge(direction, ahead :: edgeSoFar)
@@ -171,18 +166,20 @@ class DiagramParse(s: String) {
     edge.box1.edges ::= edge
     if (edge.box1 != edge.box2)
       edge.box2.edges ::= edge
-    println(edge)
   }
 
   val allEdgePoints = diagram.allEdges.flatMap(_.points)
-  for (box ← allBoxes)
-    box.text = collectText(box)
 
-  diagram.text = collectText(diagram)
+//  for {
+//    box1 ← allBoxes
+//    box2 ← allBoxes
+//    if box1 != box2
+//    if box1.region.intersects(box2.region)
+//  } throw new GraphParserException("Overlapping boxes: " + box1 + box2)
 
   def collectText(container: ContainerImpl): String = {
     val region = container.contentsRegion
-    val allPoints = (container.childBoxes.flatMap(_.region.points) ++ allEdgePoints).toSet
+    val allPoints = (container.childBoxes.flatMap(_.region.points) ++ allEdgePoints ++ allLabelPoints).toSet
     val sb = new StringBuilder
     for (row ← region.topLeft.row to region.bottomRight.row) {
       for {
@@ -197,14 +194,49 @@ class DiagramParse(s: String) {
     sb.toString
   }
 
-  if (allBoxes.size > -1) {
-    println(diagram)
-    println(">>>" + diagram.text + "<<<")
-    for (box ← allBoxes) {
-      println(box)
-      println(">>>" + box.text + "<<<")
+  for (edge ← diagram.allEdges) {
+    val labels: Set[Label] =
+      (for {
+        point ← edge.points
+        startPoint ← point.neighbours
+        ('[' | ']') ← charAtOpt(startPoint)
+        label ← completeLabel(startPoint, edge.parent)
+      } yield label).toSet
+    if (labels.size > 1)
+      throw new GraphParserException("Multiple labels for edge " + edge + ", " + labels.map(_.text).mkString(","))
+    edge.label_ = labels.headOption
+  }
+
+  lazy val allLabelPoints: Set[Point] =
+    (for {
+      edge ← diagram.allEdges
+      label ← edge.label_.toList
+      point ← label.points
+    } yield point).toSet
+
+  
+  for (box ← allBoxes)
+    box.text = collectText(box)
+  diagram.text = collectText(diagram)
+
+  private def completeLabel(startPoint: Point, parent: ContainerImpl): Option[Label] = {
+    val occupiedPoints = parent.childBoxes.flatMap(_.region.points) ++ allEdgePoints toSet
+    val (finalChar, direction) = charAt(startPoint) match {
+      case '[' ⇒ (']', Right)
+      case ']' ⇒ ('[', Left)
     }
-    println()
+
+    def search(point: Point): Option[Label] = charAtOpt(point) flatMap {
+      case `finalChar` ⇒
+        val List(p1, p2) = List(startPoint, point).sortBy(_.column)
+        Some(Label(p1, p2))
+      case _ if occupiedPoints.contains(point) ⇒
+        None
+      case _ ⇒
+        search(point.go(direction))
+    }
+
+    search(startPoint.go(direction))
   }
 
   abstract class ContainerImpl extends RegionToString { self: Container ⇒
@@ -221,7 +253,7 @@ class DiagramParse(s: String) {
 
     var edges: List[EdgeImpl] = Nil
 
-    var parent: Option[Container] = None
+    var parent: Option[Container with ContainerImpl] = None
 
     def region: Region = Region(topLeft, bottomRight)
 
@@ -247,13 +279,19 @@ class DiagramParse(s: String) {
 
     val box2: BoxImpl = diagram.boxAt(points.last).get
 
-    var label: Option[String] = None
+    var label_ : Option[Label] = None
 
-    val arrow1 = isArrow(charAt(points.head))
+    def label = label_.map(_.text)
 
-    val arrow2 = isArrow(charAt(points.last))
+    lazy val parent: Container with ContainerImpl = if (box1.parent == Some(box2)) box2 else box2.parent.get
 
-    override def toString = diagramRegionToString(region(points), points.toSet)
+    lazy val arrow1 = isArrow(charAt(points.head))
+
+    lazy val arrow2 = isArrow(charAt(points.last))
+
+    lazy val edgeAndLabelPoints = points ++ label_.map(_.points).getOrElse(Set())
+    
+    override def toString = diagramRegionToString(region(edgeAndLabelPoints), edgeAndLabelPoints.contains)
 
     def region(points: List[Point]): Region =
       Region(
@@ -298,6 +336,25 @@ class DiagramParse(s: String) {
     def region: Region = Region(Point(0, 0), Point(numberOfRows - 1, numberOfColumns - 1))
 
     def contentsRegion = region
+
+  }
+
+  case class Label(start: Point, end: Point) {
+
+    require(start.row == end.row)
+
+    val row = start.row
+
+    def points: List[Point] =
+      for (column ← start.column to end.column toList)
+        yield Point(row, column)
+
+    val text: String = {
+      val sb = new StringBuilder
+      for (column ← start.column + 1 to end.column - 1)
+        sb.append(charAt(Point(row, column)))
+      sb.toString
+    }
 
   }
 
