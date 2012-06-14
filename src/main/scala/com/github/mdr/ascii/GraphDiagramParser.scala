@@ -1,4 +1,7 @@
-import scala.annotation.tailrec
+package com.github.mdr.ascii
+
+import scala.Option._
+import scala.annotation._
 
 case class Point(row: Int, column: Int) {
 
@@ -160,12 +163,6 @@ class DiagramParse(s: String) {
   for (box ← allBoxes if box.parentBox.isEmpty)
     diagram.topLevelBoxes ::= box
 
-  for (box ← allBoxes)
-    box.text = {
-      for (point ← box.innerRegion.points if !box.childBoxes.exists(_.region contains point))
-        yield charAt(point)
-    }.mkString
-
   diagram.text = {
     for (point ← diagram.region.points if !diagram.topLevelBoxes.exists(_.region contains point))
       yield charAt(point)
@@ -249,12 +246,31 @@ class DiagramParse(s: String) {
         box.bottomBoundary.flatMap(followEdge(Down, _))
     }
 
-  for (edges ← edges.groupBy(_.points.toSet).values) {
-    val edge = edges.head
+  val allEdges = edges.groupBy(_.points.toSet).values.map(_.head)
+  for (edge ← allEdges) {
     edge.box1.edges ::= edge
     if (edge.box1 != edge.box2)
       edge.box2.edges ::= edge
     println(edge)
+  }
+
+  val allEdgePoints = allEdges.flatMap(_.points)
+  for (box ← allBoxes) {
+    val allPoints = (box.childBoxes.flatMap(_.region.points) ++ allEdgePoints).toSet
+    val sb = new StringBuilder
+    for (row ← box.region.topLeft.row to box.region.bottomRight.row) {
+
+      for (column ← box.region.topLeft.column to box.region.bottomRight.column) {
+        val point = Point(row, column)
+        val c = charAt(point)
+      }
+
+    }
+    box.text = sb.toString
+    box.text = {
+      for (point ← box.innerRegion.points if !allPoints.contains(point))
+        yield charAt(point)
+    }.mkString
   }
 
   def boxAt(point: Point): Option[BoxImpl] = allBoxes.find(_.boundaryPoints.contains(point))
@@ -307,7 +323,7 @@ class DiagramParse(s: String) {
 
     val arrow2 = isArrow(charAt(points.last))
 
-    override def toString = diagramRegionToString(region(points))
+    override def toString = diagramRegionToString(region(points), points.toSet)
 
     def region(points: List[Point]): Region =
       Region(
@@ -325,13 +341,17 @@ class DiagramParse(s: String) {
     def region: Region
 
     override def toString = diagramRegionToString(region)
+
   }
 
-  def diagramRegionToString(region: Region) = {
+  def diagramRegionToString(region: Region, includePoint: Point ⇒ Boolean = p ⇒ true) = {
     val sb = new StringBuilder("\n")
     for (row ← region.topLeft.row to region.bottomRight.row) {
-      for (column ← region.topLeft.column to region.bottomRight.column)
-        sb.append(charAt(Point(row, column)))
+      for {
+        column ← region.topLeft.column to region.bottomRight.column
+        point = Point(row, column)
+        c = if (includePoint(point)) charAt(point) else ' '
+      } sb.append(c)
       sb.append("\n")
     }
     sb.toString
