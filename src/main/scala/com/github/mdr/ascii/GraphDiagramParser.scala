@@ -50,7 +50,7 @@ class DiagramParse(s: String) {
     for {
       row ← (0 until numberOfRows - 1).toList
       column ← 0 until numberOfColumns - 1
-      val point = Point(row, column)
+      point = Point(row, column)
       if charAt(point) == '+'
       if charAt(point.right) == '-'
       if charAt(point.down) == '|'
@@ -166,22 +166,22 @@ class DiagramParse(s: String) {
         box.bottomBoundary.flatMap(followEdge(Down, _))
     }
 
-  val allEdges = edges.groupBy(_.points.toSet).values.map(_.head)
-  for (edge ← allEdges) {
+  diagram.allEdges = edges.groupBy(_.points.toSet).values.toList.map(_.head)
+  for (edge ← diagram.allEdges) {
     edge.box1.edges ::= edge
     if (edge.box1 != edge.box2)
       edge.box2.edges ::= edge
     println(edge)
   }
 
-  val allEdgePoints = allEdges.flatMap(_.points)
+  val allEdgePoints = diagram.allEdges.flatMap(_.points)
   for (box ← allBoxes)
     box.text = collectText(box)
 
   diagram.text = collectText(diagram)
 
-  def collectText(container: Container): String = {
-    val region = container.region
+  def collectText(container: ContainerImpl): String = {
+    val region = container.contentsRegion
     val allPoints = (container.childBoxes.flatMap(_.region.points) ++ allEdgePoints).toSet
     val sb = new StringBuilder
     for (row ← region.topLeft.row to region.bottomRight.row) {
@@ -197,29 +197,35 @@ class DiagramParse(s: String) {
     sb.toString
   }
 
-  def boxAt(point: Point): Option[BoxImpl] = allBoxes.find(_.boundaryPoints.contains(point))
-
   if (allBoxes.size > -1) {
     println(diagram)
+    println(">>>" + diagram.text + "<<<")
     for (box ← allBoxes) {
-      //      println(box)
+      println(box)
+      println(">>>" + box.text + "<<<")
     }
     println()
   }
 
-  class BoxImpl(val topLeft: Point, val bottomRight: Point) extends Box with RegionToString {
+  abstract class ContainerImpl extends RegionToString { self: Container ⇒
 
     var text: String = ""
 
     var childBoxes: List[BoxImpl] = Nil
 
-    var parent: Option[Container] = None
+    def contentsRegion: Region
+
+  }
+
+  class BoxImpl(val topLeft: Point, val bottomRight: Point) extends ContainerImpl with Box {
 
     var edges: List[EdgeImpl] = Nil
 
+    var parent: Option[Container] = None
+
     def region: Region = Region(topLeft, bottomRight)
 
-    def innerRegion: Region = Region(topLeft.right.down, bottomRight.up.left)
+    def contentsRegion: Region = Region(topLeft.right.down, bottomRight.up.left)
 
     val leftBoundary: List[Point] = for (row ← topLeft.row to bottomRight.row toList) yield Point(row, topLeft.column)
     val rightBoundary: List[Point] = for (row ← topLeft.row to bottomRight.row toList) yield Point(row, bottomRight.column)
@@ -237,9 +243,9 @@ class DiagramParse(s: String) {
 
   class EdgeImpl(val points: List[Point]) extends Edge {
 
-    val box1: BoxImpl = boxAt(points.head).get
+    val box1: BoxImpl = diagram.boxAt(points.head).get
 
-    val box2: BoxImpl = boxAt(points.last).get
+    val box2: BoxImpl = diagram.boxAt(points.last).get
 
     var label: Option[String] = None
 
@@ -281,15 +287,17 @@ class DiagramParse(s: String) {
     sb.toString
   }
 
-  class DiagramImpl(numberOfRows: Int, numberOfColumns: Int) extends Diagram with RegionToString {
-
-    var text: String = ""
+  class DiagramImpl(numberOfRows: Int, numberOfColumns: Int) extends ContainerImpl with Diagram {
 
     var allBoxes: List[BoxImpl] = Nil
 
-    var childBoxes: List[BoxImpl] = Nil
+    var allEdges: List[EdgeImpl] = Nil
+
+    def boxAt(point: Point): Option[BoxImpl] = allBoxes.find(_.boundaryPoints.contains(point))
 
     def region: Region = Region(Point(0, 0), Point(numberOfRows - 1, numberOfColumns - 1))
+
+    def contentsRegion = region
 
   }
 
@@ -297,7 +305,6 @@ class DiagramParse(s: String) {
 
 class DiagramParserImpl {
 
-  def parse(s: String): Diagram =
-    new DiagramParse(s).diagram
+  def parse(s: String): Diagram = new DiagramParse(s).diagram
 
 }

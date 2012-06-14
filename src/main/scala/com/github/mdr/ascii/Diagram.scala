@@ -27,9 +27,13 @@ trait Diagram extends Container {
    * @return all boxes in diagram, regardless of which container they are in containers
    */
   def allBoxes: List[Box]
-
+  
+  def allEdges: List[Edge]
+  
   def parent: Option[Container] = None
 
+  def boxAt(point: Point): Option[Box] 
+  
 }
 
 trait Box extends Container {
