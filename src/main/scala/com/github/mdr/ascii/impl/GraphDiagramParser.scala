@@ -1,7 +1,7 @@
-package com.github.mdr.ascii
+package com.github.mdr.ascii.impl
 
-import scala.Option._
-import scala.annotation._
+import com.github.mdr.ascii._
+import scala.annotation.tailrec
 
 class DiagramParse(s: String) {
 
@@ -360,8 +360,3 @@ class DiagramParse(s: String) {
 
 }
 
-class DiagramParserImpl {
-
-  def parse(s: String): Diagram = new DiagramParse(s).diagram
-
-}

@@ -2,7 +2,7 @@ package com.github.mdr.ascii
 
 object Main extends App {
 
-  val diagram = """
+  val diagram1 = Diagram("""
              +-+             
     ---------|E|----------   
     |        +-+         |   
@@ -16,9 +16,9 @@ object Main extends App {
     |         |          |   
    +-+       +-+         |   
    |A|-------|B|----------   
-   +-+  [7]  +-+          """
+   +-+  [7]  +-+          """)
 
-  val diagram2 = """ 
+  val diagram2 = Diagram(""" 
     +-----------+
     |  +--+     |     +-+   +---------+
 ----|  |d | asdf|     | |   |The quick|
@@ -29,8 +29,13 @@ object Main extends App {
 --------+-----------------------+---------
         |                       |
         -------------------------
-  """
+  """)
 
-  new DiagramParserImpl().parse(diagram)
+  val diagram = diagram1
+
+  for (box ← diagram.allBoxes)
+    println(box)
+  for (edge ← diagram.allEdges)
+    println(edge)
 
 }

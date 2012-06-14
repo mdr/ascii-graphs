@@ -1,11 +1,13 @@
 package com.github.mdr.ascii
 
+import com.github.mdr.ascii.impl._
+
 class GraphParserException(message: String) extends RuntimeException(message)
 
-trait DiagramParser {
+object Diagram {
 
   @throws(classOf[GraphParserException])
-  def parse(s: String): Diagram
+  def apply(s: String): Diagram = new DiagramParse(s).diagram
 
 }
 
@@ -53,7 +55,7 @@ trait Edge {
   def points: List[Point]
 
   def parent: Container
-  
+
   def box1: Box
 
   def box2: Box
@@ -82,7 +84,7 @@ case class Point(row: Int, column: Int) {
     case Left  ⇒ left
     case Right ⇒ right
   }
-  
+
   def neighbours: List[Point] = List(up, right, down, left)
 
 }
