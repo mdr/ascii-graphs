@@ -35,7 +35,16 @@ object Main extends App {
 
   for (box ← diagram.allBoxes)
     println(box)
-  for (edge ← diagram.allEdges)
-    println(edge)
+
+  for {
+    boxA ← diagram.allBoxes.find(_.text == "A")
+    edge ← boxA.edges
+    label ← edge.label
+  } println(label)
+
+  //  for (box ← diagram.allBoxes)
+  //    println(box)
+  //  for (edge ← diagram.allEdges)
+  //    println(edge)
 
 }
