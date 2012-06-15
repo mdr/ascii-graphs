@@ -7,11 +7,10 @@ object graphs, and so on.
 Typical usage is to parse the diagram into `Diagram`/`Box`/`Edge` objects, and then convert those objects into 
 whatever your specific test data happens to be.
 
-Syntax
-======
+## Syntax
 
-Boxes
------
+### Boxes
+
 
 A `Box` is drawn as follows:
 
@@ -39,8 +38,7 @@ Or other boxes:
     |+---+|
     +-----+
 
-Edges
------
+### Edges
 
 An `Edge` connects two boxes:
 
@@ -103,8 +101,7 @@ Edges can cross using a `+`:
              |     |
              +-----+    
 
-Labels
-------
+### Labels
 
 Edges can have an associated label:
 
@@ -124,8 +121,7 @@ Edges can have an associated label:
     
 The label's `[` or `]` bracket must be adjacent (horizontally or vertically) to part of the edge.
 
-Usage
-=====
+## Usage
 
     import com.github.mdr.ascii._
     
