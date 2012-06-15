@@ -31,17 +31,40 @@ object Main extends App {
         -------------------------
   """)
 
-  val diagram = diagram1
+  {
 
-  for (box ← diagram.allBoxes)
-    println(box)
+    val diagram = Diagram("""
+    +----------+          +------------+
+    |Person    |          |Person      |
+    |==========| [likes]  |============|
+    |Name: Bob |--------->|Name: Alice |
+    | Age: 25  |          | Age: 26    |
+    +----------+          +------------+
+         ^                       |
+         |                       |[knows]
+         |                       v
+         |[employs]       +------------+
+         |                |Person      |
+         |                |============|
+         -----------------|Name: Carl  |
+                          | Age: 34    |
+                          +------------+  """)
 
-  for {
-    boxA ← diagram.allBoxes.find(_.text == "A")
-    edge ← boxA.edges
-    label ← edge.label
-  } println(label)
+    
+  }
 
+  {
+    val diagram = diagram1
+
+    for (box ← diagram.allBoxes)
+      println(box)
+
+    for {
+      box ← diagram.allBoxes.find(_.text == "A")
+      (edge, otherBox) ← box.connections()
+      label ← edge.label
+    } println(box + " ==> " + label + " ==> " + otherBox)
+  }
   //  for (box ← diagram.allBoxes)
   //    println(box)
   //  for (edge ← diagram.allEdges)

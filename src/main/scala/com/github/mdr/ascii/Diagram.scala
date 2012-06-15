@@ -7,14 +7,20 @@ class GraphParserException(message: String) extends RuntimeException(message)
 object Diagram {
 
   @throws(classOf[GraphParserException])
-  def apply(s: String): Diagram = new DiagramParse(s).diagram
+  def apply(s: String): Diagram = new DiagramParse(s).getDiagram
 
 }
 
 sealed trait Container {
 
+  /**
+   * @return all the text directly inside this container, excluding any diagram elements (boxes, edges and labels). 
+   */
   def text: String
 
+  /**
+   * @return the area of the diagram covered by this container
+   */
   def region: Region
 
   /**
@@ -48,6 +54,55 @@ trait Box extends Container {
    */
   def edges: List[Edge]
 
+  /**
+   * @return edges and other boxes incident to this box, filtered according to the given mode.
+   */
+  def connections(mode: ConnectMode = ConnectMode.All): List[(Edge, Box)] =
+    for {
+      edge ← edges
+      if mode.includeEdge(edge, this)
+      otherBox = edge.otherBox(this)
+    } yield edge -> otherBox
+
+}
+
+/**
+ * Rule for filtering edges incident to a box
+ */
+trait ConnectMode {
+  def includeEdge(edge: Edge, fromBox: Box): Boolean
+}
+
+object ConnectMode {
+
+  /**
+   * Return only edges that have an arrow going into the other box
+   */
+  case object Out extends ConnectMode {
+    def includeEdge(edge: Edge, fromBox: Box): Boolean = edge.otherHasArrow(fromBox)
+  }
+
+  /**
+   * Return only edges that have an arrow coming into this box
+   */
+  case object In extends ConnectMode {
+    def includeEdge(edge: Edge, fromBox: Box): Boolean = edge.hasArrow(fromBox)
+  }
+
+  /**
+   * Return only undirected edges
+   */
+  case object Undirected extends ConnectMode {
+    def includeEdge(edge: Edge, fromBox: Box): Boolean = edge.hasArrow1 == false && edge.hasArrow2 == false
+  }
+
+  /**
+   * Return all edges
+   */
+  case object All extends ConnectMode {
+    def includeEdge(edge: Edge, fromBox: Box): Boolean = true
+  }
+
 }
 
 trait Edge {
@@ -56,15 +111,51 @@ trait Edge {
 
   def parent: Container
 
-  def box1: Box
+  /**
+   * First box incident to this edge
+   */
+  val box1: Box
 
-  def box2: Box
+  /**
+   * Second box incident to this edge
+   */
+  val box2: Box
 
-  val arrow1: Boolean
+  /**
+   * First box incident to this edge
+   */
+  val hasArrow1: Boolean
 
-  val arrow2: Boolean
+  val hasArrow2: Boolean
 
-  def label: Option[String]
+  val label: Option[String]
+
+  /**
+   * Given one box in the edge, return the other
+   */
+  def otherBox(box: Box): Box =
+    if (box == box1)
+      box2
+    else if (box == box2)
+      box1
+    else
+      throw new IllegalArgumentException("Box not part of edge: " + box)
+
+  /**
+   * Is there an arrow associated with the given box (which must be part of this edge)
+   */
+  def hasArrow(box: Box): Boolean =
+    if (box == box1)
+      hasArrow1
+    else if (box == box2)
+      hasArrow2
+    else
+      throw new IllegalArgumentException("Box not part of edge: " + box)
+
+  /**
+   * Is there an arrow associated with the other box than the given box (which must be part of this edge)
+   */
+  def otherHasArrow(box: Box): Boolean = hasArrow(otherBox(box))
 
 }
 

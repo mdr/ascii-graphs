@@ -5,11 +5,11 @@ import scala.annotation.tailrec
 
 class DiagramParse(s: String) {
 
-  val rawRows: List[String] = if (s.isEmpty) Nil else s.split("(\r)?\n").toList
+  private val rawRows: List[String] = if (s.isEmpty) Nil else s.split("(\r)?\n").toList
 
-  val numberOfColumns = rawRows.maxBy(_.length).length
+  private val numberOfColumns = rawRows.maxBy(_.length).length
 
-  val rows = rawRows.map(_.padTo(numberOfColumns, ' ')).toArray
+  private val rows = rawRows.map(_.padTo(numberOfColumns, ' ')).toArray
 
   private val numberOfRows = rows.length
 
@@ -63,10 +63,13 @@ class DiagramParse(s: String) {
       bottomRight ← completeBox(topLeft)
     } yield new BoxImpl(topLeft, bottomRight)
 
-  val diagram = new DiagramImpl(numberOfRows, numberOfColumns)
+  def getDiagram: Diagram = diagram
+
+  private val diagram = new DiagramImpl(numberOfRows, numberOfColumns)
+
   diagram.allBoxes = allBoxes
 
-  val boxContains: Map[BoxImpl, BoxImpl] =
+  private val boxContains: Map[BoxImpl, BoxImpl] =
     (for {
       outerBox ← allBoxes
       innerBox ← allBoxes
@@ -99,7 +102,7 @@ class DiagramParse(s: String) {
       val points = (connectPoint :: edgeSoFar).reverse
       if (points.size <= 2)
         None
-      else 
+      else
         Some(new EdgeImpl(points))
     }
     val ahead: Point = currentPoint.go(direction)
@@ -151,9 +154,9 @@ class DiagramParse(s: String) {
       }
   }
 
-  def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] = followEdge(direction, startPoint :: Nil)
+  private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] = followEdge(direction, startPoint :: Nil)
 
-  val edges =
+  private val edges =
     allBoxes.flatMap { box ⇒
       box.rightBoundary.flatMap(followEdge(Right, _)) ++
         box.leftBoundary.flatMap(followEdge(Left, _)) ++
@@ -170,12 +173,12 @@ class DiagramParse(s: String) {
 
   val allEdgePoints = diagram.allEdges.flatMap(_.points)
 
-//  for {
-//    box1 ← allBoxes
-//    box2 ← allBoxes
-//    if box1 != box2
-//    if box1.region.intersects(box2.region)
-//  } throw new GraphParserException("Overlapping boxes: " + box1 + box2)
+  //  for {
+  //    box1 ← allBoxes
+  //    box2 ← allBoxes
+  //    if box1 != box2
+  //    if box1.region.intersects(box2.region)
+  //  } throw new GraphParserException("Overlapping boxes: " + box1 + box2)
 
   def collectText(container: ContainerImpl): String = {
     val region = container.contentsRegion
@@ -207,14 +210,13 @@ class DiagramParse(s: String) {
     edge.label_ = labels.headOption
   }
 
-  lazy val allLabelPoints: Set[Point] =
+  private lazy val allLabelPoints: Set[Point] =
     (for {
       edge ← diagram.allEdges
       label ← edge.label_.toList
       point ← label.points
     } yield point).toSet
 
-  
   for (box ← allBoxes)
     box.text = collectText(box)
   diagram.text = collectText(diagram)
@@ -239,7 +241,7 @@ class DiagramParse(s: String) {
     search(startPoint.go(direction))
   }
 
-  abstract class ContainerImpl extends RegionToString { self: Container ⇒
+  private abstract class ContainerImpl extends RegionToString { self: Container ⇒
 
     var text: String = ""
 
@@ -249,7 +251,7 @@ class DiagramParse(s: String) {
 
   }
 
-  class BoxImpl(val topLeft: Point, val bottomRight: Point) extends ContainerImpl with Box {
+  private class BoxImpl(val topLeft: Point, val bottomRight: Point) extends ContainerImpl with Box {
 
     var edges: List[EdgeImpl] = Nil
 
@@ -268,12 +270,12 @@ class DiagramParse(s: String) {
 
   }
 
-  def isArrow(c: Char) = c match {
+  private def isArrow(c: Char) = c match {
     case '^' | 'v' | 'V' | '>' | '<' ⇒ true
     case _                           ⇒ false
   }
 
-  class EdgeImpl(val points: List[Point]) extends Edge {
+  private class EdgeImpl(val points: List[Point]) extends Edge {
 
     val box1: BoxImpl = diagram.boxAt(points.head).get
 
@@ -281,16 +283,16 @@ class DiagramParse(s: String) {
 
     var label_ : Option[Label] = None
 
-    def label = label_.map(_.text)
+    lazy val label = label_.map(_.text)
 
     lazy val parent: Container with ContainerImpl = if (box1.parent == Some(box2)) box2 else box2.parent.get
 
-    lazy val arrow1 = isArrow(charAt(points.head))
+    lazy val hasArrow1 = isArrow(charAt(points.head))
 
-    lazy val arrow2 = isArrow(charAt(points.last))
+    lazy val hasArrow2 = isArrow(charAt(points.last))
 
     lazy val edgeAndLabelPoints = points ++ label_.map(_.points).getOrElse(Set())
-    
+
     override def toString = diagramRegionToString(region(edgeAndLabelPoints), edgeAndLabelPoints.contains)
 
     def region(points: List[Point]): Region =
@@ -304,7 +306,7 @@ class DiagramParse(s: String) {
 
   }
 
-  trait RegionToString {
+  private trait RegionToString {
 
     def region: Region
 
@@ -325,7 +327,7 @@ class DiagramParse(s: String) {
     sb.toString
   }
 
-  class DiagramImpl(numberOfRows: Int, numberOfColumns: Int) extends ContainerImpl with Diagram {
+  private class DiagramImpl(numberOfRows: Int, numberOfColumns: Int) extends ContainerImpl with Diagram {
 
     var allBoxes: List[BoxImpl] = Nil
 
@@ -339,7 +341,7 @@ class DiagramParse(s: String) {
 
   }
 
-  case class Label(start: Point, end: Point) {
+  private case class Label(start: Point, end: Point) {
 
     require(start.row == end.row)
 
