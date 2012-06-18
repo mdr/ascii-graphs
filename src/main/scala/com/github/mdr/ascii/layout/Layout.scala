@@ -3,8 +3,8 @@ package com.github.mdr.ascii.layout
 import com.github.mdr.ascii._
 
 sealed abstract class Vertex
-case class DummyVertex extends Vertex
-case class RealVertex(text: String) extends Vertex
+class DummyVertex() extends Vertex
+class RealVertex(val text: String) extends Vertex
 
 class Layer {
 
@@ -30,124 +30,73 @@ class Layering {
 
 }
 
-sealed trait DrawingElement
+object Layouter {
 
-case class VertexDrawingElement(region: Region, textLines: List[String]) extends DrawingElement {
+  case class VertexInfo(region: Region, inPorts: Map[Vertex, Point], outPorts: Map[Vertex, Point]) {
 
-}
-
-case class EdgeDrawingElement(
-  points: List[Point],
-  hasArrow1: Boolean,
-  hasArrow2: Boolean)
-  extends DrawingElement {
-
-  private def direction(point1: Point, point2: Point): Direction =
-    if (point1.row == point2.row) {
-      if (point1.column < point2.column)
-        Right
-      else if (point1.column > point2.column)
-        Left
-      else
-        throw new RuntimeException("Same point")
-    } else if (point1.column == point2.column) {
-      if (point1.row < point2.row)
-        Down
-      else if (point1.row > point2.row)
-        Up
-      else
-        throw new RuntimeException("Same point")
-    } else
-      throw new RuntimeException("Points not aligned: " + point1 + ", " + point2)
-
-  lazy val pointAndDirections: List[(Point, Direction, Point)] =
-    for ((point1, point2) ← points.zip(points.drop(1)))
-      yield (point1, direction(point1, point2), point2)
-
-}
-
-class Renderer {
-
-  private def combinePoints(point1: Point, point2: Point) =
-    Point(math.max(point1.row, point2.row), math.max(point1.column, point2.column))
-
-  class Grid(width: Int, height: Int) {
-
-    private def makeRow: Array[Char] = (" " * width).toArray
-    val chars = (1 to height).map(r ⇒ makeRow).toArray
-
-    def apply(point: Point): Char = chars(point.row)(point.column)
-
-    def update(point: Point, char: Char) {
-      chars(point.row)(point.column) = char
-    }
-
-    def update(point: Point, s: String) {
-      var p = point
-      for (c ← s) {
-        this(p) = c
-        p = p.right
-      }
-    }
-
-    override def toString = chars.map(new String(_)).mkString("\n")
   }
 
-  private def draw(grid: Grid, point1: Point, direction: Direction, point2: Point) {
-    if (point1 != point2) {
-      grid(point1) = direction match {
-        case Up | Down    ⇒ if (grid(point1) == '-') '+' else '|'
-        case Right | Left ⇒ if (grid(point1) == '|') '+' else '-'
-      }
-      draw(grid, point1.go(direction), direction, point2)
+  private var vertexInfos: Map[Vertex, VertexInfo] = Map()
+
+  private def calculateLayerInfo(vertices: List[Vertex], inEdges: List[(Vertex, Vertex)], outEdges: List[(Vertex, Vertex)], row: Int) {
+    def inVertices(vertex: Vertex) = inEdges collect { case (v1, `vertex`) ⇒ v1 }
+    def outVertices(vertex: Vertex) = outEdges collect { case (`vertex`, v2) ⇒ v2 }
+    val dimensions: Map[Vertex, Dimension] =
+      (for {
+        vertex ← vertices
+        outDegree = outVertices(vertex).size
+        inDegree = inVertices(vertex).size
+        width = math.max(math.max(3, outDegree * 2 + 3), inDegree * 2 + 3)
+        dimension = Dimension(height = 3, width = width)
+      } yield vertex -> dimension).toMap
+
+    var regions: Map[Vertex, Region] = Map()
+    var pos = Point(row, 0)
+    for (vertex ← vertices) {
+      val region = Region(pos, dimensions(vertex))
+      regions += vertex -> region
+      pos = region.topRight.right(3)
     }
+
+    for (vertex ← vertices) {
+      val region = regions(vertex)
+      val point = region.bottomLeft
+
+      val inPorts = (for ((vertex, index) ← inVertices(vertex).zipWithIndex)
+        yield vertex -> region.topLeft.right(index * 2 + 2)).toMap
+      val outPorts = (for ((vertex, index) ← outVertices(vertex).zipWithIndex)
+        yield vertex -> region.bottomLeft.right(index * 2 + 2)).toMap
+      val vertexInfo = VertexInfo(region, inPorts, outPorts)
+      vertexInfos += vertex -> vertexInfo
+    }
+
   }
 
-  private def render(grid: Grid, element: EdgeDrawingElement) {
-    for ((point1, direction, point2) ← element.pointAndDirections)
-      draw(grid, point1, direction, point2)
-    if (element.hasArrow1)
-      for ((point, direction, _) ← element.pointAndDirections.headOption)
-        grid(point) = direction.opposite.arrow
-    if (element.hasArrow2)
-      for ((_, direction, point) ← element.pointAndDirections.lastOption)
-        grid(point) = direction.arrow
-  }
+  def layout(vertices1: List[Vertex], vertices2: List[Vertex], edges: List[(Vertex, Vertex)]): List[DrawingElement] = {
+    calculateLayerInfo(vertices1, Nil, edges.sortBy { case (_, v2) ⇒ vertices2.indexOf(v2) }, 0)
+    calculateLayerInfo(vertices2, edges.sortBy { case (v1, _) ⇒ vertices1.indexOf(v1) }, Nil, 1 + edges.size  * 2)
 
-  private def render(grid: Grid, element: VertexDrawingElement) {
-    val region = element.region
-
-    grid(region.topLeft) = '+'
-    grid(region.topRight) = '+'
-    grid(region.bottomLeft) = '+'
-    grid(region.bottomRight) = '+'
-
-    for (column ← (region.leftColumn + 1) to (region.rightColumn - 1)) {
-      grid(Point(region.topRow, column)) = '-'
-      grid(Point(region.bottomRow, column)) = '-'
-    }
-    for (row ← (region.topRow + 1) to (region.bottomRow - 1)) {
-      grid(Point(row, region.leftColumn)) = '|'
-      grid(Point(row, region.rightColumn)) = '|'
+    var x = 0
+    val edgeEls = for {
+      ((v1, v2), x2) ← edges.zipWithIndex
+      start = vertexInfos(v1).outPorts(v2).down
+      finish = vertexInfos(v2).inPorts(v1).up
+    } yield {
+      val points =
+        if (start.column == finish.column)
+          List(start, finish)
+        else {
+          val horizRow = start.down(x + 1).row
+          x += 2
+          List(start, start.copy(row = horizRow), finish.copy(row = horizRow), finish)
+        }
+      EdgeDrawingElement(points.distinct, false, true)
     }
 
-    for ((line, index) ← element.textLines.zipWithIndex)
-      grid(region.topLeft.right.down(index + 1)) = line
-  }
-
-  def render(elements: List[DrawingElement]): String = {
-    val largestPoint =
-      elements.flatMap {
-        case element: VertexDrawingElement ⇒ List(element.region.bottomRight)
-        case element: EdgeDrawingElement   ⇒ element.points
-      }.reduceLeft(combinePoints)
-    val grid = new Grid(width = largestPoint.column + 1, height = largestPoint.row + 1)
-
-    for (element ← elements) element match {
-      case vde: VertexDrawingElement ⇒ render(grid, vde)
-      case ede: EdgeDrawingElement   ⇒ render(grid, ede)
-    }
-    grid.toString
+    vertexInfos.toList.flatMap {
+      case (vertex: RealVertex, info) ⇒
+        VertexDrawingElement(info.region, List(vertex.text)) :: Nil
+    } ++ edgeEls
   }
 
 }

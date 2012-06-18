@@ -169,7 +169,9 @@ case class Point(row: Int, column: Int) {
 
   def left = copy(column = column - 1)
 
-  def right = copy(column = column + 1)
+  def right(n: Int): Point = copy(column = column + n)
+
+  def right: Point = right(1)
 
   def go(direction: Direction) = direction match {
     case Up    ⇒ up
@@ -193,6 +195,8 @@ sealed trait Direction {
     case Left  ⇒ '<'
     case Right ⇒ '>'
   }
+
+  def isVertical = this == Up || this == Down
 
 }
 
@@ -218,6 +222,17 @@ case object Right extends Direction {
   val turnLeft = Up
   val turnRight = Down
   val opposite: Direction = Left
+}
+
+case class Dimension(height: Int, width: Int)
+
+object Region {
+
+  def apply(topLeft: Point, dimension: Dimension): Region = {
+    val bottomRight = Point(topLeft.row + dimension.height - 1, topLeft.column + dimension.width - 1)
+    Region(topLeft, bottomRight)
+  }
+
 }
 
 case class Region(topLeft: Point, bottomRight: Point) {
@@ -253,6 +268,8 @@ case class Region(topLeft: Point, bottomRight: Point) {
   def width = rightColumn - leftColumn + 1
 
   def height = bottomRow - topRow + 1
+
+  def dimension = Dimension(height, width)
 
   def area = width * height
 
