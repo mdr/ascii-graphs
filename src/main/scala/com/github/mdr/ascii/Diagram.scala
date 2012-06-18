@@ -14,7 +14,7 @@ object Diagram {
 sealed trait Container {
 
   /**
-   * @return all the text directly inside this container, excluding any diagram elements (boxes, edges and labels). 
+   * @return all the text directly inside this container, excluding any diagram elements (boxes, edges and labels).
    */
   def text: String
 
@@ -163,7 +163,9 @@ case class Point(row: Int, column: Int) {
 
   def up = copy(row = row - 1)
 
-  def down = copy(row = row + 1)
+  def down: Point = down(1)
+
+  def down(n: Int): Point = copy(row = row + n)
 
   def left = copy(column = column - 1)
 
@@ -183,57 +185,81 @@ case class Point(row: Int, column: Int) {
 sealed trait Direction {
   val turnLeft: Direction
   val turnRight: Direction
+  val opposite: Direction
+
+  def arrow: Char = this match {
+    case Up    ⇒ '^'
+    case Down  ⇒ 'v'
+    case Left  ⇒ '<'
+    case Right ⇒ '>'
+  }
+
 }
 
 case object Up extends Direction {
   val turnLeft = Left
   val turnRight = Right
+  val opposite: Direction = Down
 }
 
 case object Down extends Direction {
   val turnLeft = Right
   val turnRight = Left
+  val opposite: Direction = Up
 }
 
 case object Left extends Direction {
   val turnLeft = Down
   val turnRight = Up
+  val opposite: Direction = Right
 }
 
 case object Right extends Direction {
   val turnLeft = Up
   val turnRight = Down
-
+  val opposite: Direction = Left
 }
 
 case class Region(topLeft: Point, bottomRight: Point) {
 
+  def bottomLeft = Point(bottomRight.row, topLeft.column)
+
+  def topRight = Point(topLeft.row, bottomRight.column)
+
+  def topRow = topLeft.row
+
+  def bottomRow = bottomRight.row
+
+  def leftColumn = topLeft.column
+
+  def rightColumn = bottomRight.column
+
   def contains(point: Point): Boolean = {
-    point.row >= topLeft.row && point.column >= topLeft.column &&
-      point.row <= bottomRight.row && point.column <= bottomRight.column
+    point.row >= topRow && point.column >= leftColumn &&
+      point.row <= bottomRow && point.column <= rightColumn
   }
 
   def contains(region: Region): Boolean = contains(region.topLeft) && contains(region.bottomRight)
 
   def intersects(region: Region): Boolean = {
     val disjoint =
-      this.bottomRight.column < region.topLeft.column ||
-        region.bottomRight.column < this.topLeft.column ||
-        this.bottomRight.row < region.topLeft.row ||
-        region.bottomRight.row < this.topLeft.row
+      this.rightColumn < region.leftColumn ||
+        region.rightColumn < this.leftColumn ||
+        this.bottomRow < region.topRow ||
+        region.bottomRow < this.topRow
     !disjoint
   }
 
-  def width = bottomRight.column - topLeft.column + 1
+  def width = rightColumn - leftColumn + 1
 
-  def height = bottomRight.row - topLeft.row + 1
+  def height = bottomRow - topRow + 1
 
   def area = width * height
 
   def points: List[Point] =
     for {
-      row ← (topLeft.row to bottomRight.row toList)
-      column ← topLeft.column to bottomRight.column
+      row ← (topRow to bottomRow toList)
+      column ← leftColumn to rightColumn
     } yield Point(row, column)
 
 }
