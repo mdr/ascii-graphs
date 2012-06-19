@@ -13,19 +13,21 @@ object Main extends App {
   val v6: Vertex = new RealVertex("6")
   val v7: Vertex = new RealVertex("7")
   val v8: Vertex = new RealVertex("8")
-  val result = // colliding edges
-    Renderer.render(Layouter.layout(
-      List(v1, v2, v3),
-      List(v4, v5, v6, v7, v8),
-      for (from <- List(v1, v2, v3); to <- List(v4, v5, v6, v7, v8)) yield from -> to))
+  val v9: Vertex = new RealVertex("9")
+//  val result = 
+//    Renderer.render(Layouter.layout(
+//      List(v1, v2, v3),
+//      List(v4, v5, v6, v7, v8),
+//      for (from <- List(v1, v2, v3); to <- List(v4, v5, v6, v7, v8)) yield from -> to))
   //        List(v1 -> v5, v2 -> v8, v3 -> v7, v3 -> v4, v1 -> v4, v1 -> v4)))
-  //  val result =
-  //    Renderer.render(Layouter.layout(
-  //      List(v1, v2, v3),
-  //      List(v4, v5, v6, v7, v8),
-  ////      List(v3 -> v4, v2 -> v4)))
-  ////        List(v1 -> v8, v2 -> v8)))
-  //        List(v3 -> v8, v1 -> v4, v2 -> v5, v2 -> v6, v1 -> v7, v3 -> v4)))
+    val result =
+      Renderer.render(Layouter.layout(
+        List(v1, v2, v3),
+        List(v4, v5, v6, v7, v8),
+        List(v9),
+  //      List(v3 -> v4, v2 -> v4)))
+  //        List(v1 -> v8, v2 -> v8)))
+          List(v3 -> v8, v2 -> v5, v2 -> v6, v1 -> v6, v3 -> v7) /** ++ List(v5 -> v9) */))
 
   println(result)
   System.exit(1)
