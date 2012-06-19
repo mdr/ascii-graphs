@@ -37,6 +37,12 @@ case class EdgeDrawingElement(
 
 }
 
+object Renderer {
+
+  def render(elements: List[DrawingElement]) = new Renderer().render(elements)
+
+}
+
 class Renderer {
 
   private def combinePoints(point1: Point, point2: Point) =
@@ -67,8 +73,10 @@ class Renderer {
   @tailrec
   private def drawLine(grid: Grid, point1: Point, direction: Direction, point2: Point) {
     grid(point1) = direction match {
-      case Up | Down    ⇒ if (grid(point1) == '-') '+' else '|'
-      case Right | Left ⇒ if (grid(point1) == '|') '+' else '-'
+      case Up | Down    ⇒ if (grid(point1) == '-') '|' else '|'
+      case Right | Left ⇒ if (grid(point1) == '|') '|' else '-'
+//      case Up | Down    ⇒ if (grid(point1) == '-') '+' else '|'
+//      case Right | Left ⇒ if (grid(point1) == '|') '+' else '-'
     }
     if (point1 != point2)
       drawLine(grid, point1.go(direction), direction, point2)
@@ -80,7 +88,7 @@ class Renderer {
         if (direction.isVertical && point1 != element.points.head) point1.go(direction) else point1
       val endPoint =
         if (direction.isVertical && point2 != element.points.last) point2.go(direction.opposite) else point2
-        
+
       drawLine(grid, startPoint, direction, endPoint)
     }
     if (element.hasArrow1)

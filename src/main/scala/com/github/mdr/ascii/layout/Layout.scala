@@ -32,15 +32,20 @@ class Layering {
 
 object Layouter {
 
-  case class VertexInfo(region: Region, inPorts: Map[Vertex, Point], outPorts: Map[Vertex, Point]) {
+  private case class VertexInfo(region: Region, inPorts: Map[Edge, Point], outPorts: Map[Edge, Point]) {
 
+  }
+
+  private class Edge(val startVertex: Vertex, val finishVertex: Vertex)
+  private object Edge {
+    def unapply(e: Edge) = Some((e.startVertex, e.finishVertex))
   }
 
   private var vertexInfos: Map[Vertex, VertexInfo] = Map()
 
-  private def calculateLayerInfo(vertices: List[Vertex], inEdges: List[(Vertex, Vertex)], outEdges: List[(Vertex, Vertex)], row: Int) {
-    def inVertices(vertex: Vertex) = inEdges collect { case (v1, `vertex`) ⇒ v1 }
-    def outVertices(vertex: Vertex) = outEdges collect { case (`vertex`, v2) ⇒ v2 }
+  private def calculateLayerInfo(vertices: List[Vertex], inEdges: List[Edge], outEdges: List[Edge], row: Int) {
+    def inVertices(vertex: Vertex) = inEdges collect { case e @ Edge(v1, `vertex`) ⇒ e }
+    def outVertices(vertex: Vertex) = outEdges collect { case e @ Edge(`vertex`, v2) ⇒ e }
     val dimensions: Map[Vertex, Dimension] =
       (for {
         vertex ← vertices
@@ -72,16 +77,29 @@ object Layouter {
 
   }
 
+  case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point)
+
   def layout(vertices1: List[Vertex], vertices2: List[Vertex], edges: List[(Vertex, Vertex)]): List[DrawingElement] = {
-    calculateLayerInfo(vertices1, Nil, edges.sortBy { case (_, v2) ⇒ vertices2.indexOf(v2) }, 0)
-    calculateLayerInfo(vertices2, edges.sortBy { case (v1, _) ⇒ vertices1.indexOf(v1) }, Nil, 1 + edges.size  * 2)
+
+    val edges2 = edges.map { case (v1, v2) ⇒ new Edge(v1, v2) }
+    calculateLayerInfo(vertices1, Nil, edges2.sortBy { case Edge(_, v2) ⇒ vertices2.indexOf(v2) }, 0)
+    calculateLayerInfo(vertices2, edges2.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, Nil, 5 + edges2.size * 2)
+
+    val edgeInfos =
+      for {
+        edge @ Edge(v1, v2) ← edges2
+        start = vertexInfos(v1).outPorts(edge).down
+        finish = vertexInfos(v2).inPorts(edge).up
+      } yield EdgeInfo(v1, v2, start, finish)
+
+    val sortedInfos = edgeInfos.sortBy { info ⇒
+      val diff = info.startPort.column - info.finishPort.column
+      val sign = if (diff == 0) 0 else diff / math.abs(diff)
+      sign * info.finishPort.column
+    }
 
     var x = 0
-    val edgeEls = for {
-      ((v1, v2), x2) ← edges.zipWithIndex
-      start = vertexInfos(v1).outPorts(v2).down
-      finish = vertexInfos(v2).inPorts(v1).up
-    } yield {
+    val edgeEls = for { (EdgeInfo(v1, v2, start, finish), x2) ← sortedInfos.zipWithIndex } yield {
       val points =
         if (start.column == finish.column)
           List(start, finish)
