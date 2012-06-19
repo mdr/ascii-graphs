@@ -60,7 +60,7 @@ object Layouter {
     for (vertex ← vertices) {
       val region = Region(pos, dimensions(vertex))
       regions += vertex -> region
-      pos = region.topRight.right(3)
+      pos = region.topRight.right(2)
     }
 
     for (vertex ← vertices) {
@@ -92,28 +92,55 @@ object Layouter {
         finish = vertexInfos(v2).inPorts(edge).up
       } yield EdgeInfo(v1, v2, start, finish)
 
+    // We sort this way to avoid unnecessary overlaps coming into the same vertex
     val sortedInfos = edgeInfos.sortBy { info ⇒
       val diff = info.startPort.column - info.finishPort.column
       val sign = if (diff == 0) 0 else diff / math.abs(diff)
       sign * info.finishPort.column
     }
 
+    var edgeRows: Map[EdgeInfo, Int] = Map()
+
     var x = 0
-    val edgeEls = for { (EdgeInfo(v1, v2, start, finish), x2) ← sortedInfos.zipWithIndex } yield {
-      val points =
-        if (start.column == finish.column)
-          List(start, finish)
-        else {
-          val horizRow = start.down(x + 1).row
-          x += 2
-          List(start, start.copy(row = horizRow), finish.copy(row = horizRow), finish)
-        }
-      EdgeDrawingElement(points.distinct, false, true)
+    for { edgeInfo @ EdgeInfo(_, _, startPort, finishPort) ← sortedInfos } {
+      if (startPort.column != finishPort.column) {
+        edgeRows += edgeInfo -> startPort.down(x + 1).row
+        x += 2
+      }
     }
 
-    vertexInfos.toList.flatMap {
-      case (vertex: RealVertex, info) ⇒
-        VertexDrawingElement(info.region, List(vertex.text)) :: Nil
+    var continue = true
+    while (continue) {
+      continue = false
+      for {
+        edgeInfo1 @ EdgeInfo(_, _, start, _) ← sortedInfos
+        edgeInfo2 @ EdgeInfo(_, _, _, finish) ← sortedInfos
+        if edgeInfo1 != edgeInfo2
+        if start.column == finish.column
+        row1 = edgeRows(edgeInfo1)
+        row2 = edgeRows(edgeInfo2)
+        if row1 > row2
+      } {
+        edgeRows += edgeInfo1 -> row2
+        edgeRows += edgeInfo2 -> row1
+        continue = true
+      }
+    }
+
+    val edgeEls =
+      for (edgeInfo @ EdgeInfo(_, _, start, finish) ← sortedInfos) yield {
+        val points =
+          if (start.column == finish.column)
+            List(start, finish)
+          else {
+            val horizRow = edgeRows(edgeInfo)
+            List(start, start.copy(row = horizRow), finish.copy(row = horizRow), finish)
+          }
+        EdgeDrawingElement(points.distinct, false, true)
+      }
+
+    vertexInfos.toList.collect {
+      case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
     } ++ edgeEls
   }
 
