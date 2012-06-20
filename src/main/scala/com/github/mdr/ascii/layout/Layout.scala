@@ -1,6 +1,7 @@
 package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii._
+import com.github.mdr.ascii.util.Utils
 
 sealed abstract class Vertex
 class DummyVertex() extends Vertex
@@ -9,6 +10,14 @@ class RealVertex(val text: String) extends Vertex { override def toString = "Rea
 object Layouter {
 
   private case class VertexInfo(region: Region, inPorts: Map[Edge, Point], outPorts: Map[Edge, Point]) {
+
+    def translate(down: Int = 0, right: Int = 0): VertexInfo = {
+      val newRegion = region.translate(down, right)
+      VertexInfo(
+        region.translate(down, right),
+        Utils.transformValues(inPorts)(_.translate(down, right)),
+        Utils.transformValues(outPorts)(_.translate(down, right)))
+    }
 
   }
 
@@ -95,25 +104,23 @@ object Layouter {
     edgeRows
   }
 
-  def layout(vertices1: List[Vertex], vertices2: List[Vertex], vertices3: List[Vertex], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
-
-    val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
-    val vertexInfos1 = calculateVertexInfo(vertices1, Nil, edges.sortBy { case Edge(_, v2) ⇒ vertices2.indexOf(v2) })
-    val vertexInfos2 = calculateVertexInfo(vertices2, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, edges.sortBy { case Edge(_, v2) ⇒ vertices3.indexOf(v2) }) //5 + edges.size * 2
-    //    vertexInfos = vertexInfos ++ calculateVertexInfo(vertices3, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, Nil, 30)
+  private def layoutRow(vertexInfos1: Map[Vertex, VertexInfo], vertexInfos2: Map[Vertex, VertexInfo], edges: List[Edge]): (List[DrawingElement], Map[Vertex, VertexInfo]) = {
 
     val edgeInfos =
       for {
         edge @ Edge(v1, v2) ← edges
-        start = vertexInfos1(v1).outPorts(edge).down
-        finish = vertexInfos2(v2).inPorts(edge).up
+        vertexInfo1 ← vertexInfos1.get(v1)
+        vertexInfo2 ← vertexInfos2.get(v2)
+        start = vertexInfo1.outPorts(edge).down
+        finish = vertexInfo2.inPorts(edge).up
       } yield EdgeInfo(v1, v2, start, finish)
 
     val edgeRows = calculateEdgeOrdering(edgeInfos)
 
-    def rowCoord(rowIndex: Int) = rowIndex * 2 + 4
+    val initRow = if (vertexInfos1.isEmpty) 0 else vertexInfos1.values.map(_.region.bottomRow).head
+    def rowCoord(rowIndex: Int) = initRow + rowIndex * 2 + 2
 
-    val edgeFinishRow = rowCoord(edgeRows.values.max) + 3
+    val edgeFinishRow = (if (edgeRows.isEmpty) 0 else rowCoord(edgeRows.values.max) + 3)
 
     val edgeElements =
       for (edgeInfo @ EdgeInfo(_, _, start, finish) ← edgeInfos) yield {
@@ -128,11 +135,26 @@ object Layouter {
         EdgeDrawingElement(points.distinct, false, true)
       }
 
-    vertexInfos1.toList.collect {
-      case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
-    } ++ vertexInfos2.toList.collect {
-      case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
-    }.map(_.translate(down = edgeFinishRow)) ++ edgeElements
+    val newVertexInfos2 = Utils.transformValues(vertexInfos2)(_.translate(down = edgeFinishRow))
+
+    val elements =
+      newVertexInfos2.toList.collect {
+        case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
+      } ++ edgeElements
+    (elements, newVertexInfos2)
+  }
+
+  def layout(vertices1: List[Vertex], vertices2: List[Vertex], vertices3: List[Vertex], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
+
+    val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
+    val vertexInfos1 = calculateVertexInfo(vertices1, Nil, edges.sortBy { case Edge(_, v2) ⇒ vertices2.indexOf(v2) })
+    val vertexInfos2 = calculateVertexInfo(vertices2, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, edges.sortBy { case Edge(_, v2) ⇒ vertices3.indexOf(v2) }) //5 + edges.size * 2
+    val vertexInfos3 = calculateVertexInfo(vertices3, edges.sortBy { case Edge(v1, _) ⇒ vertices3.indexOf(v1) }, Nil)
+
+    val (elements1, newVertexInfo1s) = layoutRow(Map(), vertexInfos1, edges)
+    val (elements2, newVertexInfo2s) = layoutRow(newVertexInfo1s, vertexInfos2, edges)
+    val (elements3, newVertexInfo3s) = layoutRow(newVertexInfo2s, vertexInfos3, edges)
+    elements1 ++ elements2 ++ elements3
   }
 
 }

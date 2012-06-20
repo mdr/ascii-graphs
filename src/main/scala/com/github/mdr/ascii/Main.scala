@@ -27,7 +27,7 @@ object Main extends App {
         List(v9),
   //      List(v3 -> v4, v2 -> v4)))
   //        List(v1 -> v8, v2 -> v8)))
-          List(v3 -> v8, v2 -> v5, v2 -> v6, v1 -> v6, v3 -> v7) ))
+          List(v3 -> v8, v2 -> v5, v2 -> v6, v1 -> v6, v3 -> v7) ++ List(v5 -> v9, v7 -> v9) ))
 
   println(result)
   System.exit(1)
