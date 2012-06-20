@@ -119,7 +119,7 @@ object Layouter {
     edgeRows
   }
 
-  private def layoutRow(vertexInfos1: Map[Vertex, VertexInfo], vertexInfos2: Map[Vertex, VertexInfo], edges: List[Edge]): (List[DrawingElement], Map[Vertex, VertexInfo]) = {
+  private def layoutRow(vertexInfos1: Map[Vertex, VertexInfo], vertexInfos2: Map[Vertex, VertexInfo], edges: List[Edge], incompleteEdges: Map[DummyVertex, List[Point]]): (List[DrawingElement], Map[Vertex, VertexInfo], Map[DummyVertex, List[Point]]) = {
 
     val edgeInfos =
       for {
@@ -137,37 +137,53 @@ object Layouter {
 
     val edgeZoneBottomRow = (if (edgeRows.isEmpty) edgeZoneTopRow else edgeBendRow(edgeRows.values.max) + 2)
 
-    val edgeElements =
-      for (edgeInfo @ EdgeInfo(_, _, start, finish) ← edgeInfos) yield {
+    val edgeInfoToPoints: Map[EdgeInfo, List[Point]] =
+      (for (edgeInfo @ EdgeInfo(startVertex, _, start, finish) ← edgeInfos) yield {
         val trueFinish = finish.translate(down = edgeZoneBottomRow + 1)
+        val priorPoints: List[Point] = startVertex match {
+          case dv: DummyVertex ⇒ incompleteEdges.get(dv).getOrElse(List(start)) // todo remove
+          case _: RealVertex   ⇒ List(start)
+        }
+        val lastPriorPoint = priorPoints.last
         val points =
-          if (start.column == trueFinish.column) // No bend required
-            List(start, trueFinish)
+          if (lastPriorPoint.column == trueFinish.column) // No bend required
+            priorPoints :+ trueFinish
           else {
             val row = edgeBendRow(edgeRows(edgeInfo))
-            List(start, start.copy(row = row), trueFinish.copy(row = row), trueFinish)
+            priorPoints ++ List(lastPriorPoint.copy(row = row), trueFinish.copy(row = row), trueFinish)
           }
-        EdgeDrawingElement(points.distinct, false, true)
-      }
+        edgeInfo -> points
+      }).toMap
+
+    val edgeElements =
+      for ((EdgeInfo(_, finishVertex: RealVertex, _, _), points) ← edgeInfoToPoints)
+        yield EdgeDrawingElement(points, false, true)
+
+    val updatedIncompleteEdges: Map[DummyVertex, List[Point]] =
+      for ((EdgeInfo(_, finishVertex: DummyVertex, _, _), points) ← edgeInfoToPoints)
+        yield finishVertex -> points.init
 
     val updatedVertexInfos2 = Utils.transformValues(vertexInfos2)(_.translate(down = edgeZoneBottomRow + 1))
 
     val vertexElements = updatedVertexInfos2.toList.collect {
       case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
     }
-    (vertexElements ++ edgeElements, updatedVertexInfos2)
+    (vertexElements ++ edgeElements, updatedVertexInfos2, updatedIncompleteEdges)
   }
 
   def layout(vertexLayers: List[List[Vertex]], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
     val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
 
     var previousVertexInfos: Map[Vertex, VertexInfo] = Map()
+    var incompleteEdges: Map[DummyVertex, List[Point]] = Map()
     (for ((previousVerticesOpt, currentVertices, nextVerticesOpt) ← Utils.withPreviousAndNext(vertexLayers)) yield {
       val previousVertices = previousVerticesOpt.getOrElse(Nil)
       val nextVertices = nextVerticesOpt.getOrElse(Nil)
       val vertexInfos = calculateVertexInfo(currentVertices, edges, previousVertices, nextVertices)
-      val (elements, updatedVertexInfos) = layoutRow(previousVertexInfos, vertexInfos, edges)
+      val (elements, updatedVertexInfos, updatedIncompletedEdges) =
+        layoutRow(previousVertexInfos, vertexInfos, edges, incompleteEdges)
       previousVertexInfos = updatedVertexInfos
+      incompleteEdges = updatedIncompletedEdges
       elements
     }).flatten
 

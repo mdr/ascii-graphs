@@ -15,18 +15,20 @@ object RunLayout extends Application {
   val vb: Vertex = new RealVertex("B")
   val vc: Vertex = new RealVertex("C")
   val d1: Vertex = new DummyVertex()
+  val d2: Vertex = new DummyVertex()
   val result =
     Renderer.render(Layouter.layout(
       List(
         List(v1, v2, v3),
         List(v4, v5, v6, v7, v8),
         List(v9, d1),
-        List(va, vb),
+        List(va, vb, d2),
         List(vc)),
       Nil ++
         List(v3 -> v8, v2 -> v5, v1 -> v6, v2 -> v6, v3 -> v7) ++
         List(v5 -> v9, v7 -> v9, v7 -> d1) ++
-        List(v9 -> vb, v9 -> va, d1 -> vb)))
+        List(v9 -> vb, v9 -> va, d1 -> d2) ++
+        List(d2 -> vc)))
 
   println(result)
 
