@@ -120,25 +120,25 @@ object Layouter {
 
     val edgeRows = calculateEdgeOrdering(edgeInfos)
 
-    val initRow = if (vertexInfos1.isEmpty) 0 else vertexInfos1.values.map(_.region.bottomRow).head
-    def rowCoord(rowIndex: Int) = initRow + rowIndex * 2 + 2
+    val edgeZoneTopRow = if (vertexInfos1.isEmpty) 0 else vertexInfos1.values.map(_.region.bottomRow).max + 1
+    def edgeBendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 2 + 1
 
-    val edgeFinishRow = (if (edgeRows.isEmpty) 0 else rowCoord(edgeRows.values.max) + 3)
+    val edgeZoneBottomRow = (if (edgeRows.isEmpty) edgeZoneTopRow else edgeBendRow(edgeRows.values.max) + 2)
 
     val edgeElements =
       for (edgeInfo @ EdgeInfo(_, _, start, finish) ← edgeInfos) yield {
-        val trueFinish = finish.translate(down = edgeFinishRow)
+        val trueFinish = finish.translate(down = edgeZoneBottomRow + 1)
         val points =
-          if (start.column == trueFinish.column)
-            List(start, trueFinish) // No bend required
+          if (start.column == trueFinish.column) // No bend required
+            List(start, trueFinish)
           else {
-            val row = rowCoord(edgeRows(edgeInfo))
+            val row = edgeBendRow(edgeRows(edgeInfo))
             List(start, start.copy(row = row), trueFinish.copy(row = row), trueFinish)
           }
         EdgeDrawingElement(points.distinct, false, true)
       }
 
-    val updatedVertexInfos2 = Utils.transformValues(vertexInfos2)(_.translate(down = edgeFinishRow))
+    val updatedVertexInfos2 = Utils.transformValues(vertexInfos2)(_.translate(down = edgeZoneBottomRow + 1))
 
     val vertexElements = updatedVertexInfos2.toList.collect {
       case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
