@@ -39,9 +39,16 @@ object Layouter {
         vertex ← vertices
         outDegree = outVertices(vertex).size
         inDegree = inVertices(vertex).size
-        width = math.max(outDegree * 2 + 3, inDegree * 2 + 3)
-        dimension = Dimension(height = VERTEX_HEIGHT, width = width)
-      } yield vertex -> dimension).toMap
+      } yield {
+        val dimension = vertex match {
+          case _: RealVertex ⇒
+            val width = math.max(outDegree * 2 + 3, inDegree * 2 + 3)
+            Dimension(height = VERTEX_HEIGHT, width = width)
+          case _: DummyVertex ⇒
+            Dimension(height = 1, width = 1)
+        }
+        vertex -> dimension
+      }).toMap
 
     var regions: Map[Vertex, Region] = Map()
     var pos = Point(0, 0)
@@ -53,13 +60,18 @@ object Layouter {
 
     def makeVertexInfo(vertex: Vertex): VertexInfo = {
       val region = regions(vertex)
-      val point = region.bottomLeft
-
-      val inPorts = (for ((vertex, index) ← inVertices(vertex).zipWithIndex)
-        yield vertex -> region.topLeft.right(index * 2 + 2)).toMap
-      val outPorts = (for ((vertex, index) ← outVertices(vertex).zipWithIndex)
-        yield vertex -> region.bottomLeft.right(index * 2 + 2)).toMap
-      VertexInfo(region, inPorts, outPorts)
+      vertex match {
+        case _: RealVertex ⇒
+          val inPorts = (for ((vertex, index) ← inVertices(vertex).zipWithIndex)
+            yield vertex -> region.topLeft.right(index * 2 + 2)).toMap
+          val outPorts = (for ((vertex, index) ← outVertices(vertex).zipWithIndex)
+            yield vertex -> region.bottomLeft.right(index * 2 + 2)).toMap
+          VertexInfo(region, inPorts, outPorts)
+        case _: DummyVertex ⇒
+          val List(inVertex) = inVertices(vertex)
+          val List(outVertex) = outVertices(vertex)
+          VertexInfo(region, Map(inVertex -> region.topLeft), Map(outVertex -> region.topLeft))
+      }
     }
 
     (for (vertex ← vertices) yield vertex -> makeVertexInfo(vertex)).toMap
@@ -120,7 +132,7 @@ object Layouter {
 
     val edgeRows = calculateEdgeOrdering(edgeInfos)
 
-    val edgeZoneTopRow = if (vertexInfos1.isEmpty) 0 else vertexInfos1.values.map(_.region.bottomRow).max + 1
+    val edgeZoneTopRow = if (vertexInfos1.isEmpty) -1 /* first layer */ else vertexInfos1.values.map(_.region.bottomRow).max + 1
     def edgeBendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 2 + 1
 
     val edgeZoneBottomRow = (if (edgeRows.isEmpty) edgeZoneTopRow else edgeBendRow(edgeRows.values.max) + 2)
@@ -150,7 +162,7 @@ object Layouter {
     val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
 
     var previousVertexInfos: Map[Vertex, VertexInfo] = Map()
-    (for ((previousVerticesOpt, currentVertices, nextVerticesOpt) <- Utils.withPreviousAndNext(vertexLayers)) yield {
+    (for ((previousVerticesOpt, currentVertices, nextVerticesOpt) ← Utils.withPreviousAndNext(vertexLayers)) yield {
       val previousVertices = previousVerticesOpt.getOrElse(Nil)
       val nextVertices = nextVerticesOpt.getOrElse(Nil)
       val vertexInfos = calculateVertexInfo(currentVertices, edges, previousVertices, nextVertices)
