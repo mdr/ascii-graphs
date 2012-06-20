@@ -147,6 +147,7 @@ object Layouter {
   def layout(vertices1: List[Vertex], vertices2: List[Vertex], vertices3: List[Vertex], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
 
     val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
+
     val vertexInfos1 = calculateVertexInfo(vertices1, Nil, edges.sortBy { case Edge(_, v2) ⇒ vertices2.indexOf(v2) })
     val vertexInfos2 = calculateVertexInfo(vertices2, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, edges.sortBy { case Edge(_, v2) ⇒ vertices3.indexOf(v2) }) //5 + edges.size * 2
     val vertexInfos3 = calculateVertexInfo(vertices3, edges.sortBy { case Edge(v1, _) ⇒ vertices3.indexOf(v1) }, Nil)
