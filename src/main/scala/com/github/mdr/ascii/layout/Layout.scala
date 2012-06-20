@@ -28,9 +28,12 @@ object Layouter {
 
   val VERTEX_HEIGHT = 3
 
-  private def calculateVertexInfo(vertices: List[Vertex], inEdges: List[Edge], outEdges: List[Edge]): Map[Vertex, VertexInfo] = {
+  private def calculateVertexInfo(vertices: List[Vertex], edges: List[Edge], previousVertices: List[Vertex], nextVertices: List[Vertex]): Map[Vertex, VertexInfo] = {
+    val inEdges = edges.sortBy { case Edge(v1, _) ⇒ previousVertices.indexOf(v1) }
+    val outEdges = edges.sortBy { case Edge(_, v2) ⇒ nextVertices.indexOf(v2) }
     def inVertices(vertex: Vertex) = inEdges collect { case e @ Edge(v1, `vertex`) ⇒ e }
     def outVertices(vertex: Vertex) = outEdges collect { case e @ Edge(`vertex`, v2) ⇒ e }
+
     val dimensions: Map[Vertex, Dimension] =
       (for {
         vertex ← vertices
@@ -135,27 +138,27 @@ object Layouter {
         EdgeDrawingElement(points.distinct, false, true)
       }
 
-    val newVertexInfos2 = Utils.transformValues(vertexInfos2)(_.translate(down = edgeFinishRow))
+    val updatedVertexInfos2 = Utils.transformValues(vertexInfos2)(_.translate(down = edgeFinishRow))
 
-    val elements =
-      newVertexInfos2.toList.collect {
-        case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
-      } ++ edgeElements
-    (elements, newVertexInfos2)
+    val vertexElements = updatedVertexInfos2.toList.collect {
+      case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
+    }
+    (vertexElements ++ edgeElements, updatedVertexInfos2)
   }
 
-  def layout(vertices1: List[Vertex], vertices2: List[Vertex], vertices3: List[Vertex], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
-
+  def layout(vertexLayers: List[List[Vertex]], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
     val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
 
-    val vertexInfos1 = calculateVertexInfo(vertices1, Nil, edges.sortBy { case Edge(_, v2) ⇒ vertices2.indexOf(v2) })
-    val vertexInfos2 = calculateVertexInfo(vertices2, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, edges.sortBy { case Edge(_, v2) ⇒ vertices3.indexOf(v2) }) //5 + edges.size * 2
-    val vertexInfos3 = calculateVertexInfo(vertices3, edges.sortBy { case Edge(v1, _) ⇒ vertices3.indexOf(v1) }, Nil)
+    var previousVertexInfos: Map[Vertex, VertexInfo] = Map()
+    (for ((previousVerticesOpt, currentVertices, nextVerticesOpt) <- Utils.withPreviousAndNext(vertexLayers)) yield {
+      val previousVertices = previousVerticesOpt.getOrElse(Nil)
+      val nextVertices = nextVerticesOpt.getOrElse(Nil)
+      val vertexInfos = calculateVertexInfo(currentVertices, edges, previousVertices, nextVertices)
+      val (elements, updatedVertexInfos) = layoutRow(previousVertexInfos, vertexInfos, edges)
+      previousVertexInfos = updatedVertexInfos
+      elements
+    }).flatten
 
-    val (elements1, newVertexInfo1s) = layoutRow(Map(), vertexInfos1, edges)
-    val (elements2, newVertexInfo2s) = layoutRow(newVertexInfo1s, vertexInfos2, edges)
-    val (elements3, newVertexInfo3s) = layoutRow(newVertexInfo2s, vertexInfos3, edges)
-    elements1 ++ elements2 ++ elements3
   }
 
 }

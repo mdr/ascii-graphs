@@ -19,7 +19,7 @@ case class EdgeDrawingElement(
   points: List[Point],
   hasArrow1: Boolean,
   hasArrow2: Boolean)
-  extends DrawingElement {
+    extends DrawingElement {
 
   def translate(down: Int = 0, right: Int = 0) = copy(points = points.map(_.translate(down, right)))
 
@@ -83,10 +83,10 @@ class Renderer {
   @tailrec
   private def drawLine(grid: Grid, point1: Point, direction: Direction, point2: Point) {
     grid(point1) = direction match {
-      case Up | Down    ⇒ if (grid(point1) == '-') '|' else '|'
-      case Right | Left ⇒ if (grid(point1) == '|') '|' else '-'
-      //      case Up | Down    ⇒ if (grid(point1) == '-') '+' else '|'
-      //      case Right | Left ⇒ if (grid(point1) == '|') '+' else '-'
+      //      case Up | Down    ⇒ if (grid(point1) == '-') '|' else '|'
+      //      case Right | Left ⇒ if (grid(point1) == '|') '|' else '-'
+      case Up | Down    ⇒ '|'
+      case Right | Left ⇒ '-'
     }
     if (point1 != point2)
       drawLine(grid, point1.go(direction), direction, point2)
