@@ -4,31 +4,7 @@ import com.github.mdr.ascii._
 
 sealed abstract class Vertex
 class DummyVertex() extends Vertex
-class RealVertex(val text: String) extends Vertex { override def toString = "RealVertex(" + text  + ")" }
-
-//class Layer {
-//
-//  def vertices: List[Vertex] = ???
-//
-//}
-//
-//class Edge {
-//
-//  def vertex1: Vertex = ???
-//
-//  def vertex2: Vertex = ???
-//
-//  def arrow1: Boolean = ???
-//
-//  def arrow2: Boolean = ???
-//
-//}
-//
-//class Layering {
-//
-//  def layers: List[Layer] = ???
-//
-//}
+class RealVertex(val text: String) extends Vertex { override def toString = "RealVertex(" + text + ")" }
 
 object Layouter {
 
@@ -41,11 +17,9 @@ object Layouter {
     def unapply(e: Edge) = Some((e.startVertex, e.finishVertex))
   }
 
-  private var vertexInfos: Map[Vertex, VertexInfo] = Map()
-
   val VERTEX_HEIGHT = 3
 
-  private def calculateVertexInfo(vertices: List[Vertex], inEdges: List[Edge], outEdges: List[Edge], topLeftRow: Int): Map[Vertex, VertexInfo] = {
+  private def calculateVertexInfo(vertices: List[Vertex], inEdges: List[Edge], outEdges: List[Edge]): Map[Vertex, VertexInfo] = {
     def inVertices(vertex: Vertex) = inEdges collect { case e @ Edge(v1, `vertex`) ⇒ e }
     def outVertices(vertex: Vertex) = outEdges collect { case e @ Edge(`vertex`, v2) ⇒ e }
     val dimensions: Map[Vertex, Dimension] =
@@ -58,7 +32,7 @@ object Layouter {
       } yield vertex -> dimension).toMap
 
     var regions: Map[Vertex, Region] = Map()
-    var pos = Point(topLeftRow, 0)
+    var pos = Point(0, 0)
     for (vertex ← vertices) {
       val region = Region(pos, dimensions(vertex))
       regions += vertex -> region
@@ -81,19 +55,7 @@ object Layouter {
 
   case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point)
 
-  def layout(vertices1: List[Vertex], vertices2: List[Vertex], vertices3: List[Vertex], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
-
-    val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
-    vertexInfos = vertexInfos ++ calculateVertexInfo(vertices1, Nil, edges.sortBy { case Edge(_, v2) ⇒ vertices2.indexOf(v2) }, 0)
-    vertexInfos = vertexInfos ++ calculateVertexInfo(vertices2, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, edges.sortBy { case Edge(_, v2) ⇒ vertices3.indexOf(v2) }, 15) //5 + edges.size * 2
-//    vertexInfos = vertexInfos ++ calculateVertexInfo(vertices3, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, Nil, 30)
-
-    val edgeInfos =
-      for {
-        edge @ Edge(v1, v2) ← edges
-        start = vertexInfos(v1).outPorts(edge).down
-        finish = vertexInfos(v2).inPorts(edge).up
-      } yield EdgeInfo(v1, v2, start, finish)
+  private def calculateEdgeOrdering(edgeInfos: List[EdgeInfo]): Map[EdgeInfo, Int] = {
 
     // We sort this way to avoid unnecessary overlaps coming into the same vertex
     val sortedInfos = edgeInfos.sortBy { info ⇒
@@ -103,14 +65,13 @@ object Layouter {
     }
 
     var edgeRows: Map[EdgeInfo, Int] = Map()
-    var rowOffset = 0
+    var rowNumber = 0
     for { edgeInfo @ EdgeInfo(_, _, startPort, finishPort) ← sortedInfos } {
       if (startPort.column != finishPort.column) {
-        edgeRows += edgeInfo -> startPort.down(rowOffset + 1).row
-        rowOffset += 2
+        edgeRows += edgeInfo -> rowNumber
+        rowNumber += 1
       }
     }
-    edgeRows.foreach(println)
 
     // Force edges that share start and end columns to be ordered correctly to avoid conflicts
     var continue = false // true
@@ -131,21 +92,47 @@ object Layouter {
       }
     }
 
+    edgeRows
+  }
+
+  def layout(vertices1: List[Vertex], vertices2: List[Vertex], vertices3: List[Vertex], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
+
+    val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
+    val vertexInfos1 = calculateVertexInfo(vertices1, Nil, edges.sortBy { case Edge(_, v2) ⇒ vertices2.indexOf(v2) })
+    val vertexInfos2 = calculateVertexInfo(vertices2, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, edges.sortBy { case Edge(_, v2) ⇒ vertices3.indexOf(v2) }) //5 + edges.size * 2
+    //    vertexInfos = vertexInfos ++ calculateVertexInfo(vertices3, edges.sortBy { case Edge(v1, _) ⇒ vertices1.indexOf(v1) }, Nil, 30)
+
+    val edgeInfos =
+      for {
+        edge @ Edge(v1, v2) ← edges
+        start = vertexInfos1(v1).outPorts(edge).down
+        finish = vertexInfos2(v2).inPorts(edge).up
+      } yield EdgeInfo(v1, v2, start, finish)
+
+    val edgeRows = calculateEdgeOrdering(edgeInfos)
+
+    def rowCoord(rowIndex: Int) = rowIndex * 2 + 4
+
+    val edgeFinishRow = rowCoord(edgeRows.values.max) + 3
+
     val edgeElements =
-      for (edgeInfo @ EdgeInfo(_, _, start, finish) ← sortedInfos) yield {
+      for (edgeInfo @ EdgeInfo(_, _, start, finish) ← edgeInfos) yield {
+        val trueFinish = finish.translate(down = edgeFinishRow)
         val points =
-          if (start.column == finish.column)
-            List(start, finish) // No bend required
+          if (start.column == trueFinish.column)
+            List(start, trueFinish) // No bend required
           else {
-            val horizRow = edgeRows(edgeInfo)
-            List(start, start.copy(row = horizRow), finish.copy(row = horizRow), finish)
+            val row = rowCoord(edgeRows(edgeInfo))
+            List(start, start.copy(row = row), trueFinish.copy(row = row), trueFinish)
           }
         EdgeDrawingElement(points.distinct, false, true)
       }
 
-    vertexInfos.toList.collect {
+    vertexInfos1.toList.collect {
       case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
-    } ++ edgeElements
+    } ++ vertexInfos2.toList.collect {
+      case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
+    }.map(_.translate(down = edgeFinishRow)) ++ edgeElements
   }
 
 }

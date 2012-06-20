@@ -173,6 +173,8 @@ case class Point(row: Int, column: Int) {
 
   def right: Point = right(1)
 
+  def translate(down: Int = 0, right: Int = 0): Point = this.down(down).right(right)
+
   def go(direction: Direction) = direction match {
     case Up    ⇒ up
     case Down  ⇒ down
@@ -278,5 +280,8 @@ case class Region(topLeft: Point, bottomRight: Point) {
       row ← (topRow to bottomRow toList)
       column ← leftColumn to rightColumn
     } yield Point(row, column)
+
+  def translate(down: Int = 0, right: Int = 0): Region =
+    Region(topLeft.translate(down, right), bottomRight.translate(down, right))
 
 }

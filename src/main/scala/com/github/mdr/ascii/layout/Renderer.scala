@@ -3,15 +3,25 @@ package com.github.mdr.ascii.layout
 import com.github.mdr.ascii._
 import scala.annotation.tailrec
 
-sealed trait DrawingElement
+sealed trait DrawingElement {
 
-case class VertexDrawingElement(region: Region, textLines: List[String]) extends DrawingElement
+  def translate(down: Int = 0, right: Int = 0): DrawingElement
+
+}
+
+case class VertexDrawingElement(region: Region, textLines: List[String]) extends DrawingElement {
+
+  def translate(down: Int = 0, right: Int = 0) = copy(region = region.translate(down, right))
+
+}
 
 case class EdgeDrawingElement(
   points: List[Point],
   hasArrow1: Boolean,
   hasArrow2: Boolean)
   extends DrawingElement {
+
+  def translate(down: Int = 0, right: Int = 0) = copy(points = points.map(_.translate(down, right)))
 
   private def direction(point1: Point, point2: Point): Direction =
     if (point1.row == point2.row) {
@@ -75,8 +85,8 @@ class Renderer {
     grid(point1) = direction match {
       case Up | Down    ⇒ if (grid(point1) == '-') '|' else '|'
       case Right | Left ⇒ if (grid(point1) == '|') '|' else '-'
-//      case Up | Down    ⇒ if (grid(point1) == '-') '+' else '|'
-//      case Right | Left ⇒ if (grid(point1) == '|') '+' else '-'
+      //      case Up | Down    ⇒ if (grid(point1) == '-') '+' else '|'
+      //      case Right | Left ⇒ if (grid(point1) == '|') '+' else '-'
     }
     if (point1 != point2)
       drawLine(grid, point1.go(direction), direction, point2)
