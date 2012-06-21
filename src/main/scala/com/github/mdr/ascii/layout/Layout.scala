@@ -3,10 +3,6 @@ package com.github.mdr.ascii.layout
 import com.github.mdr.ascii._
 import com.github.mdr.ascii.util.Utils
 
-sealed abstract class Vertex
-class DummyVertex() extends Vertex
-class RealVertex(val text: String) extends Vertex { override def toString = "RealVertex(" + text + ")" }
-
 object Layouter {
 
   private case class VertexInfo(region: Region, inPorts: Map[Edge, Point], outPorts: Map[Edge, Point]) {
@@ -21,22 +17,17 @@ object Layouter {
 
   }
 
-  private class Edge(val startVertex: Vertex, val finishVertex: Vertex)
-  private object Edge {
-    def unapply(e: Edge) = Some((e.startVertex, e.finishVertex))
-  }
-
   val VERTEX_HEIGHT = 3
 
-  private def calculateVertexInfo(vertices: List[Vertex], edges: List[Edge], previousVertices: List[Vertex], nextVertices: List[Vertex]): Map[Vertex, VertexInfo] = {
-    val inEdges = edges.sortBy { case Edge(v1, _) ⇒ previousVertices.indexOf(v1) }
-    val outEdges = edges.sortBy { case Edge(_, v2) ⇒ nextVertices.indexOf(v2) }
+  private def calculateVertexInfo(layer: Layer, edges: List[Edge], previousLayer: Layer, nextLayer: Layer): Map[Vertex, VertexInfo] = {
+    val inEdges = edges.sortBy { case Edge(v1, _) ⇒ previousLayer.vertices.indexOf(v1) }
+    val outEdges = edges.sortBy { case Edge(_, v2) ⇒ nextLayer.vertices.indexOf(v2) }
     def inVertices(vertex: Vertex) = inEdges collect { case e @ Edge(v1, `vertex`) ⇒ e }
     def outVertices(vertex: Vertex) = outEdges collect { case e @ Edge(`vertex`, v2) ⇒ e }
 
     val dimensions: Map[Vertex, Dimension] =
       (for {
-        vertex ← vertices
+        vertex ← layer.vertices
         outDegree = outVertices(vertex).size
         inDegree = inVertices(vertex).size
       } yield {
@@ -52,7 +43,7 @@ object Layouter {
 
     var regions: Map[Vertex, Region] = Map()
     var pos = Point(0, 0)
-    for (vertex ← vertices) {
+    for (vertex ← layer.vertices) {
       val region = Region(pos, dimensions(vertex))
       regions += vertex -> region
       pos = region.topRight.right(2)
@@ -74,7 +65,7 @@ object Layouter {
       }
     }
 
-    (for (vertex ← vertices) yield vertex -> makeVertexInfo(vertex)).toMap
+    (for (vertex ← layer.vertices) yield vertex -> makeVertexInfo(vertex)).toMap
   }
 
   case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point)
@@ -171,17 +162,16 @@ object Layouter {
     (vertexElements ++ edgeElements, updatedVertexInfos2, updatedIncompleteEdges)
   }
 
-  def layout(vertexLayers: List[List[Vertex]], edgePairs: List[(Vertex, Vertex)]): List[DrawingElement] = {
-    val edges = edgePairs.map { case (v1, v2) ⇒ new Edge(v1, v2) }
+  def layout(layering: Layering): List[DrawingElement] = {
 
     var previousVertexInfos: Map[Vertex, VertexInfo] = Map()
     var incompleteEdges: Map[DummyVertex, List[Point]] = Map()
-    (for ((previousVerticesOpt, currentVertices, nextVerticesOpt) ← Utils.withPreviousAndNext(vertexLayers)) yield {
-      val previousVertices = previousVerticesOpt.getOrElse(Nil)
-      val nextVertices = nextVerticesOpt.getOrElse(Nil)
-      val vertexInfos = calculateVertexInfo(currentVertices, edges, previousVertices, nextVertices)
+    (for ((previousVerticesOpt, currentVertices, nextVerticesOpt) ← Utils.withPreviousAndNext(layering.layers)) yield {
+      val previousVertices = previousVerticesOpt.getOrElse(Layer(Nil))
+      val nextVertices = nextVerticesOpt.getOrElse(Layer(Nil))
+      val vertexInfos = calculateVertexInfo(currentVertices, layering.edges, previousVertices, nextVertices)
       val (elements, updatedVertexInfos, updatedIncompletedEdges) =
-        layoutRow(previousVertexInfos, vertexInfos, edges, incompleteEdges)
+        layoutRow(previousVertexInfos, vertexInfos, layering.edges, incompleteEdges)
       previousVertexInfos = updatedVertexInfos
       incompleteEdges = updatedIncompletedEdges
       elements

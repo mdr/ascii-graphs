@@ -4,21 +4,21 @@ import com.github.mdr.ascii.util.Utils
 
 object LayerOrderingCalculator {
 
-  def reorder(vertexLayers: List[List[Vertex]], edges: List[(Vertex, Vertex)]): List[List[Vertex]] = {
-    for ((previousLayerOpt, currentLayer) ← Utils.withPrevious(vertexLayers))
-      yield previousLayerOpt match {
-      case Some(previousLayer) ⇒ reorder(previousLayer, currentLayer, edges)
-      case None                ⇒ currentLayer
-    }
-  }
+  def reorder(layering: Layering): Layering =
+    layering.copy(layers =
+      for ((previousLayerOpt, currentLayer) ← Utils.withPrevious(layering.layers))
+        yield previousLayerOpt match {
+        case Some(previousLayer) ⇒ reorder(previousLayer, currentLayer, layering.edges)
+        case None                ⇒ currentLayer
+      })
 
-  def reorder(vertices1: List[Vertex], vertices2: List[Vertex], edges: List[(Vertex, Vertex)]): List[Vertex] = {
-    def inVertices(vertex: Vertex): List[Vertex] = edges.collect { case (v1, `vertex`) ⇒ v1 }
+  def reorder(layer1: Layer, layer2: Layer, edges: List[Edge]): Layer = {
+    def inVertices(vertex: Vertex): List[Vertex] = edges.collect { case Edge(v1, `vertex`) ⇒ v1 }
     def barycenter(vertex: Vertex): Double = {
       val in = inVertices(vertex)
-      in.map(v ⇒ vertices1.indexOf(v)).sum.toDouble / in.size
+      in.map(v ⇒ layer1.vertices.indexOf(v)).sum.toDouble / in.size
     }
-    vertices2.sortBy(barycenter)
+    layer2.copy(vertices = layer2.vertices.sortBy(barycenter))
   }
 
 }

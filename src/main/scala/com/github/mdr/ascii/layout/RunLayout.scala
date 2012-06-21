@@ -18,19 +18,19 @@ object RunLayout extends Application {
   val d2: Vertex = new DummyVertex()
   val vertexLayers =
     List(
-      List(v1, v2, v3),
-      List(v4, v5, v6, v7, v8),
-      List(v9, d1),
-      List(va, vb, d2),
-      List(vc))
+      Layer(v1, v2, v3),
+      Layer(v4, v5, v6, v7, v8),
+      Layer(v9, d1),
+      Layer(va, vb, d2),
+      Layer(vc))
   val edges = Nil ++
     List(v3 -> v8, v2 -> v5, v1 -> v6, v2 -> v6, v3 -> v7) ++
     List(v5 -> v9, v7 -> v9, v7 -> d1) ++
     List(v9 -> vb, v9 -> va, d1 -> d2) ++
     List(d2 -> vc)
+  val layering = Layering(vertexLayers, edges.map { case (x, y) ⇒ new Edge(x, y) })
   val result =
-    Renderer.render(Layouter.layout(
-      LayerOrderingCalculator.reorder(vertexLayers, edges), edges))
+    Renderer.render(Layouter.layout(LayerOrderingCalculator.reorder(layering)))
 
   println(result)
 
