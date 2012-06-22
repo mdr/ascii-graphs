@@ -28,7 +28,14 @@ object RunLayout extends Application {
     List(v5 -> v9, v7 -> v9, v7 -> d1) ++
     List(v9 -> vb, v9 -> va, d1 -> d2) ++
     List(d2 -> vc)
-  val layering = Layering(vertexLayers, edges.map { case (x, y) ⇒ new Edge(x, y) })
+  //  val layering = Layering(vertexLayers, edges.map { case (x, y) ⇒ new Edge(x, y) })
+
+  val layeringCalculator = new LayeringCalculator[Int]()
+  //  val graph = Graph(List("a", "b", "c", "d", "e"), List("a" -> "b", "b" -> "c", "a" -> "c", "d" -> "e"))
+  val graph = Graph(List(1, 2, 3, 4, 5, 6, 7, 8, 9, 0), List(3 -> 8, 2 -> 5, 1 -> 4, 2 -> 6, 3 -> 7, 5 -> 9, 7 -> 9))
+
+  val layering = layeringCalculator.assignLayers(graph)
+  println(layering)
   val result =
     Renderer.render(Layouter.layout(LayerOrderingCalculator.reorder(layering)))
 
