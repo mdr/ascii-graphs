@@ -17,11 +17,13 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
         Utils.transformValues(outPorts)(_.translate(down, right)))
     }
 
+    def setLeft(column: Int): VertexInfo = translate(right = column - region.leftColumn)
+
   }
 
   val VERTEX_HEIGHT = 3
 
-  private def calculateVertexInfo(layer: Layer, edges: List[Edge], previousLayer: Layer, nextLayer: Layer): Map[Vertex, VertexInfo] = {
+  private def calculateVertexInfo(layer: Layer, edges: List[Edge], previousLayer: Layer, nextLayer: Layer): LayerVertexInfos = {
     val inEdges = edges.sortBy { case Edge(v1, _) ⇒ previousLayer.vertices.indexOf(v1) }
     val outEdges = edges.sortBy { case Edge(_, v2) ⇒ nextLayer.vertices.indexOf(v2) }
     def inVertices(vertex: Vertex) = inEdges collect { case e @ Edge(v1, `vertex`) ⇒ e }
@@ -54,14 +56,19 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       pos = region.topRight.right(2)
     }
 
+    def spacePorts(edges: List[Edge], vertexWidth: Int): List[(Edge, Int)] = {
+      val factor = vertexWidth / (edges.size + 1)
+      edges.zipWithIndex.map { case (v, i) ⇒ (v, (i + 1) * factor) }
+    }
+
     def makeVertexInfo(vertex: Vertex): VertexInfo = {
       val region = regions(vertex)
       vertex match {
         case _: RealVertex ⇒
-          val inPorts = (for ((vertex, index) ← inVertices(vertex).zipWithIndex)
-            yield vertex -> region.topLeft.right(index * 2 + 2)).toMap
-          val outPorts = (for ((vertex, index) ← outVertices(vertex).zipWithIndex)
-            yield vertex -> region.bottomLeft.right(index * 2 + 2)).toMap
+          val inPorts = (for ((edge, offset) ← spacePorts(inVertices(vertex), region.width))
+            yield edge -> region.topLeft.right(offset)).toMap
+          val outPorts = (for ((edge, offset) ← spacePorts(outVertices(vertex), region.width))
+            yield edge -> region.bottomLeft.right(offset)).toMap
           VertexInfo(region, inPorts, outPorts)
         case _: DummyVertex ⇒
           val List(inVertex) = inVertices(vertex)
@@ -70,7 +77,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       }
     }
 
-    (for (vertex ← layer.vertices) yield vertex -> makeVertexInfo(vertex)).toMap
+    LayerVertexInfos((for (vertex ← layer.vertices) yield vertex -> makeVertexInfo(vertex)).toMap)
   }
 
   case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point)
@@ -115,21 +122,30 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
     edgeRows
   }
 
-  private def layoutRow(vertexInfos1: Map[Vertex, VertexInfo], vertexInfos2: Map[Vertex, VertexInfo], edges: List[Edge], incompleteEdges: Map[DummyVertex, List[Point]]): (List[DrawingElement], Map[Vertex, VertexInfo], Map[DummyVertex, List[Point]]) = {
+  private case class RowLayoutResult(
+    drawingElements: List[DrawingElement],
+    updatedVertexInfos: LayerVertexInfos,
+    updatedIncompletedEdges: Map[DummyVertex, List[Point]])
+
+  private def layoutRow(
+    vertexInfos1: LayerVertexInfos,
+    vertexInfos2: LayerVertexInfos,
+    edges: List[Edge],
+    incompleteEdges: Map[DummyVertex, List[Point]]): RowLayoutResult = {
 
     val edgeInfos =
       for {
         edge @ Edge(v1, v2) ← edges
-        vertexInfo1 ← vertexInfos1.get(v1)
-        vertexInfo2 ← vertexInfos2.get(v2)
+        vertexInfo1 ← vertexInfos1.vertexInfo(v1)
+        vertexInfo2 ← vertexInfos2.vertexInfo(v2)
         start = vertexInfo1.outPorts(edge).down
         finish = vertexInfo2.inPorts(edge).up
       } yield EdgeInfo(v1, v2, start, finish)
 
     val edgeRows = calculateEdgeOrdering(edgeInfos)
 
-    val edgeZoneTopRow = if (vertexInfos1.isEmpty) -1 /* first layer */ else vertexInfos1.values.map(_.region.bottomRow).max + 1
-    def edgeBendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 2 + 1
+    val edgeZoneTopRow = if (vertexInfos1.isEmpty) -1 /* first layer */ else vertexInfos1.maxRow + 1
+    def edgeBendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 1 /* 2 */ + 1
 
     val edgeZoneBottomRow =
       if (edgeInfos.isEmpty)
@@ -165,25 +181,59 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       for ((EdgeInfo(_, finishVertex: DummyVertex, _, _), points) ← edgeInfoToPoints)
         yield finishVertex -> points.init
 
-    val updatedVertexInfos2 = Utils.transformValues(vertexInfos2)(_.translate(down = edgeZoneBottomRow + 1))
+    val updatedVertexInfos2 = vertexInfos2.down(edgeZoneBottomRow + 1)
 
-    val vertexElements = updatedVertexInfos2.toList.collect {
-      case (vertex: RealVertex, info) ⇒
-        val text = vertexRenderingStrategy.getText(vertex.contents.asInstanceOf[V], info.contentRegion.dimension)
+    val vertexElements = updatedVertexInfos2.realVertexInfos.map {
+      case (realVertex, info) ⇒
+        val text = vertexRenderingStrategy.getText(realVertex.contents.asInstanceOf[V], info.contentRegion.dimension)
         VertexDrawingElement(info.region, text)
     }
-    (vertexElements ++ edgeElements, updatedVertexInfos2, updatedIncompleteEdges)
+    RowLayoutResult(vertexElements ++ edgeElements, updatedVertexInfos2, updatedIncompleteEdges)
+  }
+
+  private case class LayerVertexInfos(vertexInfos: Map[Vertex, VertexInfo]) {
+
+    def vertexInfo(v: Vertex): Option[VertexInfo] = vertexInfos.get(v)
+
+    def isEmpty = vertexInfos.isEmpty
+
+    def maxRow = vertexInfos.values.map(_.region.bottomRow).max
+
+    def maxColumn = vertexInfos.values.map(_.region.rightColumn).max
+
+    def down(n: Int): LayerVertexInfos = copy(vertexInfos = Utils.transformValues(vertexInfos)(_.translate(down = n)))
+
+    def realVertexInfos: List[(RealVertex, VertexInfo)] = vertexInfos.toList.collect {
+      case (vertex: RealVertex, info) ⇒ (vertex, info)
+    }
+
+  }
+
+  private def spaceVertices(lvi: LayerVertexInfos, diagramWidth: Int): LayerVertexInfos = {
+    val excessSpace = diagramWidth - lvi.maxColumn
+    val spacing = excessSpace / lvi.vertexInfos.size
+    lvi.vertexInfos.map { case (v, vertexInfo) ⇒ v -> vertexInfo }
+    LayerVertexInfos(lvi.vertexInfos)
   }
 
   def layout(layering: Layering): List[DrawingElement] = {
 
-    var previousVertexInfos: Map[Vertex, VertexInfo] = Map()
+    var vertexInfosByLayer: Map[Layer, LayerVertexInfos] = Map()
+    for ((previousLayerOpt, currentLayer, nextLayerOpt) ← Utils.withPreviousAndNext(layering.layers)) yield {
+      val previousLayer = previousLayerOpt.getOrElse(Layer(Nil))
+      val nextLayer = nextLayerOpt.getOrElse(Layer(Nil))
+      val vertexInfos = calculateVertexInfo(currentLayer, layering.edges, previousLayer, nextLayer)
+      vertexInfosByLayer += currentLayer -> vertexInfos
+    }
+    val diagramWidth = vertexInfosByLayer.values.map(_.maxRow).max
+
+    vertexInfosByLayer = vertexInfosByLayer.mapValues(lvi ⇒ spaceVertices(lvi, diagramWidth)).toMap
+
+    var previousVertexInfos: LayerVertexInfos = LayerVertexInfos(Map())
     var incompleteEdges: Map[DummyVertex, List[Point]] = Map()
-    (for ((previousVerticesOpt, currentVertices, nextVerticesOpt) ← Utils.withPreviousAndNext(layering.layers)) yield {
-      val previousVertices = previousVerticesOpt.getOrElse(Layer(Nil))
-      val nextVertices = nextVerticesOpt.getOrElse(Layer(Nil))
-      val vertexInfos = calculateVertexInfo(currentVertices, layering.edges, previousVertices, nextVertices)
-      val (elements, updatedVertexInfos, updatedIncompletedEdges) =
+    (for (layer ← layering.layers) yield {
+      val vertexInfos = vertexInfosByLayer(layer)
+      val RowLayoutResult(elements, updatedVertexInfos, updatedIncompletedEdges) =
         layoutRow(previousVertexInfos, vertexInfos, layering.edges, incompleteEdges)
       previousVertexInfos = updatedVertexInfos
       incompleteEdges = updatedIncompletedEdges

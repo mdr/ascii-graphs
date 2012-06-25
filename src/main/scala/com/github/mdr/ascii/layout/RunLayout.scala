@@ -17,20 +17,17 @@ object RunLayout extends Application {
       5 -> 9,
       7 -> 9))
 
-  val V1 = "wibble"
-  val V2 = "wobble"
-  val V3 = "splish\nsplosh"
-  val V4 = "flurble"
-  val V5 = "baz\nbiz\nbuz"
-
+  val V1 = "wicket\norg.apache.wicket\n1.5-M3"
+  val V2 = "slf4j-api\norg.slft4j\n1.5.8"
+  val V3 = "wicket-request\norg.apache.wicket\n1.5-M3"
+  val V4 = "wicket-util\norg.apache.wicket\n1.5-M3"
   val graph2 = Graph(
     vertices = List(
-      V1, V2, V3, V4, V5),
+      V1, V2, V3, V4),
     edges = List(
       V1 -> V2,
-      V1 -> V5,
-      V5 -> V3,
-      V3 -> V4))
+      V1 -> V3,
+      V1 -> V4))
 
   val layeringCalculator = new LayeringCalculator[String]()
   val layering = layeringCalculator.assignLayers(graph2)
