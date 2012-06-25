@@ -209,11 +209,19 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
   }
 
-  private def spaceVertices(lvi: LayerVertexInfos, diagramWidth: Int): LayerVertexInfos = {
-    val excessSpace = diagramWidth - lvi.maxColumn
-    val spacing = excessSpace / lvi.vertexInfos.size
-    lvi.vertexInfos.map { case (v, vertexInfo) ⇒ v -> vertexInfo }
-    LayerVertexInfos(lvi.vertexInfos)
+  private def spaceVertices(layerVertexInfos: LayerVertexInfos, diagramWidth: Int): LayerVertexInfos = {
+    val excessSpace = diagramWidth - layerVertexInfos.maxColumn
+    val spacing = math.max(excessSpace / (layerVertexInfos.vertexInfos.size + 1), 1)
+
+    var pos = spacing
+    val newVertexInfos =
+      for ((v, vertexInfo) ← layerVertexInfos.vertexInfos) yield {
+        val oldPos = pos
+        pos += vertexInfo.region.width
+        pos += spacing
+        v -> vertexInfo.setLeft(oldPos)
+      }
+    LayerVertexInfos(newVertexInfos)
   }
 
   def layout(layering: Layering): List[DrawingElement] = {
@@ -225,7 +233,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       val vertexInfos = calculateVertexInfo(currentLayer, layering.edges, previousLayer, nextLayer)
       vertexInfosByLayer += currentLayer -> vertexInfos
     }
-    val diagramWidth = vertexInfosByLayer.values.map(_.maxRow).max
+    val diagramWidth = vertexInfosByLayer.values.map(_.vertexInfos.values.map(_.region.dimension.width + 1).sum).max
 
     vertexInfosByLayer = vertexInfosByLayer.mapValues(lvi ⇒ spaceVertices(lvi, diagramWidth)).toMap
 
