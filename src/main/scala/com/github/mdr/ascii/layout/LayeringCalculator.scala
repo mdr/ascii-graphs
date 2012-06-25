@@ -8,6 +8,9 @@ case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
 
   val inMap = edges.groupBy(_._2).map { case (k, vs) ⇒ (k, vs.map(_._1)) }
 
+  require(outMap.keys.forall(vertices.contains))
+  require(inMap.keys.forall(vertices.contains))
+
   def inVertices(v: V): List[V] = inMap.getOrElse(v, Nil)
 
   def outVertices(v: V): List[V] = outMap.getOrElse(v, Nil)

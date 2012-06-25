@@ -2,10 +2,13 @@ package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii.Dimension
 
-trait VertexRenderingStrategy[V] {
+trait VertexRenderingStrategy[-V] {
 
   def getPreferredSize(v: V): Dimension
 
-  def getText(v: V, allocatedSize: Dimension): List[List[String]]
+  /**
+   * @return rows of text
+   */
+  def getText(v: V, allocatedSize: Dimension): List[String]
 
 }

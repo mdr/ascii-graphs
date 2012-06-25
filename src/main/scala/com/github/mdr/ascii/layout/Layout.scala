@@ -3,9 +3,11 @@ package com.github.mdr.ascii.layout
 import com.github.mdr.ascii._
 import com.github.mdr.ascii.util.Utils
 
-object Layouter {
+class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
   private case class VertexInfo(region: Region, inPorts: Map[Edge, Point], outPorts: Map[Edge, Point]) {
+
+    def contentRegion: Region = region.copy(topLeft = region.topLeft.down.right, bottomRight = region.bottomRight.up.left)
 
     def translate(down: Int = 0, right: Int = 0): VertexInfo = {
       val newRegion = region.translate(down, right)
@@ -32,9 +34,12 @@ object Layouter {
         inDegree = inVertices(vertex).size
       } yield {
         val dimension = vertex match {
-          case _: RealVertex ⇒
-            val width = math.max(outDegree * 2 + 3, inDegree * 2 + 3)
-            Dimension(height = VERTEX_HEIGHT, width = width)
+          case realVertex: RealVertex ⇒
+            val Dimension(preferredHeight, preferredWidth) =
+              vertexRenderingStrategy.getPreferredSize(realVertex.contents.asInstanceOf[V])
+            val width = math.max(math.max(outDegree * 2 + 3, inDegree * 2 + 3), preferredWidth + 2)
+            val height = math.max(VERTEX_HEIGHT, preferredHeight + 2)
+            Dimension(height = height, width = width)
           case _: DummyVertex ⇒
             Dimension(height = 1, width = 1)
         }
@@ -126,13 +131,19 @@ object Layouter {
     val edgeZoneTopRow = if (vertexInfos1.isEmpty) -1 /* first layer */ else vertexInfos1.values.map(_.region.bottomRow).max + 1
     def edgeBendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 2 + 1
 
-    val edgeZoneBottomRow = (if (edgeRows.isEmpty) edgeZoneTopRow else edgeBendRow(edgeRows.values.max) + 2)
+    val edgeZoneBottomRow =
+      if (edgeInfos.isEmpty)
+        -1
+      else if (edgeRows.isEmpty)
+        edgeZoneTopRow + 2
+      else
+        edgeBendRow(edgeRows.values.max) + 2
 
     val edgeInfoToPoints: Map[EdgeInfo, List[Point]] =
       (for (edgeInfo @ EdgeInfo(startVertex, _, start, finish) ← edgeInfos) yield {
         val trueFinish = finish.translate(down = edgeZoneBottomRow + 1)
         val priorPoints: List[Point] = startVertex match {
-          case dv: DummyVertex ⇒ incompleteEdges.get(dv).getOrElse(List(start)) // todo remove
+          case dv: DummyVertex ⇒ incompleteEdges(dv)
           case _: RealVertex   ⇒ List(start)
         }
         val lastPriorPoint = priorPoints.last
@@ -157,7 +168,9 @@ object Layouter {
     val updatedVertexInfos2 = Utils.transformValues(vertexInfos2)(_.translate(down = edgeZoneBottomRow + 1))
 
     val vertexElements = updatedVertexInfos2.toList.collect {
-      case (vertex: RealVertex, info) ⇒ VertexDrawingElement(info.region, List(vertex.text))
+      case (vertex: RealVertex, info) ⇒
+        val text = vertexRenderingStrategy.getText(vertex.contents.asInstanceOf[V], info.contentRegion.dimension)
+        VertexDrawingElement(info.region, text)
     }
     (vertexElements ++ edgeElements, updatedVertexInfos2, updatedIncompleteEdges)
   }

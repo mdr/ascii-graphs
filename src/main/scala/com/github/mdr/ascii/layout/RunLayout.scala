@@ -1,52 +1,45 @@
 package com.github.mdr.ascii.layout
 
+import com.github.mdr.ascii.Dimension
+
 object RunLayout extends Application {
 
-  val v1: Vertex = new RealVertex("1")
-  val v2: Vertex = new RealVertex("2")
-  val v3: Vertex = new RealVertex("3")
-  val v4: Vertex = new RealVertex("4")
-  val v5: Vertex = new RealVertex("5")
-  val v6: Vertex = new RealVertex("6")
-  val v7: Vertex = new RealVertex("7")
-  val v8: Vertex = new RealVertex("8")
-  val v9: Vertex = new RealVertex("9")
-  val va: Vertex = new RealVertex("A")
-  val vb: Vertex = new RealVertex("B")
-  val vc: Vertex = new RealVertex("C")
-  val d1: Vertex = new DummyVertex()
-  val d2: Vertex = new DummyVertex()
-  val vertexLayers =
-    List(
-      Layer(v1, v2, v3),
-      Layer(v4, v5, v6, v7, v8),
-      Layer(v9, d1),
-      Layer(va, vb, d2),
-      Layer(vc))
-  val edges = Nil ++
-    List(v3 -> v8, v2 -> v5, v1 -> v6, v2 -> v6, v3 -> v7) ++
-    List(v5 -> v9, v7 -> v9, v7 -> d1) ++
-    List(v9 -> vb, v9 -> va, d1 -> d2) ++
-    List(d2 -> vc)
-  //  val layering = Layering(vertexLayers, edges.map { case (x, y) ⇒ new Edge(x, y) })
-
-  val layeringCalculator = new LayeringCalculator[Int]()
-  //  val graph = Graph(List("a", "b", "c", "d", "e"), List("a" -> "b", "b" -> "c", "a" -> "c", "d" -> "e"))
-  val graph = Graph(List(1, 2, 3, 4, 5, 6, 7, 8, 9, 0),
-    List(
+  val graph1 = Graph(
+    vertices = List(
+      1, 2, 3, 4, 5, 6, 7, 8123, 9, 120),
+    edges = List(
       1 -> 3,
       1 -> 4,
-      3 -> 8,
+      3 -> 8123,
       2 -> 5,
       2 -> 6,
       3 -> 7,
       5 -> 9,
       7 -> 9))
 
-  val layering = layeringCalculator.assignLayers(graph)
+  val V1 = "wibble"
+  val V2 = "wobble"
+  val V3 = "splish\nsplosh"
+  val V4 = "flurble"
+  val V5 = "baz\nbiz\nbuz"
+
+  val graph2 = Graph(
+    vertices = List(
+      V1, V2, V3, V4, V5),
+    edges = List(
+      V1 -> V2,
+      V1 -> V5,
+      V5 -> V3,
+      V3 -> V4))
+
+  val layeringCalculator = new LayeringCalculator[String]()
+  val layering = layeringCalculator.assignLayers(graph2)
   //  println(layering)
-  val result =
-    Renderer.render(Layouter.layout(LayerOrderingCalculator.reorder(layering)))
+
+  val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
+  val elements = layouter.layout(LayerOrderingCalculator.reorder(layering))
+  //  elements.foreach(println)
+  val result = Renderer.render(elements)
 
   println(result)
 
