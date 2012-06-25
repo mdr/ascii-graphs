@@ -89,7 +89,7 @@ object Layouter {
     }
 
     // Force edges that share start and end columns to be ordered correctly to avoid conflicts
-    var continue = false // true
+    var continue = true
     while (continue) {
       continue = false
       for {

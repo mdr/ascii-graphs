@@ -32,10 +32,19 @@ object RunLayout extends Application {
 
   val layeringCalculator = new LayeringCalculator[Int]()
   //  val graph = Graph(List("a", "b", "c", "d", "e"), List("a" -> "b", "b" -> "c", "a" -> "c", "d" -> "e"))
-  val graph = Graph(List(1, 2, 3, 4, 5, 6, 7, 8, 9, 0), List(3 -> 8, 2 -> 5, 1 -> 4, 2 -> 6, 3 -> 7, 5 -> 9, 7 -> 9))
+  val graph = Graph(List(1, 2, 3, 4, 5, 6, 7, 8, 9, 0),
+    List(
+      1 -> 3,
+      1 -> 4,
+      3 -> 8,
+      2 -> 5,
+      2 -> 6,
+      3 -> 7,
+      5 -> 9,
+      7 -> 9))
 
   val layering = layeringCalculator.assignLayers(graph)
-  println(layering)
+  //  println(layering)
   val result =
     Renderer.render(Layouter.layout(LayerOrderingCalculator.reorder(layering)))
 

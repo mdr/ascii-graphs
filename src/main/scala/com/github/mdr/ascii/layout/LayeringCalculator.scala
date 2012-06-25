@@ -1,6 +1,5 @@
 package com.github.mdr.ascii.layout
 
-import com.github.mdr.ascii.layout.RealVertex
 import scala.collection.mutable.ListBuffer
 
 case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
@@ -52,7 +51,7 @@ class LayeringCalculator[V] {
     val maxLayerNum = longestDistancesToSink.values.max
     def layerNum(v: V): Int = maxLayerNum - longestDistancesToSink(v)
 
-    println(longestDistancesToSink)
+    //    println(longestDistancesToSink)
     //    val rawVertexLayers: Array[List[V]] =
     //          graph.vertices.groupBy(longestDistancesToSink).toList.sortBy(_._1).map(new RealVertex(_._2)).toArray
 
