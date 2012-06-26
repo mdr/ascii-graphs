@@ -1,8 +1,8 @@
-name := "ascii-graph-diagram-parser"
+name := "ascii-graphs"
 
 organization := "com.github.mdr"
 
-version := "0.1.3-SNAPSHOT"
+version := "0.0.1-SNAPSHOT"
 
 scalaVersion := "2.9.2"
 
@@ -15,4 +15,6 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "1.7.2" % "test"
 EclipseKeys.withSource := true
 
 EclipseKeys.eclipseOutput := Some("bin")
+
+libraryDependencies += "com.tinkerpop.blueprints" % "blueprints-core" % "2.0.0"
 
