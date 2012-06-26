@@ -16,7 +16,7 @@ EclipseKeys.withSource := true
 
 EclipseKeys.eclipseOutput := Some("bin")
 
-libraryDependencies += "com.tinkerpop.blueprints" % "blueprints-core" % "2.0.0"
+// libraryDependencies += "com.tinkerpop.blueprints" % "blueprints-core" % "2.0.0"
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 

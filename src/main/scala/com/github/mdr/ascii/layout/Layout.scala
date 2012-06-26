@@ -3,6 +3,18 @@ package com.github.mdr.ascii.layout
 import com.github.mdr.ascii._
 import com.github.mdr.ascii.util.Utils
 
+object Layouter {
+  
+  def renderGraph[T](graph: layout.Graph[T]): String = {
+    val layeringCalculator = new LayeringCalculator[T]
+    val layering = layeringCalculator.assignLayers(graph)
+    val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
+    val elements = layouter.layout(LayerOrderingCalculator.reorder(layering))
+    Renderer.render(elements)
+  }
+  
+}
+
 class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
   private case class VertexInfo(region: Region, inPorts: Map[Edge, Point], outPorts: Map[Edge, Point]) {
