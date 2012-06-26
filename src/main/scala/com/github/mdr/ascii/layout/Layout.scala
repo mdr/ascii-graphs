@@ -221,19 +221,21 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
   }
 
-  private def spaceVertices(layerVertexInfos: LayerVertexInfos, diagramWidth: Int): LayerVertexInfos = {
+  private def spaceVertices(layer: Layer, layerVertexInfos: LayerVertexInfos, diagramWidth: Int): LayerVertexInfos = {
     val excessSpace = diagramWidth - layerVertexInfos.maxColumn
     val spacing = math.max(excessSpace / (layerVertexInfos.vertexInfos.size + 1), 1)
 
     var pos = spacing
     val newVertexInfos =
-      for ((v, vertexInfo) ← layerVertexInfos.vertexInfos) yield {
+      for (v <- layer.vertices) yield {
+        val vertexInfo = layerVertexInfos.vertexInfo(v).get
+//      for ((v, vertexInfo) ← layerVertexInfos.vertexInfos) yield {
         val oldPos = pos
         pos += vertexInfo.region.width
         pos += spacing
         v -> vertexInfo.setLeft(oldPos)
       }
-    LayerVertexInfos(newVertexInfos)
+    LayerVertexInfos(newVertexInfos.toMap)
   }
 
   def layout(layering: Layering): List[DrawingElement] = {
@@ -247,7 +249,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
     }
     val diagramWidth = vertexInfosByLayer.values.map(_.vertexInfos.values.map(_.region.dimension.width + 1).sum).max
 
-    vertexInfosByLayer = vertexInfosByLayer.mapValues(lvi ⇒ spaceVertices(lvi, diagramWidth)).toMap
+    vertexInfosByLayer = vertexInfosByLayer.map { case (layer, lvi) ⇒ layer -> spaceVertices(layer, lvi, diagramWidth) }
 
     var previousVertexInfos: LayerVertexInfos = LayerVertexInfos(Map())
     var incompleteEdges: Map[DummyVertex, List[Point]] = Map()

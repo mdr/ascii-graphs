@@ -23,7 +23,6 @@ object LayerOrderingCalculator {
       val in = inVertices(vertex)
       in.map(v ⇒ layer1.vertices.indexOf(v).ensuring(_ >= 0)).sum.toDouble / in.size
     }
-    val DELME = layer2.vertices.map(barycenter)
     val reorderedVertices = layer2.vertices.sortBy(barycenter)
     layer2.copy(vertices = reorderedVertices)
   }
