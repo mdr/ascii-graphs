@@ -1,6 +1,6 @@
-An ASCII-art diagram parser for graphs.
+An ASCII-art diagram library for graphs. It supports both parsing existing diagrams and rendering graphs out as an ASCII diagram.
 
-This is intended for constructing test DSLs, particularly for data which would be much more comprehensible in ASCII art
+The graph parser is intended for constructing test DSLs, particularly for data which would be much more comprehensible in ASCII art
 than constructed through regular programming language expressions. For example, directed graphs, trees, 2D games, 
 object graphs, and so on.
 
