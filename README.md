@@ -1,10 +1,10 @@
 An ASCII-art diagram library for graphs. It supports both parsing existing diagrams and rendering graphs out as an ASCII diagram.
 
-## Usage
+You can use it via sbt:
 
     libraryDependencies += "com.github.mdr" %% "ascii-graphs" % "0.0.1"
 
-## Graph layout
+# Graph layout
 
     import com.github.mdr.ascii.layout._
 
@@ -54,7 +54,7 @@ This would produce:
     |V5 | |V6 | |V4 | |V3 |
     +---+ +---+ +---+ +---+
 
-## Graph parser
+# Graph parser
 
 The graph parser is intended for constructing test DSLs, particularly for data which would be much more comprehensible in ASCII art
 than constructed through regular programming language expressions. For example, directed graphs, trees, 2D games, 
