@@ -24,6 +24,7 @@ object RunLayout extends Application {
   val V5 = "5555555555"
   val V6 = "666666666666"
   val V7 = "777777777777"
+
   val graph = Graph(
     vertices = List(
       V1, V2, V3, V4, V5, V6, V7),
@@ -34,12 +35,12 @@ object RunLayout extends Application {
       V1 -> V4,
       V2 -> V5,
       V2 -> V6,
-      V1 -> V7,
-      V6 -> V2))
+      V6 -> V1,
+      V3 -> V7))
 
   val (newGraph, reversedEdges) = new CycleRemover[String].removeCycles(graph)
   println("reversedEdges: " + reversedEdges)
-  val layeringCalculator = new LayeringCalculator[String]()
+  val layeringCalculator = new LayeringCalculator[String]
   val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
   //  println(layering)
 

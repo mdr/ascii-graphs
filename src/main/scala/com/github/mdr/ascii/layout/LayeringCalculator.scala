@@ -84,7 +84,7 @@ class LayeringCalculator[V] {
       }
       val vertexChain = realVertices(from) +: dummies :+ realVertices(to)
       for ((v1, v2) ← vertexChain.zip(vertexChain.tail))
-        edges ::= new Edge(v1, v2, reversed = false)
+        edges ::= new Edge(v1, v2, reversed = reversedEdges.contains((from, to)))
     }
 
     Layering(layers.toList.map(lb ⇒ Layer(lb.toList)), edges)

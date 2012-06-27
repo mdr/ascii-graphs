@@ -93,7 +93,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
     LayerVertexInfos((for (vertex ← layer.vertices) yield vertex -> makeVertexInfo(vertex)).toMap)
   }
 
-  case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point)
+  case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point, reversed: Boolean)
 
   private def calculateEdgeOrdering(edgeInfos: List[EdgeInfo]): Map[EdgeInfo, Int] = {
 
@@ -106,7 +106,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
     var edgeRows: Map[EdgeInfo, Int] = Map()
     var rowNumber = 0
-    for { edgeInfo @ EdgeInfo(_, _, startPort, finishPort) ← sortedInfos } {
+    for { edgeInfo @ EdgeInfo(_, _, startPort, finishPort, _) ← sortedInfos } {
       if (startPort.column != finishPort.column) {
         edgeRows += edgeInfo -> rowNumber
         rowNumber += 1
@@ -118,8 +118,8 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
     while (continue) {
       continue = false
       for {
-        edgeInfo1 @ EdgeInfo(_, _, start1, _) ← sortedInfos
-        edgeInfo2 @ EdgeInfo(_, _, _, finish2) ← sortedInfos
+        edgeInfo1 @ EdgeInfo(_, _, start1, _, _) ← sortedInfos
+        edgeInfo2 @ EdgeInfo(_, _, _, finish2, _) ← sortedInfos
         if edgeInfo1 != edgeInfo2
         if start1.column == finish2.column
         row1 = edgeRows(edgeInfo1)
@@ -153,7 +153,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
         vertexInfo2 ← vertexInfos2.vertexInfo(v2)
         start = vertexInfo1.outPorts(edge).down
         finish = vertexInfo2.inPorts(edge).up
-      } yield EdgeInfo(v1, v2, start, finish)
+      } yield EdgeInfo(v1, v2, start, finish, edge.reversed)
 
     val edgeRows = calculateEdgeOrdering(edgeInfos)
 
@@ -169,7 +169,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
         edgeBendRow(edgeRows.values.max) + 2
 
     val edgeInfoToPoints: Map[EdgeInfo, List[Point]] =
-      (for (edgeInfo @ EdgeInfo(startVertex, _, start, finish) ← edgeInfos) yield {
+      (for (edgeInfo @ EdgeInfo(startVertex, _, start, finish, _) ← edgeInfos) yield {
         val trueFinish = finish.translate(down = edgeZoneBottomRow + 1)
         val priorPoints: List[Point] = startVertex match {
           case dv: DummyVertex ⇒ incompleteEdges(dv)
@@ -187,11 +187,11 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       }).toMap
 
     val edgeElements =
-      for ((EdgeInfo(_, finishVertex: RealVertex, _, _), points) ← edgeInfoToPoints)
-        yield EdgeDrawingElement(points, false, true)
+      for ((EdgeInfo(_, finishVertex: RealVertex, _, _, reversed), points) ← edgeInfoToPoints)
+        yield EdgeDrawingElement(points, reversed, !reversed)
 
     val updatedIncompleteEdges: Map[DummyVertex, List[Point]] =
-      for ((EdgeInfo(_, finishVertex: DummyVertex, _, _), points) ← edgeInfoToPoints)
+      for ((EdgeInfo(_, finishVertex: DummyVertex, _, _, _), points) ← edgeInfoToPoints)
         yield finishVertex -> points.init
 
     val updatedVertexInfos2 = vertexInfos2.down(edgeZoneBottomRow + 1)
