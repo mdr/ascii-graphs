@@ -1,5 +1,61 @@
 An ASCII-art diagram library for graphs. It supports both parsing existing diagrams and rendering graphs out as an ASCII diagram.
 
+## Usage
+
+    libraryDependencies += "com.github.mdr" %% "ascii-graphs" % "0.0.1"
+
+## Graph layout
+
+    import com.github.mdr.ascii.layout._
+
+    val graph = Graph(
+      vertices = List(
+        "V1", "V2", "V3", "V4", "V5", "V6", "V7"),
+      edges = List(
+        "V1" -> "V2",
+        "V7" -> "V1",
+        "V1" -> "V3",
+        "V1" -> "V4",
+        "V2" -> "V5",
+        "V2" -> "V6"))
+
+    val ascii = Layouter.renderGraph(graph)
+
+    println(ascii)
+
+This would produce:
+
+             +---+         
+             |V7 |         
+             +---+         
+               |           
+               |           
+               v           
+           +-------+       
+           |  V1   |       
+           +-------+       
+             | | |         
+             | | ----      
+             | --   |      
+         -----  |   |      
+         |      |   |      
+         v      |   |      
+      +-----+   |   |      
+      | V2  |   |   |      
+      +-----+   |   |      
+        | |     |   |      
+        | |     |   -----  
+        | |     ---     |  
+        | ---     |     |  
+      ---   |     |     |  
+      |     |     |     |  
+      v     v     v     v  
+    +---+ +---+ +---+ +---+
+    |V5 | |V6 | |V4 | |V3 |
+    +---+ +---+ +---+ +---+
+
+## Graph parser
+
 The graph parser is intended for constructing test DSLs, particularly for data which would be much more comprehensible in ASCII art
 than constructed through regular programming language expressions. For example, directed graphs, trees, 2D games, 
 object graphs, and so on.
