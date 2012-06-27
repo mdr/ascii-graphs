@@ -4,15 +4,16 @@ import com.github.mdr.ascii._
 import com.github.mdr.ascii.util.Utils
 
 object Layouter {
-  
+
   def renderGraph[T](graph: layout.Graph[T]): String = {
+    val (newGraph, reversedEdges) = new CycleRemover[T].removeCycles(graph)
     val layeringCalculator = new LayeringCalculator[T]
-    val layering = layeringCalculator.assignLayers(graph)
+    val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
     val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
     val elements = layouter.layout(LayerOrderingCalculator.reorder(layering))
     Renderer.render(elements)
   }
-  
+
 }
 
 class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
@@ -227,9 +228,9 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
     var pos = spacing
     val newVertexInfos =
-      for (v <- layer.vertices) yield {
+      for (v ← layer.vertices) yield {
         val vertexInfo = layerVertexInfos.vertexInfo(v).get
-//      for ((v, vertexInfo) ← layerVertexInfos.vertexInfos) yield {
+        //      for ((v, vertexInfo) ← layerVertexInfos.vertexInfos) yield {
         val oldPos = pos
         pos += vertexInfo.region.width
         pos += spacing

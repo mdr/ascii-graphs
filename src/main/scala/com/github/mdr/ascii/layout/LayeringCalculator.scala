@@ -4,9 +4,9 @@ import scala.collection.mutable.ListBuffer
 
 case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
 
-  val outMap = edges.groupBy(_._1).map { case (k, vs) ⇒ (k, vs.map(_._2)) }
+  val outMap: Map[V, List[V]] = edges.groupBy(_._1).map { case (k, vs) ⇒ (k, vs.map(_._2)) }
 
-  val inMap = edges.groupBy(_._2).map { case (k, vs) ⇒ (k, vs.map(_._1)) }
+  val inMap: Map[V, List[V]] = edges.groupBy(_._2).map { case (k, vs) ⇒ (k, vs.map(_._1)) }
 
   require(outMap.keys.forall(vertices.contains))
   require(inMap.keys.forall(vertices.contains))
@@ -14,6 +14,10 @@ case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
   def inVertices(v: V): List[V] = inMap.getOrElse(v, Nil)
 
   def outVertices(v: V): List[V] = outMap.getOrElse(v, Nil)
+
+  def outDegree(v: V): Int = outVertices(v).size
+
+  def inDegree(v: V): Int = inVertices(v).size
 
 }
 
@@ -49,7 +53,7 @@ class LayeringCalculator[V] {
     longestDistancesToSink
   }
 
-  def assignLayers(graph: Graph[V]): Layering = {
+  def assignLayers(graph: Graph[V], reversedEdges: Set[(V, V)]): Layering = {
     val longestDistancesToSink = calculateLongestDistances(graph)
     val maxLayerNum = longestDistancesToSink.values.max
     def layerNum(v: V): Int = maxLayerNum - longestDistancesToSink(v)
@@ -80,7 +84,7 @@ class LayeringCalculator[V] {
       }
       val vertexChain = realVertices(from) +: dummies :+ realVertices(to)
       for ((v1, v2) ← vertexChain.zip(vertexChain.tail))
-        edges ::= new Edge(v1, v2)
+        edges ::= new Edge(v1, v2, reversed = false)
     }
 
     Layering(layers.toList.map(lb ⇒ Layer(lb.toList)), edges)
