@@ -54,6 +54,11 @@ This would produce:
     |V5 | |V6 | |V4 | |V3 |
     +---+ +---+ +---+ +---+
 
+## Other ASCII layout libraries
+
+* Vijual (Clojure): http://lisperati.com/vijual/
+* Graph::Easy (Perl): http://bloodgate.com/perl/graph/manual/
+
 # Graph parser
 
 The graph parser is intended for constructing test DSLs, particularly for data which would be much more comprehensible in ASCII art
