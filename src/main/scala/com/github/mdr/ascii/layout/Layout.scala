@@ -11,7 +11,8 @@ object Layouter {
     val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
     val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
     val diagram = layouter.layout(LayerOrderingCalculator.reorder(layering))
-    Renderer.render(diagram)
+    val updatedDiagram = KinkRemover.removeKinks(diagram)
+    Renderer.render(updatedDiagram)
   }
 
 }
@@ -75,7 +76,8 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
     def spacePorts(edges: List[Edge], vertexWidth: Int): List[(Edge, Int)] = {
       val factor = vertexWidth / (edges.size + 1)
-      edges.zipWithIndex.map { case (v, i) ⇒ (v, (i + 1) * factor) }
+      val centraliser = (vertexWidth - factor * (edges.size + 1)) / 2
+      edges.zipWithIndex.map { case (v, i) ⇒ (v, (i + 1) * factor + centraliser) }
     }
 
     def makeVertexInfo(vertex: Vertex): VertexInfo = {
