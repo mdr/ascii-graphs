@@ -36,9 +36,13 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
   val VERTEX_HEIGHT = 3
 
-  private def calculateVertexInfo(layer: Layer, edges: List[Edge], previousLayer: Layer, nextLayer: Layer): LayerVertexInfos = {
-    val inEdges = edges.sortBy { case Edge(v1, _) ⇒ previousLayer.vertices.indexOf(v1) }
-    val outEdges = edges.sortBy { case Edge(_, v2) ⇒ nextLayer.vertices.indexOf(v2) }
+  private def calculateVertexInfo(layer: Layer, edges: List[Edge], previousLayerOpt: Option[Layer], nextLayerOpt: Option[Layer]): LayerVertexInfos = {
+    val inEdges = previousLayerOpt.map { previousLayer ⇒
+      edges.sortBy { case Edge(v1, _) ⇒ previousLayer.vertices.indexOf(v1) }
+    }.getOrElse(Nil)
+    val outEdges = nextLayerOpt.map { nextLayer ⇒
+      edges.sortBy { case Edge(_, v2) ⇒ nextLayer.vertices.indexOf(v2) }
+    }.getOrElse(Nil)
     def inVertices(vertex: Vertex) = inEdges collect { case e @ Edge(v1, `vertex`) ⇒ e }
     def outVertices(vertex: Vertex) = outEdges collect { case e @ Edge(`vertex`, v2) ⇒ e }
 
@@ -243,9 +247,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
     var vertexInfosByLayer: Map[Layer, LayerVertexInfos] = Map()
     for ((previousLayerOpt, currentLayer, nextLayerOpt) ← Utils.withPreviousAndNext(layering.layers)) yield {
-      val previousLayer = previousLayerOpt.getOrElse(Layer(Nil))
-      val nextLayer = nextLayerOpt.getOrElse(Layer(Nil))
-      val vertexInfos = calculateVertexInfo(currentLayer, layering.edges, previousLayer, nextLayer)
+      val vertexInfos = calculateVertexInfo(currentLayer, layering.edges, previousLayerOpt, nextLayerOpt)
       vertexInfosByLayer += currentLayer -> vertexInfos
     }
     val diagramWidth = vertexInfosByLayer.values.map(_.vertexInfos.values.map(_.region.dimension.width + 1).sum).max
@@ -254,15 +256,16 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
     var previousVertexInfos: LayerVertexInfos = LayerVertexInfos(Map())
     var incompleteEdges: Map[DummyVertex, List[Point]] = Map()
-    (for (layer ← layering.layers) yield {
+    var diagramElements: List[DrawingElement] = Nil
+    for (layer ← layering.layers) {
       val vertexInfos = vertexInfosByLayer(layer)
       val RowLayoutResult(elements, updatedVertexInfos, updatedIncompletedEdges) =
         layoutRow(previousVertexInfos, vertexInfos, layering.edges, incompleteEdges)
       previousVertexInfos = updatedVertexInfos
       incompleteEdges = updatedIncompletedEdges
-      elements
-    }).flatten
-
+      diagramElements ++= elements
+    }
+    diagramElements
   }
 
 }

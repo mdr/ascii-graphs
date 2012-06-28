@@ -39,10 +39,6 @@ class LayeringCalculator[V] {
     val maxLayerNum = longestDistancesToSink.values.max
     def layerNum(v: V): Int = maxLayerNum - longestDistancesToSink(v)
 
-    //    println(longestDistancesToSink)
-    //    val rawVertexLayers: Array[List[V]] =
-    //          graph.vertices.groupBy(longestDistancesToSink).toList.sortBy(_._1).map(new RealVertex(_._2)).toArray
-
     val realVertices: Map[V, RealVertex] = graph.vertices.map { v ⇒ v -> new RealVertex(v) }.toMap
 
     val layers: ListBuffer[ListBuffer[Vertex]] = ListBuffer()

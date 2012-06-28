@@ -135,7 +135,7 @@ class Renderer {
       elements.flatMap {
         case element: VertexDrawingElement ⇒ List(element.region.bottomRight)
         case element: EdgeDrawingElement   ⇒ element.points
-      }.reduceLeft(combinePoints)
+      }.reduceLeft(combinePoints) // TODO: handle empty elements
     val grid = new Grid(width = largestPoint.column + 1, height = largestPoint.row + 1)
 
     for (element ← elements) element match {
