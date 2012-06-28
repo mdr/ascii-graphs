@@ -7,11 +7,15 @@ sealed trait DrawingElement {
 
   def translate(down: Int = 0, right: Int = 0): DrawingElement
 
+  def points: List[Point]
+
 }
 
 case class VertexDrawingElement(region: Region, textLines: List[String]) extends DrawingElement {
 
   def translate(down: Int = 0, right: Int = 0) = copy(region = region.translate(down, right))
+
+  def points = region.points
 
 }
 
@@ -19,7 +23,15 @@ case class EdgeDrawingElement(
   points: List[Point],
   hasArrow1: Boolean,
   hasArrow2: Boolean)
-  extends DrawingElement {
+    extends DrawingElement {
+
+  private def collectPoints(start: Point, direction: Direction, finish: Point): List[Point] =
+    if (start == finish)
+      List(finish)
+    else
+      start :: collectPoints(start.go(direction), direction, finish)
+
+  def allPoints: List[Point] = pointAndDirections.flatMap(collectPoints _ tupled).distinct
 
   def translate(down: Int = 0, right: Int = 0) = copy(points = points.map(_.translate(down, right)))
 
@@ -49,19 +61,15 @@ case class EdgeDrawingElement(
 
 object Renderer {
 
-  def render(elements: List[DrawingElement]) = new Renderer().render(elements)
+  def render(drawing: Drawing) = new Renderer().render(drawing)
 
 }
 
 class Renderer {
 
-  private def combinePoints(point1: Point, point2: Point) =
-    Point(math.max(point1.row, point2.row), math.max(point1.column, point2.column))
+  class Grid(dimension: Dimension) {
 
-  class Grid(width: Int, height: Int) {
-
-    private def makeRow: Array[Char] = (" " * width).toArray
-    val chars = (1 to height).map(r ⇒ makeRow).toArray
+    val chars: Array[Array[Char]] = Array.fill(dimension.height, dimension.width)(' ')
 
     def apply(point: Point): Char = chars(point.row)(point.column)
 
@@ -130,15 +138,9 @@ class Renderer {
       grid(region.topLeft.right.down(index + 1)) = line
   }
 
-  def render(elements: List[DrawingElement]): String = {
-    val largestPoint =
-      elements.flatMap {
-        case element: VertexDrawingElement ⇒ List(element.region.bottomRight)
-        case element: EdgeDrawingElement   ⇒ element.points
-      }.reduceLeft(combinePoints) // TODO: handle empty elements
-    val grid = new Grid(width = largestPoint.column + 1, height = largestPoint.row + 1)
-
-    for (element ← elements) element match {
+  def render(drawing: Drawing): String = {
+    val grid = new Grid(drawing.dimension)
+    for (element ← drawing.elements) element match {
       case vde: VertexDrawingElement ⇒ render(grid, vde)
       case ede: EdgeDrawingElement   ⇒ render(grid, ede)
     }

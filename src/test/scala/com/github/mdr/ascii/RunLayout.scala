@@ -7,6 +7,7 @@ import com.github.mdr.ascii.layout.LayeringCalculator
 import com.github.mdr.ascii.layout.Layouter
 import com.github.mdr.ascii.layout.Renderer
 import com.github.mdr.ascii.layout.ToStringVertexRenderingStrategy
+import com.github.mdr.ascii.layout.KinkRemover
 
 object RunLayout extends Application {
 
@@ -97,9 +98,10 @@ object RunLayout extends Application {
   //  println(layering)
 
   val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
-  val elements = layouter.layout(LayerOrderingCalculator.reorder(layering))
+  val diagram = layouter.layout(LayerOrderingCalculator.reorder(layering))
   //  elements.foreach(println)
-  val result = Renderer.render(elements)
+  val updatedDiagram = KinkRemover.removeKinks(diagram)
+  val result = Renderer.render(updatedDiagram)
 
   println(result)
 

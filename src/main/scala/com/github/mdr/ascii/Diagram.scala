@@ -175,6 +175,8 @@ case class Point(row: Int, column: Int) {
 
   def translate(down: Int = 0, right: Int = 0): Point = this.down(down).right(right)
 
+  def maxRowCol(that: Point): Point = Point(math.max(this.row, that.row), math.max(this.column, that.column))
+
   def go(direction: Direction) = direction match {
     case Up    ⇒ up
     case Down  ⇒ down

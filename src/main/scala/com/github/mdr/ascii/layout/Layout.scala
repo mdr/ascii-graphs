@@ -10,8 +10,8 @@ object Layouter {
     val layeringCalculator = new LayeringCalculator[T]
     val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
     val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
-    val elements = layouter.layout(LayerOrderingCalculator.reorder(layering))
-    Renderer.render(elements)
+    val diagram = layouter.layout(LayerOrderingCalculator.reorder(layering))
+    Renderer.render(diagram)
   }
 
 }
@@ -243,7 +243,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
     LayerVertexInfos(newVertexInfos.toMap)
   }
 
-  def layout(layering: Layering): List[DrawingElement] = {
+  def layout(layering: Layering): Drawing = {
 
     var vertexInfosByLayer: Map[Layer, LayerVertexInfos] = Map()
     for ((previousLayerOpt, currentLayer, nextLayerOpt) ← Utils.withPreviousAndNext(layering.layers)) yield {
@@ -265,7 +265,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       incompleteEdges = updatedIncompletedEdges
       diagramElements ++= elements
     }
-    diagramElements
+    Drawing(diagramElements)
   }
 
 }
