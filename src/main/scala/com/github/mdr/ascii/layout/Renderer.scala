@@ -19,7 +19,7 @@ case class EdgeDrawingElement(
   points: List[Point],
   hasArrow1: Boolean,
   hasArrow2: Boolean)
-    extends DrawingElement {
+  extends DrawingElement {
 
   def translate(down: Int = 0, right: Int = 0) = copy(points = points.map(_.translate(down, right)))
 

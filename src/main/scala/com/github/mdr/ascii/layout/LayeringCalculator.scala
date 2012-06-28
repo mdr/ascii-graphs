@@ -2,28 +2,9 @@ package com.github.mdr.ascii.layout
 
 import scala.collection.mutable.ListBuffer
 
-case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
-
-  val outMap: Map[V, List[V]] = edges.groupBy(_._1).map { case (k, vs) ⇒ (k, vs.map(_._2)) }
-
-  val inMap: Map[V, List[V]] = edges.groupBy(_._2).map { case (k, vs) ⇒ (k, vs.map(_._1)) }
-
-  require(outMap.keys.forall(vertices.contains))
-  require(inMap.keys.forall(vertices.contains))
-
-  def inVertices(v: V): List[V] = inMap.getOrElse(v, Nil)
-
-  def outVertices(v: V): List[V] = outMap.getOrElse(v, Nil)
-
-  def outDegree(v: V): Int = outVertices(v).size
-
-  def inDegree(v: V): Int = inVertices(v).size
-
-}
-
 class LayeringCalculator[V] {
 
-  def calculateLongestDistances(graph: Graph[V]): Map[V, Int] = {
+  private def calculateLongestDistances(graph: Graph[V]): Map[V, Int] = {
 
     var longestDistancesToSink: Map[V, Int] = Map()
 

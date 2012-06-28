@@ -25,7 +25,7 @@ object RunLayout extends Application {
   val V6 = "666666666666"
   val V7 = "777777777777"
 
-  val graph = Graph(
+  val graph2 = Graph(
     vertices = List(
       V1, V2, V3, V4, V5, V6, V7),
     edges = List(
@@ -37,6 +37,52 @@ object RunLayout extends Application {
       V2 -> V6,
       V6 -> V1,
       V3 -> V7))
+
+  val graph3 = Graph.fromDiagram(
+    """
+              +--------+              
+              |22222222|              
+              +--------+              
+                | ^ |                 
+                | | -----------       
+                | -------     |       
+            -----       |     |       
+            |           |     |       
+            v           |     |       
+     +------------+     |     |       
+     |666666666666|     |     |       
+     +------------+     |     |       
+            |           |     |       
+            |  ----------     |       
+            |  |           ----       
+            |  |           |          
+            v  |           |          
+         +-------+         |          
+         |111111 |         |          
+         +-------+         |          
+           | ^ |           |          
+           | | --------    |          
+           | -----    |    |          
+        ----     |    |    |          
+        |        |    |    |          
+        v        |    |    |          
+    +-------+    |    |    |          
+    |3333333|    |    |    |          
+    +-------+    |    |    |          
+        |        |    |    |          
+        |        |    |    ------     
+     ----        |    |         |     
+     |   ---------    |         |     
+     |   |          ---         |     
+     |   |          |           |     
+     v   |          v           v     
+ +------------+ +-------+ +----------+
+ |777777777777| |4444444| |5555555555|
+ +------------+ +-------+ +----------+
+""")
+  val graph = graph3
+
+  println(graph)
 
   val (newGraph, reversedEdges) = new CycleRemover[String].removeCycles(graph)
   println("reversedEdges: " + reversedEdges)

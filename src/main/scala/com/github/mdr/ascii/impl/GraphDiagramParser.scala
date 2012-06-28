@@ -154,7 +154,8 @@ class DiagramParse(s: String) {
       }
   }
 
-  private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] = followEdge(direction, startPoint :: Nil)
+  private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] =
+    followEdge(direction, startPoint :: Nil)
 
   private val edges =
     allBoxes.flatMap { box ⇒
@@ -287,9 +288,9 @@ class DiagramParse(s: String) {
 
     lazy val parent: Container with ContainerImpl = if (box1.parent == Some(box2)) box2 else box2.parent.get
 
-    lazy val hasArrow1 = isArrow(charAt(points.head))
+    lazy val hasArrow1 = isArrow(charAt(points.drop(1).head))
 
-    lazy val hasArrow2 = isArrow(charAt(points.last))
+    lazy val hasArrow2 = isArrow(charAt(points.dropRight(1).last))
 
     lazy val edgeAndLabelPoints = points ++ label_.map(_.points).getOrElse(Set())
 
