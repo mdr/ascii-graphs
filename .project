@@ -1,5 +1,5 @@
 <projectDescription>
-  <name>ascii-graph-diagram-parser</name>
+  <name>ascii-graphs</name>
   <buildSpec>
     <buildCommand>
       <name>org.scala-ide.sdt.core.scalabuilder</name>

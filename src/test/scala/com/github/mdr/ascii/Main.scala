@@ -1,8 +1,6 @@
 package com.github.mdr.ascii
 
-import com.github.mdr.ascii.layout._
-
-object Main extends App {
+object Main extends Application {
 
   val diagram1 = Diagram("""
              +-+             

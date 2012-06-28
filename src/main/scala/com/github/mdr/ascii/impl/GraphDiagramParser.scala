@@ -7,7 +7,7 @@ class DiagramParse(s: String) {
 
   private val rawRows: List[String] = if (s.isEmpty) Nil else s.split("(\r)?\n").toList
 
-  private val numberOfColumns = rawRows.maxBy(_.length).length
+  private val numberOfColumns = rawRows.map(_.length).max
 
   private val rows = rawRows.map(_.padTo(numberOfColumns, ' ')).toArray
 
@@ -292,7 +292,7 @@ class DiagramParse(s: String) {
 
     lazy val hasArrow2 = isArrow(charAt(points.dropRight(1).last))
 
-    lazy val edgeAndLabelPoints = points ++ label_.map(_.points).getOrElse(Set())
+    lazy val edgeAndLabelPoints: List[Point] = points ++ label_.map(_.points).getOrElse(Nil)
 
     override def toString = diagramRegionToString(region(edgeAndLabelPoints), edgeAndLabelPoints.contains)
 

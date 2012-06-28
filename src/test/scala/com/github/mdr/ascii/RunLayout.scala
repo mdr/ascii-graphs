@@ -1,6 +1,12 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii
 
-import com.github.mdr.ascii.Dimension
+import com.github.mdr.ascii.layout.CycleRemover
+import com.github.mdr.ascii.layout.Graph
+import com.github.mdr.ascii.layout.LayerOrderingCalculator
+import com.github.mdr.ascii.layout.LayeringCalculator
+import com.github.mdr.ascii.layout.Layouter
+import com.github.mdr.ascii.layout.Renderer
+import com.github.mdr.ascii.layout.ToStringVertexRenderingStrategy
 
 object RunLayout extends Application {
 
