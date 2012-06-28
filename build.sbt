@@ -4,14 +4,16 @@ organization := "com.github.mdr"
 
 version := "0.0.2-SNAPSHOT"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.9.2"
 
-crossScalaVersions := Seq("2.8.1", "2.8.2", "2.9.0", "2.9.0-1", "2.9.1", "2.9.2")
+crossScalaVersions := Seq("2.8.1", "2.8.2", "2.9.0", "2.9.0-1", "2.9.1", "2.9.2", "2.10.0-M4")
 
 scalacOptions += "-deprecation"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "1.8" % "test"
- 
+
+//libraryDependencies += "org.scalatest" %% "scalatest" % "1.9-2.10.0-M4-B2" % "test"
+
 EclipseKeys.withSource := true
 
 EclipseKeys.eclipseOutput := Some("bin")
