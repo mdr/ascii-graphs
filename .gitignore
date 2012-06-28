@@ -3,4 +3,5 @@
 .settings
 bin/
 target/
-
+.project
+.classpath
