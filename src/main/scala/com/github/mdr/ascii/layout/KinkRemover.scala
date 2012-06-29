@@ -3,7 +3,6 @@ package com.github.mdr.ascii.layout
 import com.github.mdr.ascii.Dimension
 import com.github.mdr.ascii.Point
 import com.github.mdr.ascii.util.Utils._
-import scala.annotation.tailrec
 import com.github.mdr.ascii.Direction
 
 object KinkRemover {
@@ -15,19 +14,16 @@ object KinkRemover {
     for {
       edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
       updatedElement ← removeKink(edgeElement, grid)
-    } return Some(replaceElement(drawing, edgeElement, replacement = updatedElement))
+    } return Some(drawing.replaceElement(edgeElement, updatedElement))
     None
   }
 
-  private def replaceElement(drawing: Drawing, element: DrawingElement, replacement: DrawingElement) =
-    drawing.copy(elements = replacement :: drawing.elements.filterNot(_ == element))
-
-  private def allPairs[T](xs: List[T]): List[(T, T)] = xs zip xs.drop(1)
+  
 
   private def removeKink(element: EdgeDrawingElement, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
     val segments: List[EdgeSegment] = element.segments.drop(2).dropRight(1)
 
-    for ((segment1 @ EdgeSegment(start, _, middle), segment2 @ EdgeSegment(_, _, end)) ← allPairs(segments)) {
+    for ((segment1 @ EdgeSegment(start, _, middle), segment2 @ EdgeSegment(_, _, end)) ← adjacentPairs(segments)) {
       val alternativeMiddle = Point(start.row, end.column)
       val fakeElement = new EdgeDrawingElement(List(start, alternativeMiddle, end), false, false)
       val newPoints = fakeElement.allPoints.drop(1).dropRight(1)

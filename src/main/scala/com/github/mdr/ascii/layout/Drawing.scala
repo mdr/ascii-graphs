@@ -14,5 +14,8 @@ case class Drawing(elements: List[DrawingElement]) {
     Dimension(width = largestPoint.column + 1, height = largestPoint.row + 1)
   }
 
+  def replaceElement(element: DrawingElement, replacement: DrawingElement) =
+    copy(elements = replacement :: elements.filterNot(_ == element))
+
 }
 

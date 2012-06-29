@@ -19,6 +19,10 @@ object Utils {
     }
   }
 
+  def adjacentPairs[T](xs: List[T]): List[(T, T)] = xs zip xs.drop(1)
+
+  def adjacentTriples[T](xs: List[T]): List[(T, T, T)] = xs zip xs.drop(1) zip xs.drop(2) map { case ((x, y), z) ⇒ (x, y, z) }
+
   @tailrec
   def iterate[T](t: T, f: T ⇒ Option[T]): T = f(t) match {
     case Some(t2) ⇒ iterate(t2, f)

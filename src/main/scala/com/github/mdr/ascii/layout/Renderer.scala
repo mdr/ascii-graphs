@@ -33,7 +33,7 @@ case class EdgeDrawingElement(
         finish :: accum
       else
         scanForPoints(start.go(direction), direction, finish, accum = start :: accum)
-    scanForPoints(segment.start, segment.direction, segment.finish, accum = Nil)
+    scanForPoints(segment.start, segment.direction, segment.finish, accum = Nil).reverse
   }
 
   lazy val allPoints: List[Point] = segments.flatMap(getPoints).distinct
@@ -79,7 +79,8 @@ class Renderer {
     def apply(point: Point): Char = chars(point.row)(point.column)
 
     def update(point: Point, char: Char) {
-      chars(point.row)(point.column) = char
+      val row = chars(point.row)
+      row(point.column) = char
     }
 
     def update(point: Point, s: String) {
@@ -106,13 +107,17 @@ class Renderer {
   }
 
   private def render(grid: Grid, element: EdgeDrawingElement) {
-    for (EdgeSegment(point1, direction, point2) ← element.segments) {
+    for (segment @ EdgeSegment(point1, direction, point2) ← element.segments) {
       val startPoint =
         if (direction.isVertical && point1 != element.points.head) point1.go(direction) else point1
       val endPoint =
         if (direction.isVertical && point2 != element.points.last) point2.go(direction.opposite) else point2
 
-      drawLine(grid, startPoint, direction, endPoint)
+      try
+        drawLine(grid, startPoint, direction, endPoint)
+      catch {
+        case e ⇒ throw new RuntimeException("Problem drawing segment " + segment + " in edge " + element, e)
+      }
     }
     if (element.hasArrow1)
       for (EdgeSegment(point, direction, _) ← element.segments.headOption)
