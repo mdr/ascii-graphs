@@ -107,20 +107,27 @@ object RunLayout extends Application {
 """)
   val graph = graph3
 
-//  println(graph)
+  //  println(graph)
 
   val (newGraph, reversedEdges) = new CycleRemover[String].removeCycles(graph)
-//  println("reversedEdges: " + reversedEdges)
+  //  println("reversedEdges: " + reversedEdges)
   val layeringCalculator = new LayeringCalculator[String]
   val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
   //  println(layering)
 
   val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
-  val diagram = layouter.layout(LayerOrderingCalculator.reorder(layering))
+  val drawing0 = layouter.layout(LayerOrderingCalculator.reorder(layering))
+  println(Renderer.render(drawing0))
   //  elements.foreach(println)
-  val updatedDiagram = Compactifier.compactify(KinkRemover.removeKinks(diagram))
-  val result = Renderer.render(updatedDiagram)
-
-  println(result)
+  val updatedDrawing1 = KinkRemover.removeKinks(drawing0)
+  println(Renderer.render(updatedDrawing1))
+  val updatedDrawing2 = Compactifier.compactify(updatedDrawing1)
+  println(Renderer.render(updatedDrawing2))
+  //  val updatedDrawing3 = KinkRemover.removeKinks(updatedDrawing2)
+  //  println(Renderer.render(updatedDrawing3))
+  //  val updatedDrawing4 = Compactifier.compactify(updatedDrawing3)
+  //  println(Renderer.render(updatedDrawing4))
+  //  val updatedDrawing5 = KinkRemover.removeKinks(updatedDrawing4)
+  //  println(Renderer.render(updatedDrawing5))
 
 }

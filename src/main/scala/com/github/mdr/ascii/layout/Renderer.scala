@@ -2,6 +2,7 @@ package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii._
 import scala.annotation.tailrec
+import com.github.mdr.ascii.util.Utils
 
 sealed trait DrawingElement {
 
@@ -22,10 +23,10 @@ case class VertexDrawingElement(region: Region, textLines: List[String]) extends
 case class EdgeSegment(start: Point, direction: Direction, finish: Point)
 
 case class EdgeDrawingElement(
-  points: List[Point],
+  bendPoints: List[Point],
   hasArrow1: Boolean,
   hasArrow2: Boolean)
-  extends DrawingElement {
+    extends DrawingElement {
 
   private def getPoints(segment: EdgeSegment): List[Point] = {
     @tailrec def scanForPoints(start: Point, direction: Direction, finish: Point, accum: List[Point]): List[Point] =
@@ -36,9 +37,9 @@ case class EdgeDrawingElement(
     scanForPoints(segment.start, segment.direction, segment.finish, accum = Nil).reverse
   }
 
-  lazy val allPoints: List[Point] = segments.flatMap(getPoints).distinct
+  lazy val points: List[Point] = segments.flatMap(getPoints).distinct
 
-  def translate(down: Int = 0, right: Int = 0) = copy(points = points.map(_.translate(down, right)))
+  def translate(down: Int = 0, right: Int = 0) = copy(bendPoints = bendPoints.map(_.translate(down, right)))
 
   private def direction(point1: Point, point2: Point): Direction =
     if (point1.row == point2.row) {
@@ -59,7 +60,7 @@ case class EdgeDrawingElement(
       throw new RuntimeException("Points not aligned: " + point1 + ", " + point2)
 
   lazy val segments: List[EdgeSegment] =
-    for ((point1, point2) ← points.zip(points.drop(1)))
+    for ((point1, point2) ← Utils.adjacentPairs(bendPoints))
       yield EdgeSegment(point1, direction(point1, point2), point2)
 
 }
@@ -109,9 +110,9 @@ class Renderer {
   private def render(grid: Grid, element: EdgeDrawingElement) {
     for (segment @ EdgeSegment(point1, direction, point2) ← element.segments) {
       val startPoint =
-        if (direction.isVertical && point1 != element.points.head) point1.go(direction) else point1
+        if (direction.isVertical && point1 != element.bendPoints.head) point1.go(direction) else point1
       val endPoint =
-        if (direction.isVertical && point2 != element.points.last) point2.go(direction.opposite) else point2
+        if (direction.isVertical && point2 != element.bendPoints.last) point2.go(direction.opposite) else point2
 
       try
         drawLine(grid, startPoint, direction, endPoint)

@@ -9,7 +9,7 @@ case class Drawing(elements: List[DrawingElement]) {
     val largestPoint =
       elements.flatMap {
         case element: VertexDrawingElement ⇒ List(element.region.bottomRight)
-        case element: EdgeDrawingElement   ⇒ element.points
+        case element: EdgeDrawingElement   ⇒ element.bendPoints
       }.foldLeft(Point(0, 0))(_ maxRowCol _)
     Dimension(width = largestPoint.column + 1, height = largestPoint.row + 1)
   }

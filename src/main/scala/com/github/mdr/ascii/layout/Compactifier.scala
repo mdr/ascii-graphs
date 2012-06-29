@@ -12,7 +12,11 @@ object Compactifier {
     for {
       edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
       updatedElement ← compact(edgeElement, grid)
-    } return Some(drawing.replaceElement(edgeElement, updatedElement))
+    } {
+      println("Shifted edge up in " + edgeElement + ", " + updatedElement)
+      val updatedDrawing = drawing.replaceElement(edgeElement, updatedElement)
+      return Some(updatedDrawing)
+    }
     None
   }
 
@@ -25,18 +29,14 @@ object Compactifier {
       val alternativeStart2 = segment2.start.copy(row = row)
       val alternativeFinish2 = segment2.finish.copy(row = row)
       val fakeElement = new EdgeDrawingElement(
-        List(alternativeStart2, alternativeFinish2), false, false)
-      val allPoints = fakeElement.allPoints
-      val newPoints = allPoints.drop(1)
+        List(segment1.start, alternativeStart2, alternativeFinish2, segment3.finish), false, false)
+      val newPoints = fakeElement.points.filterNot(edgeElement.points.contains)
       val allClear = !newPoints.exists(grid.isOccupied)
       if (allClear) {
-        println("hit!")
-        println(edgeElement)
-        val oldBendPoints = edgeElement.points
-        val oldIndex = oldBendPoints.indexOf(segment1.finish).ensuring(_ >= 0)
+        val oldBendPoints = edgeElement.bendPoints
+        val oldIndex = oldBendPoints.indexOf(segment2.start).ensuring(_ >= 0)
         val newBendPoints = oldBendPoints.patch(oldIndex, List(alternativeStart2, alternativeFinish2), 2)
-        val updated = edgeElement.copy(points = newBendPoints)
-        println(updated)
+        val updated = edgeElement.copy(bendPoints = newBendPoints)
         return Some(updated)
       }
 
