@@ -19,19 +19,24 @@ case class VertexDrawingElement(region: Region, textLines: List[String]) extends
 
 }
 
+case class EdgeSegment(start: Point, direction: Direction, finish: Point)
+
 case class EdgeDrawingElement(
   points: List[Point],
   hasArrow1: Boolean,
   hasArrow2: Boolean)
-    extends DrawingElement {
+  extends DrawingElement {
 
-  private def collectPoints(start: Point, direction: Direction, finish: Point): List[Point] =
-    if (start == finish)
-      List(finish)
-    else
-      start :: collectPoints(start.go(direction), direction, finish)
+  private def getPoints(segment: EdgeSegment): List[Point] = {
+    @tailrec def scanForPoints(start: Point, direction: Direction, finish: Point, accum: List[Point]): List[Point] =
+      if (start == finish)
+        finish :: accum
+      else
+        scanForPoints(start.go(direction), direction, finish, accum = start :: accum)
+    scanForPoints(segment.start, segment.direction, segment.finish, accum = Nil)
+  }
 
-  def allPoints: List[Point] = pointAndDirections.flatMap(collectPoints _ tupled).distinct
+  lazy val allPoints: List[Point] = segments.flatMap(getPoints).distinct
 
   def translate(down: Int = 0, right: Int = 0) = copy(points = points.map(_.translate(down, right)))
 
@@ -53,9 +58,9 @@ case class EdgeDrawingElement(
     } else
       throw new RuntimeException("Points not aligned: " + point1 + ", " + point2)
 
-  lazy val pointAndDirections: List[(Point, Direction, Point)] =
+  lazy val segments: List[EdgeSegment] =
     for ((point1, point2) ← points.zip(points.drop(1)))
-      yield (point1, direction(point1, point2), point2)
+      yield EdgeSegment(point1, direction(point1, point2), point2)
 
 }
 
@@ -101,7 +106,7 @@ class Renderer {
   }
 
   private def render(grid: Grid, element: EdgeDrawingElement) {
-    for ((point1, direction, point2) ← element.pointAndDirections) {
+    for (EdgeSegment(point1, direction, point2) ← element.segments) {
       val startPoint =
         if (direction.isVertical && point1 != element.points.head) point1.go(direction) else point1
       val endPoint =
@@ -110,10 +115,10 @@ class Renderer {
       drawLine(grid, startPoint, direction, endPoint)
     }
     if (element.hasArrow1)
-      for ((point, direction, _) ← element.pointAndDirections.headOption)
+      for (EdgeSegment(point, direction, _) ← element.segments.headOption)
         grid(point) = direction.opposite.arrow
     if (element.hasArrow2)
-      for ((_, direction, point) ← element.pointAndDirections.lastOption)
+      for (EdgeSegment(_, direction, point) ← element.segments.lastOption)
         grid(point) = direction.arrow
   }
 

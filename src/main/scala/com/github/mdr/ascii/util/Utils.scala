@@ -1,5 +1,7 @@
 package com.github.mdr.ascii.util
 
+import scala.annotation.tailrec
+
 object Utils {
 
   def transformValues[K, V, V2](map: Map[K, V])(f: V ⇒ V2): Map[K, V2] = map.map { case (k, v) ⇒ (k, f(v)) }
@@ -15,6 +17,12 @@ object Utils {
       val next = (iterable.tail map Some[T]).toList ::: List(None)
       previous zip iterable zip next map { case ((a, b), c) ⇒ (a, b, c) }
     }
+  }
+
+  @tailrec
+  def iterate[T](t: T, f: T ⇒ Option[T]): T = f(t) match {
+    case Some(t2) ⇒ iterate(t2, f)
+    case None     ⇒ t
   }
 
 }
