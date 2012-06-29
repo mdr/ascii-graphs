@@ -24,7 +24,7 @@ object Compactifier {
     for {
       (segment1, segment2, segment3) ← adjacentTriples(edgeElement.segments)
       if segment1.direction == Down && segment3.direction == Down
-      row ← (segment1.start.row + 2) to (segment2.start.row - 1)
+      row ← (segment1.start.row + /* 2 */ 1) to (segment2.start.row - 1)
     } {
       val alternativeStart2 = segment2.start.copy(row = row)
       val alternativeFinish2 = segment2.finish.copy(row = row)

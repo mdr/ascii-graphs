@@ -17,5 +17,10 @@ case class Drawing(elements: List[DrawingElement]) {
   def replaceElement(element: DrawingElement, replacement: DrawingElement) =
     copy(elements = replacement :: elements.filterNot(_ == element))
 
+  def vertexElementAt(point: Point): Option[VertexDrawingElement] =
+    elements.collect {
+      case vde: VertexDrawingElement if vde.region.contains(point) ⇒ vde
+    }.headOption
+
 }
 
