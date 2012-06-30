@@ -105,13 +105,13 @@ object RunLayout extends Application {
   |          1.1.1          | |      3.5.0      | |    2.9.1     |    
   +-------------------------+ +-----------------+ +--------------+    
 """)
-  val graph = graph3
+  val graph = graph1
 
   //  println(graph)
 
-  val (newGraph, reversedEdges) = new CycleRemover[String].removeCycles(graph)
+  val (newGraph, reversedEdges) = new CycleRemover[Int].removeCycles(graph)
   //  println("reversedEdges: " + reversedEdges)
-  val layeringCalculator = new LayeringCalculator[String]
+  val layeringCalculator = new LayeringCalculator[Int]
   val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
   //  println(layering)
 
