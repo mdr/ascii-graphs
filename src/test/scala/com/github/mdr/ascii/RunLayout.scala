@@ -9,6 +9,7 @@ import com.github.mdr.ascii.layout.Renderer
 import com.github.mdr.ascii.layout.ToStringVertexRenderingStrategy
 import com.github.mdr.ascii.layout.KinkRemover
 import com.github.mdr.ascii.layout.Compactifier
+import com.github.mdr.ascii.layout.RandomGraph
 
 object RunLayout extends Application {
 
@@ -105,22 +106,25 @@ object RunLayout extends Application {
   |          1.1.1          | |      3.5.0      | |    2.9.1     |    
   +-------------------------+ +-----------------+ +--------------+    
 """)
-  val graph = graph1
 
-  //  println(graph)
+  val graph4 = RandomGraph.randomGraph(new scala.util.Random())
 
-  val (newGraph, reversedEdges) = new CycleRemover[Int].removeCycles(graph)
+  val graph = graph4
+
+    println(graph)
+
+  val (newGraph, reversedEdges) = new CycleRemover[String].removeCycles(graph)
   //  println("reversedEdges: " + reversedEdges)
-  val layeringCalculator = new LayeringCalculator[Int]
+  val layeringCalculator = new LayeringCalculator[String]
   val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
   //  println(layering)
 
   val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
   val drawing0 = layouter.layout(LayerOrderingCalculator.reorder(layering))
-  println(Renderer.render(drawing0))
+//  println(Renderer.render(drawing0))
   //  elements.foreach(println)
   val updatedDrawing1 = KinkRemover.removeKinks(drawing0)
-  println(Renderer.render(updatedDrawing1))
+//  println(Renderer.render(updatedDrawing1))
   val updatedDrawing2 = Compactifier.compactify(updatedDrawing1)
   println(Renderer.render(updatedDrawing2))
   //  val updatedDrawing3 = KinkRemover.removeKinks(updatedDrawing2)
