@@ -7,12 +7,11 @@ object Layouter {
 
   def renderGraph[T](graph: layout.Graph[T]): String = {
     val (newGraph, reversedEdges) = new CycleRemover[T].removeCycles(graph)
-    val layeringCalculator = new LayeringCalculator[T]
-    val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
+    val layering = new LayeringCalculator[T].assignLayers(newGraph, reversedEdges.toSet)
     val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
-    val diagram = layouter.layout(LayerOrderingCalculator.reorder(layering))
-    val updatedDiagram = KinkRemover.removeKinks(diagram)
-    Renderer.render(updatedDiagram)
+    val drawing = layouter.layout(LayerOrderingCalculator.reorder(layering))
+    val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))
+    Renderer.render(cleanedUpDrawing)
   }
 
 }

@@ -107,9 +107,9 @@ object RunLayout extends Application {
   +-------------------------+ +-----------------+ +--------------+    
 """)
 
-  //  val graph4 = RandomGraph.randomGraph(new scala.util.Random())
-
-  val graph = graph3
+  implicit val random = new scala.util.Random(45232329)
+  val graph4 = RandomGraph.randomGraph(random)
+  val graph = graph4
   //  println(graph)
 
   val (newGraph, reversedEdges) = new CycleRemover[String].removeCycles(graph)

@@ -127,11 +127,14 @@ class CycleRemover[V] {
     left.reverse ++ right
   }
 
+  private def removeSelfLoops(graph: Graph[V]): Graph[V] =
+    graph.copy(edges = graph.edges.filterNot { case (v1, v2) ⇒ v1 == v2 })
+
   /**
    * @return graph without cycles and list of reversed edges.
    */
   def removeCycles(graph: Graph[V]): (Graph[V], List[(V, V)]) =
-    removeCycles(graph, findVertexSequence(graph))
+    removeCycles(removeSelfLoops(graph), findVertexSequence(graph))
 
   private def removeCycles(graph: Graph[V], vertexSequence: List[V]): (Graph[V], List[(V, V)]) = {
     var newEdges: List[(V, V)] = Nil
