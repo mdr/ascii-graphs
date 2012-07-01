@@ -25,8 +25,8 @@ object RandomGraph {
         def mkEdge: (String, String) = {
           val i1 = random.nextInt(numberOfVertices)
           var i2 = random.nextInt(numberOfVertices)
-          if (i2 == i1) 
-            i2  = (i1 + 1) % numberOfVertices
+          if (i2 == i1)
+            i2 = (i1 + 1) % numberOfVertices
           val v1 = vertices(i1)
           val v2 = vertices(i2)
 

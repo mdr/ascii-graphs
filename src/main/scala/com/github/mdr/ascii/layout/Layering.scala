@@ -25,7 +25,7 @@ class RealVertex(val contents: Any) extends Vertex {
 }
 
 class Edge(val startVertex: Vertex, val finishVertex: Vertex, val reversed: Boolean) {
- 
+
   override def toString = "Edge(" + startVertex + ", " + finishVertex + "," + reversed + ")"
 
 }

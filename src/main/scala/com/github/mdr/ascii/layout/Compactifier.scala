@@ -6,7 +6,9 @@ import com.github.mdr.ascii.Point
 
 object Compactifier {
 
-  def elevateEdges(drawing: Drawing): Drawing = iterate(drawing, elevateEdge)
+  def compactify(drawing: Drawing): Drawing = removeRedundantRows(elevateEdges(drawing))
+
+  private def elevateEdges(drawing: Drawing): Drawing = iterate(drawing, elevateEdge)
 
   private def elevateEdge(drawing: Drawing): Option[Drawing] = {
     val grid = new OccupancyGrid(drawing)
@@ -14,7 +16,7 @@ object Compactifier {
       edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
       updatedElement ← elevateEdge(edgeElement, grid)
     } {
-      println("Shifted edge up in " + edgeElement + ", " + updatedElement)
+      //      println("Shifted edge up in " + edgeElement + ", " + updatedElement)
       val updatedDrawing = drawing.replaceElement(edgeElement, updatedElement)
       return Some(updatedDrawing)
     }
@@ -45,9 +47,41 @@ object Compactifier {
     None
   }
 
-  private def removeRows(diagram: Drawing, fromRow: Int, toRow: Int): Drawing = {
+  private def removeRedundantRows(drawing: Drawing): Drawing = iterate(drawing, removeRedundantRow)
+
+  private def removeRedundantRow(drawing: Drawing): Option[Drawing] = {
+    for (row ← 0 until drawing.dimension.height if canRemove(drawing, row))
+      return Some(removeRows(drawing, row, row))
+    None
+  }
+
+  private def canRemove(drawing: Drawing, row: Int): Boolean =
+    drawing.elements.forall {
+      case ede: EdgeDrawingElement   ⇒ canRemove(ede, row)
+      case vde: VertexDrawingElement ⇒ row < vde.region.topRow || row > vde.region.bottomRow
+    }
+
+  private def canRemove(ede: EdgeDrawingElement, row: Int): Boolean = {
+    val List(firstBendPoint, secondBendPoint, _*) = ede.bendPoints
+    val wouldLeaveStubbyUpArrow =
+      row == firstBendPoint.row + 1 &&
+        ede.hasArrow1 &&
+        secondBendPoint.row == row + 1 &&
+        ede.bendPoints.size > 2
+
+    val List(lastBendPoint, secondLastBendPoint, _*) = ede.bendPoints.reverse
+    val wouldLeaveStubbyDownArrow =
+      row == lastBendPoint.row - 1 &&
+        ede.hasArrow2 &&
+        secondLastBendPoint.row == row - 1 &&
+        ede.bendPoints.size > 2
+
+    !wouldLeaveStubbyDownArrow && !wouldLeaveStubbyUpArrow && ede.bendPoints.forall(_.row != row)
+  }
+
+  private def removeRows(drawing: Drawing, fromRow: Int, toRow: Int): Drawing = {
     val rowsToRemove = (toRow - fromRow + 1).ensuring(_ >= 0)
-    val newElements = diagram.elements map {
+    val newElements = drawing.elements map {
       case ede: EdgeDrawingElement ⇒
         val newBendPoints = ede.bendPoints.map { point ⇒
           if (point.row < fromRow)
@@ -62,8 +96,7 @@ object Compactifier {
         else
           vde.up(rowsToRemove)
     }
-
-    diagram.copy(elements = newElements)
+    drawing.copy(elements = newElements)
   }
 
 }

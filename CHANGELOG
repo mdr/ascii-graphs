@@ -1,0 +1,10 @@
+0.0.1 (27/June/2012)
+
+* Initial release
+
+0.0.2 (..)
+
+* Support drawing cyclic graphs
+* Straighten edge kinks
+* Compact redundant space in edge layers
+

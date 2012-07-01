@@ -16,7 +16,7 @@ object KinkRemover {
       edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
       updatedElement ← removeKink(edgeElement, drawing, grid)
     } {
-      println("Removed kink in " + edgeElement + ", " + updatedElement)
+      //      println("Removed kink in " + edgeElement + ", " + updatedElement)
       return Some(drawing.replaceElement(edgeElement, updatedElement))
     }
     None
@@ -26,7 +26,7 @@ object KinkRemover {
     case Nil | List(_) | List(_, _) ⇒ points
     case (p1 @ Point(r1, c1)) :: Point(r2, c2) :: (p3 @ Point(r3, c3)) :: remainder if c1 == c2 && c2 == c3 || r1 == r2 && r2 == r3 ⇒
       removeStraightLines(p1 :: p3 :: remainder)
-    case p :: ps => p :: removeStraightLines(ps)
+    case p :: ps ⇒ p :: removeStraightLines(ps)
   }
 
   private def removeKink(element: EdgeDrawingElement, drawing: Drawing, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
