@@ -159,23 +159,23 @@ trait Edge {
 
 }
 
-case class Point(row: Int, column: Int) {
+trait Translatable {
 
-  def up = copy(row = row - 1)
+  type Self <: Translatable
 
-  def down: Point = down(1)
+  def translate(down: Int = 0, right: Int = 0): Self
 
-  def down(n: Int): Point = copy(row = row + n)
+  def up: Self = up(1)
+  def up(n: Int): Self = translate(down = -n)
 
-  def left = copy(column = column - 1)
+  def down: Self = down(1)
+  def down(n: Int): Self = translate(down = n)
 
-  def right(n: Int): Point = copy(column = column + n)
+  def left: Self = left(1)
+  def left(n: Int): Self = translate(right = -n)
 
-  def right: Point = right(1)
-
-  def translate(down: Int = 0, right: Int = 0): Point = this.down(down).right(right)
-
-  def maxRowCol(that: Point): Point = Point(math.max(this.row, that.row), math.max(this.column, that.column))
+  def right: Self = right(1)
+  def right(n: Int): Self = translate(right = n)
 
   def go(direction: Direction) = direction match {
     case Up    ⇒ up
@@ -183,6 +183,16 @@ case class Point(row: Int, column: Int) {
     case Left  ⇒ left
     case Right ⇒ right
   }
+
+}
+
+case class Point(row: Int, column: Int) extends Translatable {
+
+  def maxRowCol(that: Point): Point = Point(math.max(this.row, that.row), math.max(this.column, that.column))
+
+  type Self = Point
+
+  def translate(down: Int = 0, right: Int = 0): Point = Point(row + down, column + right)
 
   def neighbours: List[Point] = List(up, right, down, left)
 
@@ -239,7 +249,7 @@ object Region {
 
 }
 
-case class Region(topLeft: Point, bottomRight: Point) {
+case class Region(topLeft: Point, bottomRight: Point) extends Translatable {
 
   def bottomLeft = Point(bottomRight.row, topLeft.column)
 
@@ -282,6 +292,8 @@ case class Region(topLeft: Point, bottomRight: Point) {
       row ← (topRow to bottomRow toList)
       column ← leftColumn to rightColumn
     } yield Point(row, column)
+
+  type Self = Region
 
   def translate(down: Int = 0, right: Int = 0): Region =
     Region(topLeft.translate(down, right), bottomRight.translate(down, right))

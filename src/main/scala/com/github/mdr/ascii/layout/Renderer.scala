@@ -12,8 +12,10 @@ sealed trait DrawingElement {
 
 }
 
-case class VertexDrawingElement(region: Region, textLines: List[String]) extends DrawingElement {
+case class VertexDrawingElement(region: Region, textLines: List[String]) extends DrawingElement with Translatable {
 
+  type Self = VertexDrawingElement
+  
   def translate(down: Int = 0, right: Int = 0) = copy(region = region.translate(down, right))
 
   def points = region.points

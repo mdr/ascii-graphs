@@ -125,7 +125,7 @@ object RunLayout extends Application {
   //  elements.foreach(println)
   val updatedDrawing1 = KinkRemover.removeKinks(drawing0)
 //  println(Renderer.render(updatedDrawing1))
-  val updatedDrawing2 = Compactifier.compactify(updatedDrawing1)
+  val updatedDrawing2 = Compactifier.elevateEdges(updatedDrawing1)
   println(Renderer.render(updatedDrawing2))
   //  val updatedDrawing3 = KinkRemover.removeKinks(updatedDrawing2)
   //  println(Renderer.render(updatedDrawing3))

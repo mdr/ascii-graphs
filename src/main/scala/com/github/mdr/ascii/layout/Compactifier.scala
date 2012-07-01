@@ -2,16 +2,17 @@ package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii.util.Utils._
 import com.github.mdr.ascii.Down
+import com.github.mdr.ascii.Point
 
 object Compactifier {
 
-  def compactify(drawing: Drawing): Drawing = iterate(drawing, compactOnce)
+  def elevateEdges(drawing: Drawing): Drawing = iterate(drawing, elevateEdge)
 
-  def compactOnce(drawing: Drawing): Option[Drawing] = {
+  private def elevateEdge(drawing: Drawing): Option[Drawing] = {
     val grid = new OccupancyGrid(drawing)
     for {
       edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
-      updatedElement ← compact(edgeElement, grid)
+      updatedElement ← elevateEdge(edgeElement, grid)
     } {
       println("Shifted edge up in " + edgeElement + ", " + updatedElement)
       val updatedDrawing = drawing.replaceElement(edgeElement, updatedElement)
@@ -20,7 +21,7 @@ object Compactifier {
     None
   }
 
-  def compact(edgeElement: EdgeDrawingElement, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
+  private def elevateEdge(edgeElement: EdgeDrawingElement, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
     for {
       (segment1, segment2, segment3) ← adjacentTriples(edgeElement.segments)
       if segment1.direction == Down && segment3.direction == Down
@@ -42,6 +43,27 @@ object Compactifier {
 
     }
     None
+  }
+
+  private def removeRows(diagram: Drawing, fromRow: Int, toRow: Int): Drawing = {
+    val rowsToRemove = (toRow - fromRow + 1).ensuring(_ >= 0)
+    val newElements = diagram.elements map {
+      case ede: EdgeDrawingElement ⇒
+        val newBendPoints = ede.bendPoints.map { point ⇒
+          if (point.row < fromRow)
+            point
+          else
+            point.up(rowsToRemove)
+        }
+        ede.copy(bendPoints = newBendPoints)
+      case vde: VertexDrawingElement ⇒
+        if (vde.region.topRow < fromRow)
+          vde
+        else
+          vde.up(rowsToRemove)
+    }
+
+    diagram.copy(elements = newElements)
   }
 
 }
