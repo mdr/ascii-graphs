@@ -119,7 +119,7 @@ class Renderer {
       try
         drawLine(grid, startPoint, direction, endPoint)
       catch {
-        case e ⇒ throw new RuntimeException("Problem drawing segment " + segment + " in edge " + element, e)
+        case e: Throwable ⇒ throw new RuntimeException("Problem drawing segment " + segment + " in edge " + element, e)
       }
     }
     if (element.hasArrow1)
