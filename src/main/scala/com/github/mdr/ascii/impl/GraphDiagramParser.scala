@@ -2,6 +2,7 @@ package com.github.mdr.ascii.impl
 
 import com.github.mdr.ascii._
 import scala.annotation.tailrec
+import scala.language.postfixOps
 
 class DiagramParse(s: String) {
 

@@ -1,6 +1,7 @@
 package com.github.mdr.ascii
 
 import com.github.mdr.ascii.impl._
+import scala.language.postfixOps
 
 class GraphParserException(message: String) extends RuntimeException(message)
 

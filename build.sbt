@@ -2,17 +2,13 @@ name := "ascii-graphs"
 
 organization := "com.github.mdr"
 
-version := "0.0.2"
+version := "0.0.3"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.10.1"
 
-crossScalaVersions := Seq("2.8.1", "2.8.2", "2.9.0", "2.9.0-1", "2.9.1", "2.9.2" /*, "2.10.0-M4"*/)
+scalacOptions ++= Seq("-deprecation","-feature","-optimize")
 
-scalacOptions += "-deprecation"
-
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.8" % "test"
-
-//libraryDependencies += "org.scalatest" %% "scalatest" % "1.9-2.10.0-M4-B2" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
 EclipseKeys.withSource := true
 
