@@ -16,6 +16,12 @@ EclipseKeys.eclipseOutput := Some("bin")
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
+scalariformSettings
+
+ScalariformKeys.preferences <<= baseDirectory.apply { dir => 
+    scalariform.formatter.preferences.PreferencesImporterExporter.loadPreferences((dir / "formatterPreferences.properties").getPath)
+}
+
 publishMavenStyle := true
 
 publishArtifact in Test := false

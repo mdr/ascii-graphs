@@ -28,7 +28,7 @@ case class EdgeDrawingElement(
   bendPoints: List[Point],
   hasArrow1: Boolean,
   hasArrow2: Boolean)
-  extends DrawingElement {
+    extends DrawingElement {
 
   private def getPoints(segment: EdgeSegment): List[Point] = {
     @tailrec def scanForPoints(start: Point, direction: Direction, finish: Point, accum: List[Point]): List[Point] =
