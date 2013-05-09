@@ -35,7 +35,7 @@ class Issue1DirectedEdgeNotParsedTest extends FlatSpec with ShouldMatchers {
       val Some(op1) = graph.vertices.find(_ contains ("op1"))
       val Some(gbk1) = graph.vertices.find(_ contains ("gbk1"))
       val List(edge) = graph.edges
-      edge should be ((op1, gbk1))
+      edge should be((op1, gbk1))
     }
 
   }

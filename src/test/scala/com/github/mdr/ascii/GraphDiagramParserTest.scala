@@ -23,8 +23,8 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
    |A|-------|B|----------   
    +-+  [7]  +-+          """)
 
-   diagram.allBoxes.map(_.text).toSet should equal("ABCDEF".map(_.toString).toSet)
-   
+    diagram.allBoxes.map(_.text).toSet should equal("ABCDEF".map(_.toString).toSet)
+
   }
 
 }

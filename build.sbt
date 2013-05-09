@@ -6,7 +6,9 @@ version := "0.0.3"
 
 scalaVersion := "2.10.1"
 
-scalacOptions ++= Seq("-deprecation","-feature","-optimize")
+crossScalaVersions := Seq("2.9.1", "2.9.2", "2.10.1")
+
+scalacOptions ++= Seq("-deprecation")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 

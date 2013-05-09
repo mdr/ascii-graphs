@@ -11,7 +11,7 @@ class Issue3InfiniteLoopTest extends FlatSpec with ShouldMatchers {
     val e = List("1" -> "3", "1" -> "7", "3" -> "2", "3" -> "9", "7" -> "9", "7" -> "2")
     val graph = Graph(vertices = v, edges = e)
     Layouter.renderGraph(graph)
-    
+
     // Note this doesn't loop, but still produces an overlapping edge when rendered
   }
 }
