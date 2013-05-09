@@ -1,6 +1,6 @@
 package com.github.mdr.ascii
 
-import com.github.mdr.ascii.layout.CycleRemover
+import com.github.mdr.ascii.layout.cycles.CycleRemover
 import com.github.mdr.ascii.layout.Graph
 import com.github.mdr.ascii.layout.LayerOrderingCalculator
 import com.github.mdr.ascii.layout.LayeringCalculator
@@ -10,8 +10,11 @@ import com.github.mdr.ascii.layout.ToStringVertexRenderingStrategy
 import com.github.mdr.ascii.layout.KinkRemover
 import com.github.mdr.ascii.layout.Compactifier
 import com.github.mdr.ascii.layout.RandomGraph
+import com.github.mdr.ascii.util.Utils
 
 object RunLayout extends App {
+
+  println(Graph.fromDiagram(""))
 
   val graph1 = Graph(
     vertices = List(
@@ -107,14 +110,18 @@ object RunLayout extends App {
   +-------------------------+ +-----------------+ +--------------+    
 """)
 
-  implicit val random = new scala.util.Random(45232329)
+  var seed = new scala.util.Random().nextInt
+  // seed = -968951637
+  // seed = 2085656038  empty.max
+  println(seed)
+  implicit val random = new scala.util.Random(seed)
   val graph4 = RandomGraph.randomGraph(random)
   val graph = graph4
   //  println(graph)
 
   val (newGraph, reversedEdges) = new CycleRemover[String].removeCycles(graph)
   val layeringCalculator = new LayeringCalculator[String]
-  val layering = layeringCalculator.assignLayers(newGraph, reversedEdges.toSet)
+  val layering = layeringCalculator.assignLayers(newGraph, Utils.mkMultiset(reversedEdges))
   val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
   val drawing0 = layouter.layout(LayerOrderingCalculator.reorder(layering))
   val updatedDrawing1 = KinkRemover.removeKinks(drawing0)

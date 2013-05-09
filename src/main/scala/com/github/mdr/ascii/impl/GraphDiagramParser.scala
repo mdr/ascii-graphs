@@ -7,7 +7,7 @@ class DiagramParse(s: String) {
 
   private val rawRows: List[String] = if (s.isEmpty) Nil else s.split("(\r)?\n").toList
 
-  private val numberOfColumns = rawRows.map(_.length).max
+  private val numberOfColumns = if (rawRows.isEmpty) 0 else rawRows.map(_.length).max
 
   private val rows = rawRows.map(_.padTo(numberOfColumns, ' ')).toArray
 
@@ -194,7 +194,8 @@ class DiagramParse(s: String) {
       } sb.append(c)
       sb.append("\n")
     }
-    sb.deleteCharAt(sb.length - 1)
+    if (sb.nonEmpty)
+      sb.deleteCharAt(sb.length - 1)
     sb.toString
   }
 

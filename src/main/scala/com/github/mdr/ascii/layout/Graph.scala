@@ -2,6 +2,8 @@ package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii.Diagram
 import com.github.mdr.ascii.Box
+import scala.PartialFunction.cond
+import com.github.mdr.ascii.util.Utils
 
 object Graph {
 
@@ -37,6 +39,8 @@ case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
 
   val inMap: Map[V, List[V]] = edges.groupBy(_._2).map { case (k, vs) ⇒ (k, vs.map(_._1)) }
 
+  def isEmpty = vertices.isEmpty
+
   require(outMap.keys.forall(vertices.contains))
   require(inMap.keys.forall(vertices.contains))
 
@@ -47,5 +51,13 @@ case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
   def outDegree(v: V): Int = outVertices(v).size
 
   def inDegree(v: V): Int = inVertices(v).size
+
+  override def equals(obj: Any): Boolean = cond(obj) {
+    case other: Graph[V] ⇒ Utils.multisetCompare(vertices, other.vertices) && Utils.multisetCompare(edges, other.edges)
+  }
+
+  override def hashCode = vertices.## + edges.##
+
+  override def toString = "\n" + Layouter.renderGraph(this)
 
 }

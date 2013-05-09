@@ -34,9 +34,9 @@ class LayeringCalculator[V] {
     longestDistancesToSink
   }
 
-  def assignLayers(graph: Graph[V], reversedEdges: Set[(V, V)]): Layering = {
+  def assignLayers(graph: Graph[V], reversedEdges: Map[(V, V), Int]): Layering = {
     val longestDistancesToSink = calculateLongestDistances(graph)
-    val maxLayerNum = longestDistancesToSink.values.max
+    val maxLayerNum = if (graph.isEmpty) 0 else longestDistancesToSink.values.max
     def layerNum(v: V): Int = maxLayerNum - longestDistancesToSink(v)
 
     val realVertices: Map[V, RealVertex] = graph.vertices.map { v ⇒ v -> new RealVertex(v) }.toMap
@@ -48,9 +48,12 @@ class LayeringCalculator[V] {
     for (v ← graph.vertices)
       layers(layerNum(v)) += realVertices(v)
 
+    // We decrement counts in revEdges as we construct layer edges to make sure the right proportion of reversed edges
+    // are generated:
+    var revEdges = reversedEdges
     var edges: List[Edge] = Nil
     for {
-      (from, to) ← graph.edges
+      graphEdge @ (from, to) ← graph.edges
       fromLayer = layerNum(from)
       toLayer = layerNum(to)
     } {
@@ -60,8 +63,19 @@ class LayeringCalculator[V] {
         dummy
       }
       val vertexChain = realVertices(from) +: dummies :+ realVertices(to)
-      for ((v1, v2) ← vertexChain.zip(vertexChain.tail))
-        edges ::= new Edge(v1, v2, reversed = reversedEdges.contains((from, to)))
+      for ((v1, v2) ← vertexChain.zip(vertexChain.tail)) {
+        val reversed = revEdges.get(graphEdge) match {
+          case Some(count) ⇒
+            if (count == 1)
+              revEdges -= graphEdge
+            else
+              revEdges += graphEdge -> (count - 1)
+            true
+          case None ⇒
+            false
+        }
+        edges ::= new Edge(v1, v2, reversed)
+      }
     }
 
     Layering(layers.toList.map(lb ⇒ Layer(lb.toList)), edges)

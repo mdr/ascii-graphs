@@ -29,4 +29,9 @@ object Utils {
     case None     ⇒ t
   }
 
+  def multisetCompare[T](set1: List[T], set2: List[T]): Boolean =
+    mkMultiset(set1) == mkMultiset(set2)
+
+  def mkMultiset[T](set1: List[T]): Map[T, Int] = set1.groupBy(identity).mapValues(_.size)
+
 }

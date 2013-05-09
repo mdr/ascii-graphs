@@ -2,12 +2,13 @@ package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii._
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.layout.cycles.CycleRemover
 
 object Layouter {
 
   def renderGraph[T](graph: layout.Graph[T]): String = {
-    val (newGraph, reversedEdges) = new CycleRemover[T].removeCycles(graph)
-    val layering = new LayeringCalculator[T].assignLayers(newGraph, reversedEdges.toSet)
+    val (newGraph, reversedEdges) = CycleRemover.removeCycles(graph)
+    val layering = new LayeringCalculator[T].assignLayers(newGraph, Utils.mkMultiset(reversedEdges))
     val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
     val drawing = layouter.layout(LayerOrderingCalculator.reorder(layering))
     val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))
@@ -222,9 +223,9 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
     def isEmpty = vertexInfos.isEmpty
 
-    def maxRow = vertexInfos.values.map(_.region.bottomRow).max
+    def maxRow = if (vertexInfos.isEmpty) 0 else vertexInfos.values.map(_.region.bottomRow).max
 
-    def maxColumn = vertexInfos.values.map(_.region.rightColumn).max
+    def maxColumn = if (vertexInfos.isEmpty) 0 else vertexInfos.values.map(_.region.rightColumn).max
 
     def down(n: Int): LayerVertexInfos = copy(vertexInfos = Utils.transformValues(vertexInfos)(_.translate(down = n)))
 

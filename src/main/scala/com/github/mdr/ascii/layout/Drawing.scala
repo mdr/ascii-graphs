@@ -10,7 +10,7 @@ case class Drawing(elements: List[DrawingElement]) {
       elements.flatMap {
         case element: VertexDrawingElement ⇒ List(element.region.bottomRight)
         case element: EdgeDrawingElement   ⇒ element.bendPoints
-      }.foldLeft(Point(0, 0))(_ maxRowCol _)
+      }.foldLeft(Point(-1, -1))(_ maxRowCol _)
     Dimension(width = largestPoint.column + 1, height = largestPoint.row + 1)
   }
 
