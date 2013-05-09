@@ -18,37 +18,41 @@ class CycleRemover[V] {
     var left: List[V] = Nil
     var right: List[V] = Nil
 
+    @tailrec
+    def processSinks() {
+      val sinks = db.getSinks
+      if (sinks.nonEmpty) {
+        for (v ← sinks) {
+          db.removeVertex(v)
+          right ::= v
+        }
+        processSinks()
+      }
+    }
+
+    @tailrec
+    def processSources() {
+      val sources = db.getSources
+      if (sources.nonEmpty) {
+        for (v ← sources) {
+          db.removeVertex(v)
+          left ::= v
+        }
+        processSources()
+      }
+    }
+
     var continue = true
     while (continue) {
-      @tailrec def processSinks() {
-        val sinks = db.getSinks
-        if (sinks.nonEmpty) {
-          for (v ← sinks) {
-            db.removeVertex(v)
-            right ::= v
-          }
-          processSinks()
-        }
-      }
       processSinks()
-
-      @tailrec def processSources() {
-        val sources = db.getSources
-        if (sources.nonEmpty) {
-          for (v ← sources) {
-            db.removeVertex(v)
-            left ::= v
-          }
-          processSources()
-        }
-      }
       processSources()
 
       db.getLargestDegreeDiffVertex match {
         case Some(v) ⇒
           db.removeVertex(v)
           left ::= v
-        case None ⇒ continue = false
+        case None ⇒
+          continue = false
       }
     }
 
@@ -59,7 +63,7 @@ class CycleRemover[V] {
     graph.copy(edges = graph.edges.filterNot { case (v1, v2) ⇒ v1 == v2 })
 
   /**
-   * @return graph without cycles and list of reversed edges. Note: also removes self-loops.
+   * @return graph without cycles and list of reversed edges. (Note: also removes self-loops, for now).
    */
   def removeCycles(graph: Graph[V]): (Graph[V], List[(V, V)]) = {
     val looplessGraph = removeSelfLoops(graph)

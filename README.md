@@ -48,6 +48,8 @@ This would produce:
     |V5 | |V6 | |V4 | |V3 |
     +---+ +---+ +---+ +---+
 
+Layout is Sugiyama-style layered graph drawing, and supports multi-edges, cycles, and vertex labels, but not self-loops or edge labels.
+
 ## Other ASCII layout libraries
 
 * Vijual (Clojure): http://lisperati.com/vijual/
