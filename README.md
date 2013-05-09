@@ -2,7 +2,7 @@ An ASCII-art diagram library for graphs. It supports both parsing existing diagr
 
 You can use it via sbt:
 
-    libraryDependencies += "com.github.mdr" %% "ascii-graphs" % "0.0.1"
+    libraryDependencies += "com.github.mdr" %% "ascii-graphs" % "0.0.3"
 
 # Graph layout
 
