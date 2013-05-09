@@ -118,26 +118,33 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       }
     }
 
-    // Force edges that share start and end columns to be ordered correctly to avoid conflicts
+    reorderEdgesWithSameStartAndEndColumns(edgeRows, sortedInfos)
+  }
+
+  /**
+   * Force edges that share start and end columns to be ordered so as to avoid conflicts
+   */
+  private def reorderEdgesWithSameStartAndEndColumns(edgeRows: Map[EdgeInfo, Int], sortedInfos: List[EdgeInfo]): Map[EdgeInfo, Int] = {
+    var updatedEdgeRows = edgeRows
     var continue = true
     while (continue) {
       continue = false
       for {
-        edgeInfo1 @ EdgeInfo(_, _, start1, _, _) ← sortedInfos
-        edgeInfo2 @ EdgeInfo(_, _, _, finish2, _) ← sortedInfos
+        edgeInfo1 @ EdgeInfo(_, _, start1, finish1, _) ← sortedInfos
+        edgeInfo2 @ EdgeInfo(_, _, start2, finish2, _) ← sortedInfos
         if edgeInfo1 != edgeInfo2
         if start1.column == finish2.column
+        if start2.column != finish1.column // Prevents an infinite loop (issue #3), but still allows overlapping edges
         row1 = edgeRows(edgeInfo1)
         row2 = edgeRows(edgeInfo2)
         if row1 > row2
       } {
-        edgeRows += edgeInfo1 -> row2
-        edgeRows += edgeInfo2 -> row1
+        updatedEdgeRows += edgeInfo1 -> row2
+        updatedEdgeRows += edgeInfo2 -> row1
         continue = true
       }
     }
-
-    edgeRows
+    updatedEdgeRows
   }
 
   private case class RowLayoutResult(

@@ -11,7 +11,7 @@ import com.github.mdr.ascii.layout.KinkRemover
 import com.github.mdr.ascii.layout.Compactifier
 import com.github.mdr.ascii.layout.RandomGraph
 
-object RunLayout extends Application {
+object RunLayout {
 
   val graph1 = Graph(
     vertices = List(

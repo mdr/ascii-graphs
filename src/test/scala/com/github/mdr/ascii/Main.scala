@@ -1,6 +1,6 @@
 package com.github.mdr.ascii
 
-object Main extends Application {
+object Main  {
 
   val diagram1 = Diagram("""
              +-+             
