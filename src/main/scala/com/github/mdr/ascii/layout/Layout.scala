@@ -136,8 +136,8 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
         if edgeInfo1 != edgeInfo2
         if start1.column == finish2.column
         if start2.column != finish1.column // Prevents an infinite loop (issue #3), but still allows overlapping edges
-        row1 = edgeRows(edgeInfo1)
-        row2 = edgeRows(edgeInfo2)
+        row1 = updatedEdgeRows(edgeInfo1)
+        row2 = updatedEdgeRows(edgeInfo2)
         if row1 > row2
       } {
         updatedEdgeRows += edgeInfo1 -> row2

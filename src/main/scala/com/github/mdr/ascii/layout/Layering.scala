@@ -14,7 +14,9 @@ case class Layering(layers: List[Layer], edges: List[Edge]) {
 
 sealed abstract class Vertex
 
-class DummyVertex() extends Vertex
+class DummyVertex() extends Vertex {
+  override def toString = "DummyVertex"
+}
 
 class RealVertex(val contents: Any) extends Vertex {
 
