@@ -16,57 +16,53 @@ object CycleRemover {
 
 class CycleRemover[V] {
 
-  private def findVertexSequence(graph: Graph[V]): List[V] = {
-    val db = new CycleRemovalInfo(graph)
-    var left: List[V] = Nil
-    var right: List[V] = Nil
+  private class Removal(graph: Graph[V]) {
 
-    @tailrec
-    def processSinks() {
-      val sinks = db.getSinks
-      if (sinks.nonEmpty) {
-        for (v ← sinks) {
-          db.removeVertex(v)
-          right ::= v
-        }
-        processSinks()
-      }
-    }
+    private val graphInfo = new CycleRemovalInfo(graph)
 
-    @tailrec
-    def processSources() {
-      val sources = db.getSources
-      if (sources.nonEmpty) {
-        for (v ← sources) {
-          db.removeVertex(v)
-          left ::= v
-        }
-        processSources()
-      }
-    }
+    private var left: List[V] = Nil
+    private var right: List[V] = Nil
 
-    var continue = true
-    while (continue) {
+    def run(): Removal = {
       processSinks()
       processSources()
 
-      db.getLargestDegreeDiffVertex match {
+      graphInfo.getLargestDegreeDiffVertex match {
         case Some(v) ⇒
-          db.removeVertex(v)
+          graphInfo.removeVertex(v)
           left ::= v
+          run()
         case None ⇒
-          continue = false
+          this
       }
     }
 
-    left.reverse ++ right
+    private def processSinks() =
+      while (graphInfo.getSinks.nonEmpty)
+        for (v ← graphInfo.getSinks) {
+          graphInfo.removeVertex(v)
+          right ::= v
+        }
+
+    private def processSources() =
+      while (graphInfo.getSources.nonEmpty)
+        for (v ← graphInfo.getSources) {
+          graphInfo.removeVertex(v)
+          left ::= v
+        }
+
+    def getSequence = left.reverse ++ right
+
   }
+
+  private def findVertexSequence(graph: Graph[V]): List[V] =
+    new Removal(graph).run().getSequence
 
   def removeSelfLoops(graph: Graph[V]): Graph[V] =
     graph.copy(edges = graph.edges.filterNot { case (v1, v2) ⇒ v1 == v2 })
 
   /**
-   * @return graph without cycles and list of reversed edges (in the new graph). (Note: also removes self-loops, for now).
+   * @return graph without cycles and list of reversed edges (in the new graph).
    */
   def removeCycles(graph: Graph[V]): (Graph[V], List[(V, V)]) = {
     reflowGraph(graph, findVertexSequence(graph))

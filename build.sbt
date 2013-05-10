@@ -12,20 +12,7 @@ scalacOptions ++= Seq("-deprecation")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
-// libraryDependencies += "org.antlr" % "antlr" % "3.5"
-
-// libraryDependencies += "org.vert-x" % "vertx-platform" % "1.3.1.final"
-
-//libraryDependencies ++= Seq(
-//      "com.typesafe" % "config" % "1.0.0",
-//      "org.slf4j" % "slf4j-api" % "1.7.2",
-//      "org.slf4j" % "jcl-over-slf4j" % "1.7.2",
-//      "org.slf4j" % "log4j-over-slf4j" % "1.7.2",
-//      "ch.qos.logback" % "logback-classic" % "1.0.7",
-//      "org.codehaus.janino" % "janino" % "2.6.1",
-//      "com.fasterxml.jackson.core" % "jackson-databind" % "2.1.0"
-//      )
-
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
 
 EclipseKeys.withSource := true
 

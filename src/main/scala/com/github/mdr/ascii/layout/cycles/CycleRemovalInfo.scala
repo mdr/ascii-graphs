@@ -8,13 +8,13 @@ import com.github.mdr.ascii.graph.Graph
  * Tracks information useful during cycle removal algorithm:
  *   - vertices which have been deleted from the graph
  *   - sources and sinks
- *   - vertices which have the largest difference between the out-degree and in-degree
+ *   - vertices, ranked by the difference between their out-degree and in-degree
  */
 class CycleRemovalInfo[V](graph: Graph[V]) {
 
-  private var sources: Set[V] = Set() // excludes isolated vertices
+  private var sources: Set[V] = graph.sources.toSet
 
-  private var sinks: Set[V] = Set() // includes isolated vertices
+  private var sinks: Set[V] = graph.sinks.toSet
 
   /**
    * For each vertex v, the difference between the out- and in-degrees: outDegree(v) - inDegree(v)
@@ -28,16 +28,9 @@ class CycleRemovalInfo[V](graph: Graph[V]) {
 
   private var deletedVertices: Set[V] = Set()
 
-  // Initialise based on entire graph:
-  for (v ← graph.vertices) {
-    val outDegree = graph.outDegree(v)
-    val inDegree = graph.inDegree(v)
-    if (outDegree == 0)
-      sinks += v
-    else if (inDegree == 0)
-      sources += v
-    addVertexToDegreeDiffMaps(v, outDegree - inDegree)
-  }
+  // Initialise
+  for (v ← graph.vertices)
+    addVertexToDegreeDiffMaps(v, graph.outDegree(v) - graph.inDegree(v))
 
   def getSources: Set[V] = sources
 
@@ -55,7 +48,7 @@ class CycleRemovalInfo[V](graph: Graph[V]) {
 
     for (outVertex ← getOutVertices(v)) {
       adjustDegreeDiff(outVertex, +1)
-      if (getInVertices(outVertex).isEmpty && !sinks.contains(outVertex))
+      if (getInVertices(outVertex).isEmpty)
         sources += outVertex
     }
     for (inVertex ← getInVertices(v)) {

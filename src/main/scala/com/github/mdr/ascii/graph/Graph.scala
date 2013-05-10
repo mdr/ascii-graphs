@@ -69,4 +69,12 @@ case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
 
   def sinks: List[V] = vertices.filter(outDegree(_) == 0)
 
+  def removeEdge(edge: (V, V)): Graph[V] = copy(edges = Utils.removeFirst(edges, edge))
+
+  def removeVertex(v: V): Graph[V] =
+    Graph(vertices.filterNot(_ == v), edges.filterNot { case (v1, v2) ⇒ v1 == v || v2 == v })
+
+  def map[U](f: V ⇒ U): Graph[U] =
+    Graph(vertices.map(f), edges.map { case (v1, v2) ⇒ (f(v1), f(v2)) })
+
 }

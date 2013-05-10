@@ -34,4 +34,9 @@ object Utils {
 
   def mkMultiset[T](set1: List[T]): Map[T, Int] = set1.groupBy(identity).mapValues(_.size)
 
+  def removeFirst[T](xs: List[T], x: T): List[T] = xs match {
+    case Nil    ⇒ Nil
+    case h :: t ⇒ if (h == x) t else h :: removeFirst(t, x)
+  }
+
 }
