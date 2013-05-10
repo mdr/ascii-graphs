@@ -6,7 +6,7 @@ object ToStringVertexRenderingStrategy extends VertexRenderingStrategy[Any] {
 
   def getPreferredSize(v: Any): Dimension = {
     val lines = splitLines(v.toString)
-    Dimension(lines.size, lines.map(_.size).max)
+    Dimension(lines.size, if (lines.isEmpty) 0 else lines.map(_.size).max)
   }
 
   def getText(v: Any, allocatedSize: Dimension): List[String] =

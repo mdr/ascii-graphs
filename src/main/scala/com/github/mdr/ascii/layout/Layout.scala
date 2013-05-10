@@ -3,12 +3,13 @@ package com.github.mdr.ascii.layout
 import com.github.mdr.ascii._
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.layout.cycles.CycleRemover
+import com.github.mdr.ascii.graph.Graph
 
 object Layouter {
 
-  def renderGraph[T](graph: layout.Graph[T]): String = {
+  def renderGraph[T](graph: Graph[T]): String = {
     val (newGraph, reversedEdges) = CycleRemover.removeCycles(graph)
-    val layering = new LayeringCalculator[T].assignLayers(newGraph, Utils.mkMultiset(reversedEdges))
+    val layering = new LayeringCalculator[T].assignLayers(CycleRemover.removeSelfLoops(newGraph), Utils.mkMultiset(reversedEdges))
     val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
     val drawing = layouter.layout(LayerOrderingCalculator.reorder(layering))
     val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))

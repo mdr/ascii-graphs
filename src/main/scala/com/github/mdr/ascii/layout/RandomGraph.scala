@@ -1,6 +1,7 @@
 package com.github.mdr.ascii.layout
 
 import scala.util.Random
+import com.github.mdr.ascii.graph.Graph
 
 object RandomGraph {
 

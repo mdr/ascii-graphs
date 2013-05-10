@@ -5,6 +5,7 @@ import org.scalatest.FlatSpec
 import com.github.mdr.ascii.layout.cycles.CycleRemover
 import scala.language.reflectiveCalls
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.graph.Graph
 
 class GraphReflowTest extends FlatSpec with ShouldMatchers {
 

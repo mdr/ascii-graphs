@@ -1,9 +1,10 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.graph
 
-import com.github.mdr.ascii.Diagram
-import com.github.mdr.ascii.Box
 import scala.PartialFunction.cond
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.layout.Layouter
+import com.github.mdr.ascii.Diagram
+import com.github.mdr.ascii.Box
 
 object Graph {
 
@@ -44,6 +45,10 @@ case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
   require(outMap.keys.forall(vertices.contains))
   require(inMap.keys.forall(vertices.contains))
 
+  def inEdges(v: V): List[(V, V)] = edges.filter(_._2 == v)
+
+  def outEdges(v: V): List[(V, V)] = edges.filter(_._1 == v)
+
   def inVertices(v: V): List[V] = inMap.getOrElse(v, Nil)
 
   def outVertices(v: V): List[V] = outMap.getOrElse(v, Nil)
@@ -59,5 +64,9 @@ case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
   override def hashCode = vertices.## + edges.##
 
   override def toString = "\n" + Layouter.renderGraph(this)
+
+  def sources: List[V] = vertices.filter(inDegree(_) == 0)
+
+  def sinks: List[V] = vertices.filter(outDegree(_) == 0)
 
 }

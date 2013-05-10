@@ -2,19 +2,22 @@ package com.github.mdr.ascii.layout.cycles
 
 import scala.collection.immutable.SortedMap
 import scala.annotation.tailrec
-import com.github.mdr.ascii.layout.Graph
+import com.github.mdr.ascii.graph.Graph
 
 object CycleRemover {
 
   def removeCycles[V](graph: Graph[V]): (Graph[V], List[(V, V)]) =
     new CycleRemover().removeCycles(graph)
 
+  def removeSelfLoops[V](graph: Graph[V]): Graph[V] =
+    new CycleRemover().removeSelfLoops(graph)
+
 }
 
 class CycleRemover[V] {
 
   private def findVertexSequence(graph: Graph[V]): List[V] = {
-    val db = new VertexInfoDatabase(graph)
+    val db = new CycleRemovalInfo(graph)
     var left: List[V] = Nil
     var right: List[V] = Nil
 
@@ -59,15 +62,14 @@ class CycleRemover[V] {
     left.reverse ++ right
   }
 
-  private def removeSelfLoops(graph: Graph[V]): Graph[V] =
+  def removeSelfLoops(graph: Graph[V]): Graph[V] =
     graph.copy(edges = graph.edges.filterNot { case (v1, v2) ⇒ v1 == v2 })
 
   /**
-   * @return graph without cycles and list of reversed edges. (Note: also removes self-loops, for now).
+   * @return graph without cycles and list of reversed edges (in the new graph). (Note: also removes self-loops, for now).
    */
   def removeCycles(graph: Graph[V]): (Graph[V], List[(V, V)]) = {
-    val looplessGraph = removeSelfLoops(graph)
-    reflowGraph(looplessGraph, findVertexSequence(looplessGraph))
+    reflowGraph(graph, findVertexSequence(graph))
   }
 
   /**

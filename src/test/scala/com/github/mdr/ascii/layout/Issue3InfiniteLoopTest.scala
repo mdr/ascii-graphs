@@ -2,6 +2,7 @@ package com.github.mdr.ascii.layout
 
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
+import com.github.mdr.ascii.graph.Graph
 
 // https://github.com/mdr/ascii-graphs/issues/3
 class Issue3InfiniteLoopTest extends FlatSpec with ShouldMatchers {
@@ -23,9 +24,7 @@ class Issue3InfiniteLoopTest extends FlatSpec with ShouldMatchers {
       "3" -> "9", "4" -> "5", "4" -> "8", "7" -> "9")
 
     val graph = Graph(vertices = v, edges = e)
-    val ascii = Layouter.renderGraph(graph)
-    println(ascii)
-
+    Layouter.renderGraph(graph)
   }
 }
 

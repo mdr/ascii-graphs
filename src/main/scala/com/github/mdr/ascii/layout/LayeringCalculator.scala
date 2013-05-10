@@ -1,6 +1,7 @@
 package com.github.mdr.ascii.layout
 
 import scala.collection.mutable.ListBuffer
+import com.github.mdr.ascii.graph.Graph
 
 class LayeringCalculator[V] {
 
@@ -58,24 +59,23 @@ class LayeringCalculator[V] {
       toLayer = layerNum(to)
     } {
       val dummies = (fromLayer + 1) to (toLayer - 1) map { layerNum ⇒
-        val dummy = new DummyVertex()
+        val dummy = new DummyVertex
         layers(layerNum) += dummy
         dummy
       }
       val vertexChain = realVertices(from) +: dummies :+ realVertices(to)
-      for ((v1, v2) ← vertexChain.zip(vertexChain.tail)) {
-        val reversed = revEdges.get(graphEdge) match {
-          case Some(count) ⇒
-            if (count == 1)
-              revEdges -= graphEdge
-            else
-              revEdges += graphEdge -> (count - 1)
-            true
-          case None ⇒
-            false
-        }
-        edges ::= new Edge(v1, v2, reversed)
+      val reversed = revEdges.get(graphEdge) match {
+        case Some(count) ⇒
+          if (count == 1)
+            revEdges -= graphEdge
+          else
+            revEdges += graphEdge -> (count - 1)
+          true
+        case None ⇒
+          false
       }
+      for ((v1, v2) ← vertexChain.zip(vertexChain.tail))
+        edges ::= new Edge(v1, v2, reversed)
     }
 
     Layering(layers.toList.map(lb ⇒ Layer(lb.toList)), edges)
