@@ -1,11 +1,10 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.layout.cycles
 
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.graph.GraphUtils
-import com.github.mdr.ascii.layout.cycles.CycleRemover
 import com.github.mdr.ascii.util.Utils
 
 class CycleRemoverTest extends FlatSpec with ShouldMatchers {

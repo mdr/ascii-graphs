@@ -1,14 +1,17 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.layout.cycles
 
 import scala.util.Random.javaRandomToRandom
 
-import org.scalacheck._
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.scalacheck.Gen.Params
 import org.scalacheck.Prop.forAll
+import org.scalacheck.Properties
+import org.scalacheck.Shrink
 
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.graph.GraphUtils
-import com.github.mdr.ascii.layout.cycles.CycleRemover
+import com.github.mdr.ascii.layout.RandomGraph
 import com.github.mdr.ascii.util.Utils
 
 object CycleRemoverSpecification extends Properties("CycleRemover") {

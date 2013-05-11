@@ -1,16 +1,16 @@
 package com.github.mdr.ascii
 
-import com.github.mdr.ascii.layout.cycles.CycleRemover
 import com.github.mdr.ascii.graph.Graph
-import com.github.mdr.ascii.layout.LayerOrderingCalculator
-import com.github.mdr.ascii.layout.LayeringCalculator
+import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.layout.cycles.CycleRemover
+import com.github.mdr.ascii.layout.RandomGraph
+import com.github.mdr.ascii.layout.layering.LayeringCalculator
+import com.github.mdr.ascii.layout.Compactifier
 import com.github.mdr.ascii.layout.Layouter
+import com.github.mdr.ascii.layout.KinkRemover
 import com.github.mdr.ascii.layout.Renderer
 import com.github.mdr.ascii.layout.ToStringVertexRenderingStrategy
-import com.github.mdr.ascii.layout.KinkRemover
-import com.github.mdr.ascii.layout.Compactifier
-import com.github.mdr.ascii.layout.RandomGraph
-import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.layout.layering.LayerOrderingCalculator
 
 object RunLayout extends App {
 

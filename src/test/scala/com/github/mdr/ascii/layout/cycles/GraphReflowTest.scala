@@ -1,11 +1,10 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.layout.cycles
 
-import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
-import com.github.mdr.ascii.layout.cycles.CycleRemover
-import scala.language.reflectiveCalls
-import com.github.mdr.ascii.util.Utils
+import org.scalatest.matchers.ShouldMatchers
+
 import com.github.mdr.ascii.graph.Graph
+import com.github.mdr.ascii.util.Utils
 
 class GraphReflowTest extends FlatSpec with ShouldMatchers {
 

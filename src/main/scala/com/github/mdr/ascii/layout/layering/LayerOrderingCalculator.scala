@@ -1,6 +1,4 @@
-package com.github.mdr.ascii.layout
-
-import com.github.mdr.ascii.util.Utils
+package com.github.mdr.ascii.layout.layering
 
 object LayerOrderingCalculator {
 

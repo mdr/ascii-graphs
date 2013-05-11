@@ -4,17 +4,28 @@ import com.github.mdr.ascii._
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.layout.cycles.CycleRemover
 import com.github.mdr.ascii.graph.Graph
+import com.github.mdr.ascii.layout.layering.LayeringCalculator
+import com.github.mdr.ascii.layout.layering.Vertex
+import com.github.mdr.ascii.layout.layering.RealVertex
+import com.github.mdr.ascii.layout.layering.Layering
+import com.github.mdr.ascii.layout.layering.Layer
+import com.github.mdr.ascii.layout.layering.Edge
+import com.github.mdr.ascii.layout.layering.DummyVertex
+import com.github.mdr.ascii.layout.layering.LayerOrderingCalculator
 
 object Layouter {
 
-  def renderGraph[T](graph: Graph[T]): String = {
+  def renderGraph[V](graph: Graph[V]): String = {
     val (newGraph, reversedEdges) = CycleRemover.removeCycles(graph)
-    val layering = new LayeringCalculator[T].assignLayers(CycleRemover.removeSelfLoops(newGraph), Utils.mkMultiset(reversedEdges))
-    val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
-    val drawing = layouter.layout(LayerOrderingCalculator.reorder(layering))
+    val graphWithoutLoops = CycleRemover.removeSelfLoops(newGraph)
+    val layering = new LayeringCalculator[V].assignLayers(graphWithoutLoops, Utils.mkMultiset(reversedEdges))
+    val reorderedLayering = LayerOrderingCalculator.reorder(layering)
+    val drawing = stringLayouter.layout(reorderedLayering)
     val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))
     Renderer.render(cleanedUpDrawing)
   }
+
+  private def stringLayouter = new Layouter[Any](ToStringVertexRenderingStrategy)
 
 }
 

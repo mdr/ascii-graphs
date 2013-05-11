@@ -1,11 +1,11 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.layout.layering
 
 import scala.collection.mutable.ListBuffer
 import com.github.mdr.ascii.graph.Graph
 
 class LayeringCalculator[V] {
 
-  private def calculateLongestDistances(graph: Graph[V]): Map[V, Int] = {
+  def calculateLongestDistances(graph: Graph[V]): Map[V, Int] = {
 
     var longestDistancesToSink: Map[V, Int] = Map()
 
@@ -49,7 +49,7 @@ class LayeringCalculator[V] {
     for (v ← graph.vertices)
       layers(layerNum(v)) += realVertices(v)
 
-    // We decrement counts in revEdges as we construct layer edges to make sure the right proportion of reversed edges
+    // We decrement counts in revEdges as we construct layer edges to make sure the right number of reversed edges
     // are generated:
     var revEdges = reversedEdges
     var edges: List[Edge] = Nil

@@ -1,16 +1,8 @@
-package com.github.mdr.ascii.layout
-
-object Layer {
-
-  def apply(vertices: Vertex*): Layer = apply(vertices.toList)
-
-}
+package com.github.mdr.ascii.layout.layering
 
 case class Layer(vertices: List[Vertex])
 
-case class Layering(layers: List[Layer], edges: List[Edge]) {
-
-}
+case class Layering(layers: List[Layer], edges: List[Edge])
 
 sealed abstract class Vertex
 
@@ -20,9 +12,7 @@ class DummyVertex() extends Vertex {
 
 class RealVertex(val contents: Any) extends Vertex {
 
-  def text = contents.toString
-
-  override def toString = "RealVertex(" + text + ")"
+  override def toString = "RealVertex(" + contents.toString + ")"
 
 }
 
