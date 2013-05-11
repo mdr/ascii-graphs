@@ -11,19 +11,10 @@ import org.scalacheck.Shrink
 
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.graph.GraphUtils
-import com.github.mdr.ascii.layout.RandomGraph
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.graph.GraphGenerators._
 
 object CycleRemoverSpecification extends Properties("CycleRemover") {
-
-  implicit val randomGraphGenerator: Gen[Graph[String]] = Gen { p: Params ⇒ Some(RandomGraph.randomGraph(p.rng)) }
-
-  implicit val arbitraryGraph = Arbitrary(randomGraphGenerator)
-
-  implicit val shrinkGraph = Shrink { g: Graph[String] ⇒
-    (for (edge ← g.edges.toStream) yield g.removeEdge(edge)) append
-      (for (v ← g.vertices.toStream) yield g.removeVertex(v))
-  }
 
   property("no cycles") = forAll { g: Graph[String] ⇒
     val (dag, _) = CycleRemover.removeCycles(g)

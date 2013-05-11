@@ -46,9 +46,16 @@ class LongestDistanceToSinkTest extends FlatSpec with ShouldMatchers {
     val layeringCalculator = new LayeringCalculator[String]
     def shouldBe(expectedDistances: (String, Int)*) {
       "Distances to sinks" should ("be correct for " + ">>>\n" + graph + "\n<<<") in {
-        val actualDistances = layeringCalculator.calculateLongestDistances(graph)
+        val actualDistances = layeringCalculator.longestDistancesToSink(graph)
         actualDistances should be(expectedDistances.toMap)
       }
+    }
+  }
+
+  def paths[V](graph: Graph[V], v: V): List[List[V]] = {
+    graph.outVertices(v) match {
+      case Nil ⇒ List(List[V]())
+      case vs  ⇒ vs.flatMap(v2 ⇒ paths(graph, v2).map(v2 :: _))
     }
   }
 
