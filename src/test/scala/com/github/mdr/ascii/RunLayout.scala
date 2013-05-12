@@ -119,9 +119,8 @@ object RunLayout extends App {
   val graph = graph4
   //  println(graph)
 
-  val (newGraph, reversedEdges) = new CycleRemover[String].removeCycles(graph)
-  val layeringCalculator = new LayeringCalculator[String]
-  val layering = layeringCalculator.assignLayers(newGraph, Utils.mkMultiset(reversedEdges))
+  val cycleRemovalResult = CycleRemover.removeCycles(graph)
+  val layering = new LayeringCalculator[String].assignLayers(cycleRemovalResult)
   val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
   val drawing0 = layouter.layout(LayerOrderingCalculator.reorder(layering))
   val updatedDrawing1 = KinkRemover.removeKinks(drawing0)

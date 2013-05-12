@@ -17,8 +17,8 @@ import com.github.mdr.ascii.layout.cycles.CycleRemovalResult
 object Layouter {
 
   def renderGraph[V](graph: Graph[V]): String = {
-    val CycleRemovalResult(newGraph, reversedEdges, _) = CycleRemover.removeCycles(graph)
-    val layering = new LayeringCalculator[V].assignLayers(newGraph, Utils.mkMultiset(reversedEdges))
+    val cycleRemovalResult = CycleRemover.removeCycles(graph)
+    val layering = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
     val drawing = stringLayouter.layout(reorderedLayering)
     val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))
@@ -60,16 +60,17 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
     def outVertices(vertex: Vertex) = outEdges collect { case e @ Edge(`vertex`, v2) ⇒ e }
 
     val dimensions: Map[Vertex, Dimension] =
-      (for {
-        vertex ← layer.vertices
-        outDegree = outVertices(vertex).size
-        inDegree = inVertices(vertex).size
-      } yield {
+      (for (vertex ← layer.vertices) yield {
         val dimension = vertex match {
           case realVertex: RealVertex ⇒
+            val inDegree = inVertices(vertex).size
+            val outDegree = outVertices(vertex).size
+            val selfEdges = realVertex.selfEdges
+            val requiredInputWidth = (inDegree + selfEdges) * 2 + 3
+            val requiredOutputWidth = (outDegree + selfEdges) * 2 + 3
             val Dimension(preferredHeight, preferredWidth) =
               vertexRenderingStrategy.getPreferredSize(realVertex.contents.asInstanceOf[V])
-            val width = math.max(math.max(outDegree * 2 + 3, inDegree * 2 + 3), preferredWidth + 2)
+            val width = math.max(math.max(requiredInputWidth, requiredOutputWidth), preferredWidth + 2)
             val height = math.max(VERTEX_HEIGHT, preferredHeight + 2)
             Dimension(height = height, width = width)
           case _: DummyVertex ⇒
@@ -267,7 +268,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
   def layout(layering: Layering): Drawing = {
 
     var vertexInfosByLayer: Map[Layer, LayerVertexInfos] = Map()
-    for ((previousLayerOpt, currentLayer, nextLayerOpt) ← Utils.withPreviousAndNext(layering.layers)) yield {
+    for ((previousLayerOpt, currentLayer, nextLayerOpt) ← Utils.withPreviousAndNext(layering.layers)) {
       val vertexInfos = calculateVertexInfo(currentLayer, layering.edges, previousLayerOpt, nextLayerOpt)
       vertexInfosByLayer += currentLayer -> vertexInfos
     }

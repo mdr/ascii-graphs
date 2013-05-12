@@ -10,9 +10,9 @@ class DummyVertex() extends Vertex {
   override def toString = "DummyVertex"
 }
 
-class RealVertex(val contents: Any) extends Vertex {
+class RealVertex(val contents: Any, val selfEdges: Int) extends Vertex {
 
-  override def toString = "RealVertex(" + contents.toString + ")"
+  override def toString = "RealVertex(" + contents.toString + ", selfEdges = " + selfEdges + ")"
 
 }
 

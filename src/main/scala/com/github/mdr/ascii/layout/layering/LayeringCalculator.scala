@@ -2,6 +2,8 @@ package com.github.mdr.ascii.layout.layering
 
 import scala.collection.mutable.ListBuffer
 import com.github.mdr.ascii.graph.Graph
+import com.github.mdr.ascii.layout.cycles.CycleRemovalResult
+import com.github.mdr.ascii.util.Utils
 
 class LayeringCalculator[V] {
 
@@ -43,23 +45,30 @@ class LayeringCalculator[V] {
     distances
   }
 
-  def assignLayers(graph: Graph[V], reversedEdges: Map[(V, V), Int]): Layering = {
+  private def makeRealVertices(cycleRemovalResult: CycleRemovalResult[V]): Map[V, RealVertex] =
+    cycleRemovalResult.dag.vertices.map { v ⇒
+      val selfEdges = cycleRemovalResult.countSelfEdges(v)
+      v -> new RealVertex(v, selfEdges)
+    }.toMap
+
+  def assignLayers(cycleRemovalResult: CycleRemovalResult[V]): Layering = {
+    val graph = cycleRemovalResult.dag
+
     val distancesToSink = longestDistancesToSink(graph)
     val maxLayerNum = if (graph.isEmpty) 0 else distancesToSink.values.max
     def layerNum(v: V): Int = maxLayerNum - distancesToSink(v)
-
-    val realVertices: Map[V, RealVertex] = graph.vertices.map { v ⇒ v -> new RealVertex(v) }.toMap
 
     val layers: ListBuffer[ListBuffer[Vertex]] = ListBuffer()
     for (layerNum ← 0 to maxLayerNum)
       layers += ListBuffer[Vertex]()
 
+    val realVertices: Map[V, RealVertex] = makeRealVertices(cycleRemovalResult)
     for (v ← graph.vertices)
       layers(layerNum(v)) += realVertices(v)
 
     // We decrement counts in revEdges as we construct layer edges to make sure the right number of reversed edges
     // are generated:
-    var revEdges = reversedEdges
+    var revEdges = Utils.mkMultiset(cycleRemovalResult.reversedEdges)
     var edges: List[Edge] = Nil
     for {
       graphEdge @ (from, to) ← graph.edges
