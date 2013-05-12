@@ -6,11 +6,16 @@ import com.github.mdr.ascii.graph.Graph
 
 object CycleRemover {
 
-  def removeCycles[V](graph: Graph[V]): (Graph[V], List[(V, V)]) =
-    new CycleRemover().removeCycles(removeSelfLoops(graph))
-
-  def removeSelfLoops[V](graph: Graph[V]): Graph[V] =
-    new CycleRemover().removeSelfLoops(graph)
+  /**
+   * Remove cycles and self loops from the given graph, resulting in a DAG. Removed self-loops and reversed
+   * edges are also returned.
+   */
+  def removeCycles[V](graph: Graph[V]): CycleRemovalResult[V] = {
+    val cycleRemover = new CycleRemover[V]
+    val (graphWithoutLoops, selfEdges) = cycleRemover.removeSelfLoops(graph)
+    val (graphWithoutCycles, reversedEdges) = cycleRemover.removeCycles(graphWithoutLoops)
+    CycleRemovalResult(graphWithoutCycles, reversedEdges, selfEdges)
+  }
 
 }
 
@@ -23,9 +28,10 @@ class CycleRemover[V] {
     private var left: List[V] = Nil
     private var right: List[V] = Nil
 
-    def run(): Removal = {
-      processSinks()
-      processSources()
+    @tailrec
+    final def run(): Removal = {
+      addSinksToRight()
+      addSourcesToLeft()
 
       graphInfo.getLargestDegreeDiffVertex match {
         case Some(v) ⇒
@@ -37,14 +43,14 @@ class CycleRemover[V] {
       }
     }
 
-    private def processSinks() =
+    private def addSinksToRight() =
       while (graphInfo.getSinks.nonEmpty)
         for (v ← graphInfo.getSinks) {
           graphInfo.removeVertex(v)
           right ::= v
         }
 
-    private def processSources() =
+    private def addSourcesToLeft() =
       while (graphInfo.getSources.nonEmpty)
         for (v ← graphInfo.getSources) {
           graphInfo.removeVertex(v)
@@ -58,8 +64,15 @@ class CycleRemover[V] {
   private def findVertexSequence(graph: Graph[V]): List[V] =
     new Removal(graph).run().getSequence
 
-  def removeSelfLoops(graph: Graph[V]): Graph[V] =
-    graph.copy(edges = graph.edges.filterNot { case (v1, v2) ⇒ v1 == v2 })
+  private def isSelfLoop[V](edge: (V, V)) = edge._1 == edge._2
+
+  /**
+   * @return a graph without self-loops, together with a list of the self-edges that were removed.
+   */
+  def removeSelfLoops(graph: Graph[V]): (Graph[V], List[(V, V)]) = {
+    val (selfEdges, newEdges) = graph.edges.partition(isSelfLoop)
+    (graph.copy(edges = newEdges), selfEdges)
+  }
 
   /**
    * @return graph without cycles and list of reversed edges (in the new graph).

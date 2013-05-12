@@ -17,7 +17,7 @@ object RunLayout extends App {
   println(Graph.fromDiagram(""))
 
   val graph1 = Graph(
-    vertices = List(
+    vertices = Set(
       1, 2, 3, 4, 5, 6, 7, 8123, 9, 120),
     edges = List(
       1 -> 3,
@@ -38,7 +38,7 @@ object RunLayout extends App {
   val V7 = "777777777777"
 
   val graph2 = Graph(
-    vertices = List(
+    vertices = Set(
       V1, V2, V3, V4, V5, V6, V7),
     edges = List(
       V1 -> V2,

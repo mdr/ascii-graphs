@@ -12,11 +12,12 @@ import com.github.mdr.ascii.layout.layering.Layer
 import com.github.mdr.ascii.layout.layering.Edge
 import com.github.mdr.ascii.layout.layering.DummyVertex
 import com.github.mdr.ascii.layout.layering.LayerOrderingCalculator
+import com.github.mdr.ascii.layout.cycles.CycleRemovalResult
 
 object Layouter {
 
   def renderGraph[V](graph: Graph[V]): String = {
-    val (newGraph, reversedEdges) = CycleRemover.removeCycles(graph)
+    val CycleRemovalResult(newGraph, reversedEdges, _) = CycleRemover.removeCycles(graph)
     val layering = new LayeringCalculator[V].assignLayers(newGraph, Utils.mkMultiset(reversedEdges))
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
     val drawing = stringLayouter.layout(reorderedLayering)

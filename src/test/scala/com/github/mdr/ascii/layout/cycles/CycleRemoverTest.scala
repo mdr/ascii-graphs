@@ -58,7 +58,7 @@ class CycleRemoverTest extends FlatSpec with ShouldMatchers {
   def check(diagram: String) {
     val graph = Graph.fromDiagram(diagram)
     "Graph" should ("not have cycles " + ">>>\n" + graph + "\n<<<") in {
-      val (newGraph, reversedEdges) = CycleRemover.removeCycles(graph)
+      val result @ CycleRemovalResult(newGraph, reversedEdges, _) = CycleRemover.removeCycles(graph)
 
       GraphUtils.hasCycle(newGraph) should be(false)
       val revEdgeMap = Utils.mkMultiset(reversedEdges)
@@ -66,7 +66,7 @@ class CycleRemoverTest extends FlatSpec with ShouldMatchers {
       for (reversedEdge ← reversedEdges)
         newEdgeMap.getOrElse(reversedEdge, 0) should be >= (revEdgeMap(reversedEdge))
 
-      CycleRemoverSpecification.unreverse(newGraph, reversedEdges) should be(CycleRemover.removeSelfLoops(graph))
+      CycleRemoverSpecification.recoverOriginal(result) should be(graph)
     }
   }
 

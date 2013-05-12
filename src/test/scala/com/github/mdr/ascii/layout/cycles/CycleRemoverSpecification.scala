@@ -17,12 +17,12 @@ import com.github.mdr.ascii.graph.GraphGenerators._
 object CycleRemoverSpecification extends Properties("CycleRemover") {
 
   property("no cycles") = forAll { g: Graph[String] ⇒
-    val (dag, _) = CycleRemover.removeCycles(g)
+    val CycleRemovalResult(dag, _, _) = CycleRemover.removeCycles(g)
     !GraphUtils.hasCycle(dag)
   }
 
   property("reversed edges are a sub-multiset of the new edges") = forAll { g: Graph[String] ⇒
-    val (dag, reversedEdges) = CycleRemover.removeCycles(g)
+    val CycleRemovalResult(dag, reversedEdges, _) = CycleRemover.removeCycles(g)
     val revEdgeMap = Utils.mkMultiset(reversedEdges)
     val newEdgeMap = Utils.mkMultiset(dag.edges)
     reversedEdges.forall { reversedEdge ⇒
@@ -30,16 +30,25 @@ object CycleRemoverSpecification extends Properties("CycleRemover") {
     }
   }
 
-  // For now, we ignore the self-loops
   property("reversing the reversed edges restores the original graph") = forAll { g: Graph[String] ⇒
-    val (dag, reversedEdges) = CycleRemover.removeCycles(g)
-    unreverse(dag, reversedEdges) == CycleRemover.removeSelfLoops(g)
+    recoverOriginal(CycleRemover.removeCycles(g)) == g
   }
 
-  def unreverse[V](graph: Graph[V], reversedEdges: List[(V, V)]): Graph[V] = {
+  property("self-edges are correct") = forAll { g: Graph[String] ⇒
+    val selfEdges = CycleRemover.removeCycles(g).selfEdges
+    selfEdges.forall { case (v1, v2) ⇒ v1 == v2 }
+    val selfEdgesMap = Utils.mkMultiset(selfEdges)
+    val allEdgesMap = Utils.mkMultiset(g.edges)
+    selfEdges.forall { selfEdge ⇒
+      allEdgesMap.getOrElse(selfEdge, 0) >= selfEdgesMap(selfEdge)
+    }
+  }
+
+  def recoverOriginal[V](result: CycleRemovalResult[V]): Graph[V] = {
+    val CycleRemovalResult(dag, reversedEdges, selfEdges) = result
     val rereversedEdges = reversedEdges.map { case (x, y) ⇒ (y, x) }
-    val prunedEdges = reversedEdges.foldLeft(graph.edges)(Utils.removeFirst)
-    graph.copy(edges = prunedEdges ++ rereversedEdges)
+    val prunedEdges = reversedEdges.foldLeft(dag.edges)(Utils.removeFirst)
+    dag.copy(edges = prunedEdges ++ rereversedEdges ++ selfEdges)
   }
 
 }

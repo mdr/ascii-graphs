@@ -29,12 +29,12 @@ object Graph {
           vertex2 -> vertex1
       }
     val vertices = boxToVertexMap.values.toList
-    Graph(vertices, edges)
+    Graph(vertices.toSet, edges)
   }
 
 }
 
-case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
+case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
 
   val outMap: Map[V, List[V]] = edges.groupBy(_._1).map { case (k, vs) ⇒ (k, vs.map(_._2)) }
 
@@ -58,16 +58,16 @@ case class Graph[V](vertices: List[V], edges: List[(V, V)]) {
   def inDegree(v: V): Int = inVertices(v).size
 
   override def equals(obj: Any): Boolean = cond(obj) {
-    case other: Graph[V] ⇒ Utils.multisetCompare(vertices, other.vertices) && Utils.multisetCompare(edges, other.edges)
+    case other: Graph[V] ⇒ Utils.multisetCompare(vertices.toList, other.vertices.toList) && Utils.multisetCompare(edges, other.edges)
   }
 
   override def hashCode = vertices.## + edges.##
 
   override def toString = "\n" + Layouter.renderGraph(this)
 
-  def sources: List[V] = vertices.filter(inDegree(_) == 0)
+  def sources: List[V] = vertices.toList.filter(inDegree(_) == 0)
 
-  def sinks: List[V] = vertices.filter(outDegree(_) == 0)
+  def sinks: List[V] = vertices.toList.filter(outDegree(_) == 0)
 
   def removeEdge(edge: (V, V)): Graph[V] = copy(edges = Utils.removeFirst(edges, edge))
 

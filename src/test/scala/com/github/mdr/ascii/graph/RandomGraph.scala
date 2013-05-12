@@ -37,7 +37,7 @@ object RandomGraph {
 
       }
 
-    Graph(vertices, edges)
+    Graph(vertices.toSet, edges)
 
   }
 
