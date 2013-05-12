@@ -120,9 +120,9 @@ object RunLayout extends App {
   //  println(graph)
 
   val cycleRemovalResult = CycleRemover.removeCycles(graph)
-  val layering = new LayeringCalculator[String].assignLayers(cycleRemovalResult)
+  val (layering, _) = new LayeringCalculator[String].assignLayers(cycleRemovalResult)
   val layouter = new Layouter[Int](ToStringVertexRenderingStrategy)
-  val drawing0 = layouter.layout(LayerOrderingCalculator.reorder(layering))
+  val drawing0 = layouter.layout(layering)
   val updatedDrawing1 = KinkRemover.removeKinks(drawing0)
   val updatedDrawing2 = Compactifier.compactify(updatedDrawing1)
   println(Renderer.render(updatedDrawing2))

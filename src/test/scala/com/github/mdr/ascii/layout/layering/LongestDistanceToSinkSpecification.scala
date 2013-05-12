@@ -14,7 +14,7 @@ import com.github.mdr.ascii.layout.cycles.CycleRemover
 object LongestDistanceToSinkSpecification extends Properties("LongestDistanceToSink") {
 
   property("longest distance to sink") = forAll(dags) { g: Graph[String] ⇒
-    val distances = new LayeringCalculator[String].longestDistancesToSink(g)
+    val distances = LongestDistancesToSinkCalculator.longestDistancesToSink(g)
     g.vertices.forall { v ⇒
       distances(v) == paths(g, v).map(_.length).max
     }

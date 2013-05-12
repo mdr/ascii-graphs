@@ -39,4 +39,7 @@ object Utils {
     case h :: t ⇒ if (h == x) t else h :: removeFirst(t, x)
   }
 
+  def makeMap[T, U](s: Iterable[T], f: T ⇒ U): Map[T, U] =
+    s.map(t ⇒ t -> f(t))(collection.breakOut)
+
 }

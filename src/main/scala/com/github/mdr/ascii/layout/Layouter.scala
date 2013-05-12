@@ -1,24 +1,20 @@
 package com.github.mdr.ascii.layout
 
-import com.github.mdr.ascii._
-import com.github.mdr.ascii.util.Utils
-import com.github.mdr.ascii.layout.cycles.CycleRemover
+import scala.Option.option2Iterable
+
+import com.github.mdr.ascii.Dimension
+import com.github.mdr.ascii.Point
+import com.github.mdr.ascii.Region
 import com.github.mdr.ascii.graph.Graph
-import com.github.mdr.ascii.layout.layering.LayeringCalculator
-import com.github.mdr.ascii.layout.layering.Vertex
-import com.github.mdr.ascii.layout.layering.RealVertex
-import com.github.mdr.ascii.layout.layering.Layering
-import com.github.mdr.ascii.layout.layering.Layer
-import com.github.mdr.ascii.layout.layering.Edge
-import com.github.mdr.ascii.layout.layering.DummyVertex
-import com.github.mdr.ascii.layout.layering.LayerOrderingCalculator
-import com.github.mdr.ascii.layout.cycles.CycleRemovalResult
+import com.github.mdr.ascii.layout.cycles.CycleRemover
+import com.github.mdr.ascii.layout.layering._
+import com.github.mdr.ascii.util.Utils
 
 object Layouter {
 
   def renderGraph[V](graph: Graph[V]): String = {
     val cycleRemovalResult = CycleRemover.removeCycles(graph)
-    val layering = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
+    val (layering, _) = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
     val drawing = stringLayouter.layout(reorderedLayering)
     val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))
@@ -272,7 +268,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       val vertexInfos = calculateVertexInfo(currentLayer, layering.edges, previousLayerOpt, nextLayerOpt)
       vertexInfosByLayer += currentLayer -> vertexInfos
     }
-    val diagramWidth = vertexInfosByLayer.values.map(_.vertexInfos.values.map(_.region.dimension.width + 1).sum).max
+    val diagramWidth = if (vertexInfosByLayer.isEmpty) 0 else vertexInfosByLayer.values.map(_.vertexInfos.values.map(_.region.dimension.width + 1).sum).max
 
     vertexInfosByLayer = vertexInfosByLayer.map { case (layer, lvi) ⇒ layer -> spaceVertices(layer, lvi, diagramWidth) }
 
