@@ -2,34 +2,32 @@ package com.github.mdr.ascii.graph
 
 import scala.PartialFunction.cond
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.util.Utils._
 import com.github.mdr.ascii.layout.Layouter
 import com.github.mdr.ascii.parser.Diagram
 import com.github.mdr.ascii.parser.Box
+import com.github.mdr.ascii.layout.GraphLayout
 
 object Graph {
 
   def fromDiagram(s: String): Graph[String] = fromDiagram(Diagram(s))
 
   def fromDiagram(diagram: Diagram): Graph[String] = {
-    val boxToVertexMap: Map[Box, String] =
-      (for (box ← diagram.childBoxes)
-        yield (box -> box.text)).toMap
+    val boxToVertexMap: Map[Box, String] = makeMap(diagram.childBoxes, _.text)
 
+    val vertices = boxToVertexMap.values.toSet
     val edges =
       for {
         edge ← diagram.allEdges
-        box1 = edge.box1
-        box2 = edge.box2
-        vertex1 ← boxToVertexMap.get(box1)
-        vertex2 ← boxToVertexMap.get(box2)
+        vertex1 ← boxToVertexMap.get(edge.box1)
+        vertex2 ← boxToVertexMap.get(edge.box2)
       } yield {
         if (edge.hasArrow2)
           vertex1 -> vertex2
         else
           vertex2 -> vertex1
       }
-    val vertices = boxToVertexMap.values.toList
-    Graph(vertices.toSet, edges)
+    Graph(vertices, edges)
   }
 
 }
@@ -40,10 +38,11 @@ case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
 
   val inMap: Map[V, List[V]] = edges.groupBy(_._2).map { case (k, vs) ⇒ (k, vs.map(_._1)) }
 
-  def isEmpty = vertices.isEmpty
-
   require(outMap.keys.forall(vertices.contains))
+
   require(inMap.keys.forall(vertices.contains))
+
+  def isEmpty = vertices.isEmpty
 
   def inEdges(v: V): List[(V, V)] = edges.filter(_._2 == v)
 
@@ -57,14 +56,6 @@ case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
 
   def inDegree(v: V): Int = inVertices(v).size
 
-  override def equals(obj: Any): Boolean = cond(obj) {
-    case other: Graph[V] ⇒ Utils.multisetCompare(vertices.toList, other.vertices.toList) && Utils.multisetCompare(edges, other.edges)
-  }
-
-  override def hashCode = vertices.## + edges.##
-
-  override def toString = "\n" + Layouter.renderGraph(this)
-
   def sources: List[V] = vertices.toList.filter(inDegree(_) == 0)
 
   def sinks: List[V] = vertices.toList.filter(outDegree(_) == 0)
@@ -76,5 +67,15 @@ case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
 
   def map[U](f: V ⇒ U): Graph[U] =
     Graph(vertices.map(f), edges.map { case (v1, v2) ⇒ (f(v1), f(v2)) })
+
+  override lazy val hashCode = vertices.## + edges.##
+
+  override def equals(obj: Any): Boolean = cond(obj) {
+    case other: Graph[V] ⇒
+      multisetCompare(vertices.toList, other.vertices.toList) &&
+        multisetCompare(edges, other.edges)
+  }
+
+  override def toString = "\n" + GraphLayout.renderGraph(this)
 
 }

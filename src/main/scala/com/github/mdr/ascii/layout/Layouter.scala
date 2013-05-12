@@ -1,6 +1,5 @@
 package com.github.mdr.ascii.layout
 
-import scala.Option.option2Iterable
 import com.github.mdr.ascii.parser.Dimension
 import com.github.mdr.ascii.parser.Point
 import com.github.mdr.ascii.parser.Region
@@ -11,17 +10,6 @@ import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.layout.drawing._
 
 object Layouter {
-
-  def renderGraph[V](graph: Graph[V]): String = {
-    val cycleRemovalResult = CycleRemover.removeCycles(graph)
-    val (layering, _) = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
-    val reorderedLayering = LayerOrderingCalculator.reorder(layering)
-    val drawing = toStringLayouter.layout(reorderedLayering)
-    val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))
-    Renderer.render(cleanedUpDrawing)
-  }
-
-  private val toStringLayouter = new Layouter(ToStringVertexRenderingStrategy)
 
   private val MINIMUM_VERTEX_HEIGHT = 3
 
@@ -63,24 +51,22 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
     def inVertices(vertex: Vertex) = inEdges collect { case e @ Edge(v1, `vertex`) ⇒ e }
     def outVertices(vertex: Vertex) = outEdges collect { case e @ Edge(`vertex`, v2) ⇒ e }
 
-    val dimensions: Map[Vertex, Dimension] =
-      (for (vertex ← layer.vertices) yield {
-        val dimension = vertex match {
-          case realVertex: RealVertex ⇒
-            val inDegree = inVertices(vertex).size
-            val outDegree = outVertices(vertex).size
-            val selfEdges = realVertex.selfEdges
-            val requiredInputWidth = (inDegree + selfEdges) * 2 + 3
-            val requiredOutputWidth = (outDegree + selfEdges) * 2 + 3
-            val Dimension(preferredHeight, preferredWidth) = getPreferredSize(vertexRenderingStrategy, realVertex)
-            val width = math.max(math.max(requiredInputWidth, requiredOutputWidth), preferredWidth + 2)
-            val height = math.max(MINIMUM_VERTEX_HEIGHT, preferredHeight + 2)
-            Dimension(height = height, width = width)
-          case _: DummyVertex ⇒
-            Dimension(height = 1, width = 1)
-        }
-        vertex -> dimension
-      }).toMap
+    def getDimension(vertex: Vertex): Dimension = vertex match {
+      case realVertex: RealVertex ⇒
+        val inDegree = inVertices(vertex).size
+        val outDegree = outVertices(vertex).size
+        val selfEdges = realVertex.selfEdges
+        val requiredInputWidth = (inDegree + selfEdges) * 2 + 3
+        val requiredOutputWidth = (outDegree + selfEdges) * 2 + 3
+        val Dimension(preferredHeight, preferredWidth) = getPreferredSize(vertexRenderingStrategy, realVertex)
+        val width = math.max(math.max(requiredInputWidth, requiredOutputWidth), preferredWidth + 2)
+        val height = math.max(MINIMUM_VERTEX_HEIGHT, preferredHeight + 2)
+        Dimension(height = height, width = width)
+      case _: DummyVertex ⇒
+        Dimension(height = 1, width = 1)
+    }
+
+    val dimensions: Map[Vertex, Dimension] = Utils.makeMap(layer.vertices, getDimension)
 
     var regions: Map[Vertex, Region] = Map()
     var pos = Point(0, 0)
@@ -128,11 +114,12 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
 
     var edgeRows: Map[EdgeInfo, Int] = Map()
     var rowNumber = 0
-    for { edgeInfo @ EdgeInfo(_, _, startPort, finishPort, _) ← sortedInfos } {
-      if (startPort.column != finishPort.column) {
-        edgeRows += edgeInfo -> rowNumber
-        rowNumber += 1
-      }
+    for {
+      edgeInfo @ EdgeInfo(_, _, startPort, finishPort, _) ← sortedInfos
+      if startPort.column != finishPort.column
+    } {
+      edgeRows += edgeInfo -> rowNumber
+      rowNumber += 1
     }
 
     reorderEdgesWithSameStartAndEndColumns(edgeRows, sortedInfos)
@@ -184,7 +171,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
         finish = vertexInfo2.inPorts(edge).up
       } yield EdgeInfo(v1, v2, start, finish, edge.reversed)
 
-    val edgeRows = calculateEdgeOrdering(edgeInfos)
+    val edgeRows: Map[EdgeInfo, Int] = calculateEdgeOrdering(edgeInfos)
 
     val edgeZoneTopRow = if (vertexInfos1.isEmpty) -1 /* first layer */ else vertexInfos1.maxRow + 1
     def edgeBendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 1 /* 2 */ + 1
@@ -239,11 +226,14 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
 
     def isEmpty = vertexInfos.isEmpty
 
-    def maxRow = if (vertexInfos.isEmpty) 0 else vertexInfos.values.map(_.region.bottomRow).max
+    def maxRow = vertexInfos.values.map(_.region.bottomRow).fold(0)(_ max _)
 
-    def maxColumn = if (vertexInfos.isEmpty) 0 else vertexInfos.values.map(_.region.rightColumn).max
+    def maxColumn = vertexInfos.values.map(_.region.rightColumn).fold(0)(_ max _)
 
-    def down(n: Int): LayerVertexInfos = copy(vertexInfos = Utils.transformValues(vertexInfos)(_.translate(down = n)))
+    def down(n: Int): LayerVertexInfos = {
+      val translatedVertexInfos = Utils.transformValues(vertexInfos)(_.translate(down = n))
+      copy(vertexInfos = translatedVertexInfos)
+    }
 
     def realVertexInfos: List[(RealVertex, VertexInfo)] = vertexInfos.toList.collect {
       case (vertex: RealVertex, info) ⇒ (vertex, info)
