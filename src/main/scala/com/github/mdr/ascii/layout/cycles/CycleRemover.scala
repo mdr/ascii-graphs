@@ -7,7 +7,7 @@ import com.github.mdr.ascii.graph.Graph
 object CycleRemover {
 
   def removeCycles[V](graph: Graph[V]): (Graph[V], List[(V, V)]) =
-    new CycleRemover().removeCycles(graph)
+    new CycleRemover().removeCycles(removeSelfLoops(graph))
 
   def removeSelfLoops[V](graph: Graph[V]): Graph[V] =
     new CycleRemover().removeSelfLoops(graph)
@@ -64,9 +64,8 @@ class CycleRemover[V] {
   /**
    * @return graph without cycles and list of reversed edges (in the new graph).
    */
-  def removeCycles(graph: Graph[V]): (Graph[V], List[(V, V)]) = {
+  def removeCycles(graph: Graph[V]): (Graph[V], List[(V, V)]) =
     reflowGraph(graph, findVertexSequence(graph))
-  }
 
   /**
    * Given an ordering of the vertices of the graph, return a new graph with all edges that go against

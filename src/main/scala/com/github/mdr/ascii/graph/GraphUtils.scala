@@ -11,17 +11,17 @@ object GraphUtils {
       sources = rest
       sort ::= n
       for (m ← g.outVertices(n) if !deletedEdges.contains((m, n))) {
-        deletedEdges += ((m, n))
+        deletedEdges += ((n, m))
         if (g.inEdges(m).filterNot(deletedEdges).isEmpty)
           sources ::= m
       }
     }
-    if (deletedEdges == g.edges)
-      Some(sort)
+    if (deletedEdges == g.edges.toSet)
+      Some(sort.reverse)
     else
       None
   }
 
-  def hasCycle(g: Graph[_]): Boolean = topologicalSort(g).isDefined
+  def hasCycle(g: Graph[_]): Boolean = topologicalSort(g).isEmpty
 
 }

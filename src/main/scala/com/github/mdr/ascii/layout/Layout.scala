@@ -17,8 +17,7 @@ object Layouter {
 
   def renderGraph[V](graph: Graph[V]): String = {
     val (newGraph, reversedEdges) = CycleRemover.removeCycles(graph)
-    val graphWithoutLoops = CycleRemover.removeSelfLoops(newGraph)
-    val layering = new LayeringCalculator[V].assignLayers(graphWithoutLoops, Utils.mkMultiset(reversedEdges))
+    val layering = new LayeringCalculator[V].assignLayers(newGraph, Utils.mkMultiset(reversedEdges))
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
     val drawing = stringLayouter.layout(reorderedLayering)
     val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))

@@ -61,13 +61,12 @@ class CycleRemoverTest extends FlatSpec with ShouldMatchers {
       val (newGraph, reversedEdges) = CycleRemover.removeCycles(graph)
 
       GraphUtils.hasCycle(newGraph) should be(false)
-
       val revEdgeMap = Utils.mkMultiset(reversedEdges)
       val newEdgeMap = Utils.mkMultiset(newGraph.edges)
       for (reversedEdge ← reversedEdges)
         newEdgeMap.getOrElse(reversedEdge, 0) should be >= (revEdgeMap(reversedEdge))
 
-      CycleRemoverSpecification.unreverse(newGraph, reversedEdges) should be(graph)
+      CycleRemoverSpecification.unreverse(newGraph, reversedEdges) should be(CycleRemover.removeSelfLoops(graph))
     }
   }
 

@@ -20,8 +20,7 @@ object GraphGenerators {
       (for (v ← g.vertices.toStream) yield g.removeVertex(v))
   }
 
-  private def makeDag[V](g: Graph[V]): Graph[V] =
-    CycleRemover.removeSelfLoops(CycleRemover.removeCycles(g)._1)
+  private def makeDag[V](g: Graph[V]): Graph[V] = CycleRemover.removeCycles(g)._1
 
   val dags: Gen[Graph[String]] = graphGen.map(makeDag)
 

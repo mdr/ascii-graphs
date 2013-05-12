@@ -30,9 +30,10 @@ object CycleRemoverSpecification extends Properties("CycleRemover") {
     }
   }
 
+  // For now, we ignore the self-loops
   property("reversing the reversed edges restores the original graph") = forAll { g: Graph[String] ⇒
     val (dag, reversedEdges) = CycleRemover.removeCycles(g)
-    unreverse(dag, reversedEdges) == g
+    unreverse(dag, reversedEdges) == CycleRemover.removeSelfLoops(g)
   }
 
   def unreverse[V](graph: Graph[V], reversedEdges: List[(V, V)]): Graph[V] = {
