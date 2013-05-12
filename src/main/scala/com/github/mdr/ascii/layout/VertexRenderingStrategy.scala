@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.layout
 
-import com.github.mdr.ascii.Dimension
+import com.github.mdr.ascii.parser.Dimension
 
 trait VertexRenderingStrategy[-V] {
 

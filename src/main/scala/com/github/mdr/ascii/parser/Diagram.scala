@@ -1,6 +1,4 @@
-package com.github.mdr.ascii
-
-import com.github.mdr.ascii.impl._
+package com.github.mdr.ascii.parser
 
 class GraphParserException(message: String) extends RuntimeException(message)
 

@@ -1,8 +1,17 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.layout.drawing
 
 import com.github.mdr.ascii._
 import scala.annotation.tailrec
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.parser.Up
+import com.github.mdr.ascii.parser.Translatable
+import com.github.mdr.ascii.parser.Right
+import com.github.mdr.ascii.parser.Region
+import com.github.mdr.ascii.parser.Point
+import com.github.mdr.ascii.parser.Left
+import com.github.mdr.ascii.parser.Down
+import com.github.mdr.ascii.parser.Direction
+import com.github.mdr.ascii.parser.Dimension
 
 sealed trait DrawingElement {
 

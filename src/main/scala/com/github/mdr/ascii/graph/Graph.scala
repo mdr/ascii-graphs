@@ -3,8 +3,8 @@ package com.github.mdr.ascii.graph
 import scala.PartialFunction.cond
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.layout.Layouter
-import com.github.mdr.ascii.Diagram
-import com.github.mdr.ascii.Box
+import com.github.mdr.ascii.parser.Diagram
+import com.github.mdr.ascii.parser.Box
 
 object Graph {
 

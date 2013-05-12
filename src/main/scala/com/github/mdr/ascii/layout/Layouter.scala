@@ -1,14 +1,14 @@
 package com.github.mdr.ascii.layout
 
 import scala.Option.option2Iterable
-
-import com.github.mdr.ascii.Dimension
-import com.github.mdr.ascii.Point
-import com.github.mdr.ascii.Region
+import com.github.mdr.ascii.parser.Dimension
+import com.github.mdr.ascii.parser.Point
+import com.github.mdr.ascii.parser.Region
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.layout.cycles.CycleRemover
 import com.github.mdr.ascii.layout.layering._
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.layout.drawing._
 
 object Layouter {
 
@@ -16,16 +16,20 @@ object Layouter {
     val cycleRemovalResult = CycleRemover.removeCycles(graph)
     val (layering, _) = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
-    val drawing = stringLayouter.layout(reorderedLayering)
+    val drawing = toStringLayouter.layout(reorderedLayering)
     val cleanedUpDrawing = Compactifier.compactify(KinkRemover.removeKinks(drawing))
     Renderer.render(cleanedUpDrawing)
   }
 
-  private def stringLayouter = new Layouter[Any](ToStringVertexRenderingStrategy)
+  private val toStringLayouter = new Layouter(ToStringVertexRenderingStrategy)
+
+  private val MINIMUM_VERTEX_HEIGHT = 3
 
 }
 
-class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
+class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
+
+  import Layouter._
 
   private case class VertexInfo(region: Region, inPorts: Map[Edge, Point], outPorts: Map[Edge, Point]) {
 
@@ -43,7 +47,11 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
   }
 
-  val VERTEX_HEIGHT = 3
+  private def getPreferredSize[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex) =
+    vertexRenderingStrategy.getPreferredSize(realVertex.contents.asInstanceOf[V])
+
+  private def getText[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex, preferredSize: Dimension) =
+    vertexRenderingStrategy.getText(realVertex.contents.asInstanceOf[V], preferredSize)
 
   private def calculateVertexInfo(layer: Layer, edges: List[Edge], previousLayerOpt: Option[Layer], nextLayerOpt: Option[Layer]): LayerVertexInfos = {
     val inEdges = previousLayerOpt.map { previousLayer ⇒
@@ -64,10 +72,9 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
             val selfEdges = realVertex.selfEdges
             val requiredInputWidth = (inDegree + selfEdges) * 2 + 3
             val requiredOutputWidth = (outDegree + selfEdges) * 2 + 3
-            val Dimension(preferredHeight, preferredWidth) =
-              vertexRenderingStrategy.getPreferredSize(realVertex.contents.asInstanceOf[V])
+            val Dimension(preferredHeight, preferredWidth) = getPreferredSize(vertexRenderingStrategy, realVertex)
             val width = math.max(math.max(requiredInputWidth, requiredOutputWidth), preferredWidth + 2)
-            val height = math.max(VERTEX_HEIGHT, preferredHeight + 2)
+            val height = math.max(MINIMUM_VERTEX_HEIGHT, preferredHeight + 2)
             Dimension(height = height, width = width)
           case _: DummyVertex ⇒
             Dimension(height = 1, width = 1)
@@ -220,7 +227,7 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
 
     val vertexElements = updatedVertexInfos2.realVertexInfos.map {
       case (realVertex, info) ⇒
-        val text = vertexRenderingStrategy.getText(realVertex.contents.asInstanceOf[V], info.contentRegion.dimension)
+        val text = getText(vertexRenderingStrategy, realVertex, info.contentRegion.dimension)
         VertexDrawingElement(info.region, text)
     }
     RowLayoutResult(vertexElements ++ edgeElements, updatedVertexInfos2, updatedIncompleteEdges)
@@ -268,7 +275,11 @@ class Layouter[V](vertexRenderingStrategy: VertexRenderingStrategy[V]) {
       val vertexInfos = calculateVertexInfo(currentLayer, layering.edges, previousLayerOpt, nextLayerOpt)
       vertexInfosByLayer += currentLayer -> vertexInfos
     }
-    val diagramWidth = if (vertexInfosByLayer.isEmpty) 0 else vertexInfosByLayer.values.map(_.vertexInfos.values.map(_.region.dimension.width + 1).sum).max
+    val diagramWidth =
+      if (vertexInfosByLayer.isEmpty)
+        0
+      else
+        vertexInfosByLayer.values.map(_.vertexInfos.values.map(_.region.dimension.width + 1).sum).max
 
     vertexInfosByLayer = vertexInfosByLayer.map { case (layer, lvi) ⇒ layer -> spaceVertices(layer, lvi, diagramWidth) }
 

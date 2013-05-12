@@ -1,5 +1,7 @@
 package com.github.mdr.ascii
 
+import com.github.mdr.ascii.parser.Diagram
+
 object Main {
 
   val diagram1 = Diagram("""

@@ -1,4 +1,4 @@
-package com.github.mdr.ascii.impl
+package com.github.mdr.ascii.parser
 
 import com.github.mdr.ascii._
 import scala.annotation.tailrec

@@ -1,10 +1,12 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.layout.drawing
 
-import com.github.mdr.ascii.Dimension
-import com.github.mdr.ascii.Point
+import com.github.mdr.ascii.parser.Point
 import com.github.mdr.ascii.util.Utils._
-import com.github.mdr.ascii.Direction
 import com.github.mdr.ascii._
+import scala.annotation.tailrec
+import com.github.mdr.ascii.parser.Right
+import com.github.mdr.ascii.parser.Left
+import com.github.mdr.ascii.parser.Down
 
 object KinkRemover {
 
@@ -16,7 +18,6 @@ object KinkRemover {
       edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
       updatedElement ← removeKink(edgeElement, drawing, grid)
     } {
-      //      println("Removed kink in " + edgeElement + ", " + updatedElement)
       return Some(drawing.replaceElement(edgeElement, updatedElement))
     }
     None

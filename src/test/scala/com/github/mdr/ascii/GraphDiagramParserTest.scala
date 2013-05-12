@@ -2,6 +2,7 @@ package com.github.mdr.ascii
 
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
+import com.github.mdr.ascii.parser.Diagram
 
 class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
 
