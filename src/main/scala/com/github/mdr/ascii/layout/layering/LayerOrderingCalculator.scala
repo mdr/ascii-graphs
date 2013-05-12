@@ -1,5 +1,8 @@
 package com.github.mdr.ascii.layout.layering
 
+/**
+ * Reorder the vertices in each layer in an attempt to minimise crossings.
+ */
 object LayerOrderingCalculator {
 
   def reorder(layering: Layering): Layering = {
@@ -15,11 +18,10 @@ object LayerOrderingCalculator {
     layering.copy(layers = newLayers)
   }
 
-  def reorder(layer1: Layer, layer2: Layer, edges: List[Edge]): Layer = {
-    def inVertices(vertex: Vertex): List[Vertex] = edges.collect { case Edge(v1, `vertex`) ⇒ v1 }
+  private def reorder(layer1: Layer, layer2: Layer, edges: List[Edge]): Layer = {
     def barycenter(vertex: Vertex): Double = {
-      val in = inVertices(vertex)
-      in.map(v ⇒ layer1.vertices.indexOf(v).ensuring(_ >= 0)).sum.toDouble / in.size
+      val inVertices = edges.collect { case Edge(v1, `vertex`) ⇒ v1 }
+      inVertices.map(v ⇒ layer1.vertices.indexOf(v)).sum.toDouble / inVertices.size
     }
     val reorderedVertices = layer2.vertices.sortBy(barycenter)
     layer2.copy(vertices = reorderedVertices)
