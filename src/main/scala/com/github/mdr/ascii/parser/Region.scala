@@ -9,7 +9,7 @@ object Region {
 
 }
 
-case class Region(topLeft: Point, bottomRight: Point) extends Translatable {
+case class Region(topLeft: Point, bottomRight: Point) extends Translatable[Region] {
 
   def bottomLeft = Point(bottomRight.row, topLeft.column)
 
