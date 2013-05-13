@@ -15,9 +15,9 @@ case class LayerInfo(vertexInfos: Map[Vertex, VertexInfo]) extends Translatable[
 
   def isEmpty = vertexInfos.isEmpty
 
-  def maxRow = vertexInfos.values.map(_.region.bottomRow).fold(0)(_ max _)
+  def maxRow = vertexInfos.values.map(_.boxRegion.bottomRow).fold(0)(_ max _)
 
-  def maxColumn = vertexInfos.values.map(_.region.rightColumn).fold(0)(_ max _)
+  def maxColumn = vertexInfos.values.map(_.boxRegion.rightColumn).fold(0)(_ max _)
 
   def translate(down: Int = 0, right: Int = 0) =
     copy(vertexInfos = transformValues(vertexInfos)(_.translate(down, right)))

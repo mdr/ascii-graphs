@@ -36,8 +36,8 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
   }
 
   /**
-   * Calculate layer infos, with vertices given their correct horizontal coordinate, but awaiting
-   * a correct vertical coordinate.
+   * Calculate layer infos, with vertices given their correct column coordinates, but awaiting
+   * correct row coordinates.
    */
   private def calculateLayerInfos(layering: Layering): Map[Layer, LayerInfo] = {
     var layerInfos: Map[Layer, LayerInfo] = Map()
@@ -66,33 +66,35 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
       case _: DummyVertex ⇒ Dimension(height = 1, width = 1)
     }
     val dimensions: Map[Vertex, Dimension] = makeMap(layer.vertices, getDimension)
-    val regions: Map[Vertex, Region] = calculateVertexRegions(layer, dimensions)
+    val regions: Map[Vertex, (Region, Region)] = calculateVertexRegions(layer, dimensions)
 
-    LayerInfo(makeMap(layer.vertices, v ⇒ makeVertexInfo(v, regions(v), getInEdges(v), getOutEdges(v))))
+    LayerInfo(makeMap(layer.vertices, v ⇒ makeVertexInfo(v, regions(v)._1, regions(v)._2, getInEdges(v), getOutEdges(v))))
   }
 
-  private def makeVertexInfo(vertex: Vertex, region: Region, inEdges: List[Edge], outEdges: List[Edge]): VertexInfo =
+  private def makeVertexInfo(vertex: Vertex, boxRegion: Region, greaterRegion: Region, inEdges: List[Edge], outEdges: List[Edge]): VertexInfo =
     vertex match {
-      case _: RealVertex ⇒
-        val inPorts = portOffsets(inEdges, region.width).mapValues {
-          offset ⇒ region.topLeft.right(offset)
+      case realVertex: RealVertex ⇒
+        val inPorts = portOffsets(inEdges, boxRegion.width, realVertex.selfEdges).mapValues {
+          offset ⇒ boxRegion.topLeft.right(offset)
         }
-        val outPorts = portOffsets(outEdges, region.width).mapValues {
-          offset ⇒ region.bottomLeft.right(offset)
+        val outPorts = portOffsets(outEdges, boxRegion.width, realVertex.selfEdges).mapValues {
+          offset ⇒ boxRegion.bottomLeft.right(offset)
         }
-        VertexInfo(region, inPorts, outPorts)
+        VertexInfo(boxRegion, inPorts, outPorts)
       case _: DummyVertex ⇒
         val List(inVertex) = inEdges
         val List(outVertex) = outEdges
-        VertexInfo(region, Map(inVertex -> region.topLeft), Map(outVertex -> region.topLeft))
+        VertexInfo(boxRegion, Map(inVertex -> boxRegion.topLeft), Map(outVertex -> boxRegion.topLeft))
     }
 
   /**
    * Space out edge ports even along the edge of a vertex.
+   *
+   * We leave room for self edges at the right
    */
-  private def portOffsets(edges: List[Edge], vertexWidth: Int): Map[Edge, Int] = {
-    val factor = vertexWidth / (edges.size + 1)
-    val centraliser = (vertexWidth - factor * (edges.size + 1)) / 2
+  private def portOffsets(edges: List[Edge], vertexWidth: Int, selfEdges: Int): Map[Edge, Int] = {
+    val factor = vertexWidth / (edges.size + selfEdges + 1)
+    val centraliser = (vertexWidth - factor * (edges.size + selfEdges + 1)) / 2
     edges.zipWithIndex.map { case (v, i) ⇒ (v, (i + 1) * factor + centraliser) }.toMap
   }
 
@@ -110,21 +112,30 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
   }
 
   /**
-   * Initially pack vertex regions close together (with a single space between them)
+   * Initially pack vertex regions close together, so we can determine the minimum width of the entire
+   * drawing.
+   *
+   * @return pair of regions: first = region of the vertex box; second = "great region" which includes any
+   *   self edges which need to wrap around the vertex.
    */
-  private def calculateVertexRegions(layer: Layer, dimensions: Map[Vertex, Dimension]): Map[Vertex, Region] = {
-    var regions: Map[Vertex, Region] = Map()
+  private def calculateVertexRegions(layer: Layer, dimensions: Map[Vertex, Dimension]): Map[Vertex, (Region, Region)] = {
+    var regions: Map[Vertex, (Region, Region)] = Map()
     var pos = Point(0, 0)
     for (vertex ← layer.vertices) {
-      val region = Region(pos, dimensions(vertex))
-      regions += vertex -> region
-      pos = region.topRight.right(2)
+      val boxRegion = Region(pos, dimensions(vertex))
+      val selfEdgesSpacing = vertex match {
+        case realVertex: RealVertex if realVertex.selfEdges > 0 ⇒ 1 + realVertex.selfEdges
+        case _                                                  ⇒ 0
+      }
+      val greaterRegion = boxRegion.expandRight(selfEdgesSpacing)
+      regions += vertex -> (boxRegion, greaterRegion)
+      pos = greaterRegion.topRight.right(2)
     }
     regions
   }
 
   private def calculateDiagramWidth(layerInfos: Map[Layer, LayerInfo]) = {
-    def vertexWidth(vertexInfo: VertexInfo) = vertexInfo.region.dimension.width
+    def vertexWidth(vertexInfo: VertexInfo) = vertexInfo.boxRegion.dimension.width
     def layerWidth(layerInfo: LayerInfo) = {
       val vertexInfos = layerInfo.vertexInfos.values
       val spacing = vertexInfos.size
@@ -152,7 +163,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
         vertexInfo ← layerVertexInfos.vertexInfo(v)
       } yield {
         val oldLeftColumn = leftColumn
-        leftColumn += vertexInfo.region.width
+        leftColumn += vertexInfo.boxRegion.width
         leftColumn += horizontalSpacing
         v -> vertexInfo.setLeft(oldLeftColumn)
       }
@@ -232,7 +243,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
     layerInfo.realVertexInfos.map {
       case (realVertex, info) ⇒
         val text = getText(vertexRenderingStrategy, realVertex, info.contentRegion.dimension)
-        VertexDrawingElement(info.region, text)
+        VertexDrawingElement(info.boxRegion, text)
     }
 
   private def getPreferredSize[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex) =
