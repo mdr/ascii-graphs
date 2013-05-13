@@ -23,5 +23,13 @@ case class Drawing(elements: List[DrawingElement]) {
       case vde: VertexDrawingElement if vde.region.contains(point) ⇒ vde
     }
 
+  def vertexElements: List[VertexDrawingElement] = elements.collect {
+    case vde: VertexDrawingElement ⇒ vde
+  }
+
+  def edgeElements: List[EdgeDrawingElement] = elements.collect {
+    case ede: EdgeDrawingElement ⇒ ede
+  }
+
 }
 

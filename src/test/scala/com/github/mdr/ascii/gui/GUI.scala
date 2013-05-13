@@ -59,7 +59,7 @@ E,G""")
       val text = inputTextPane.getText
       val pieces = text.split("\n").toList.map(_.split(",").toList)
       val edges = pieces.flatMap { chunks ⇒ chunks.zip(chunks.tail) }
-      val vertices = pieces.flatten.toSet
+      val vertices = if (text.trim.isEmpty) Set[String]() else pieces.flatten.toSet
       val graph = Graph(vertices, edges)
       outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy,
         OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected))
