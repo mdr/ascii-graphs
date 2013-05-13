@@ -171,8 +171,8 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
    * 4) Update bookkeeping information about as-yet-incomplete edges.
    *
    * @param edges -- edges from the previous layer into the current layer
-   * @param incompleteEdges -- map from a dummy vertex (part of a long edge) to the sequence of points that make up
-   * the edge built so far, from the start of the edge to the dummy vertex in the previousLayer.
+   * @param incompleteEdges -- map from a dummy vertex in previous layer (which is the bottom-most tip of an incomplete
+   *                           long edge), to the sequence of points that make up the edge built so far.
    */
   private def layoutLayer(
     previousLayerInfo: LayerInfo,
@@ -243,114 +243,3 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
 
 }
 
-/**
- * Info for rendering a vertex.
- *
- * @param region - area allocated to the vertex.
- * @param inPorts - map of incoming edges to the points they connect to on the vertex box.
- * @param outPorts - map of outgoing edges to the points they connect to on the vertex box.
- */
-case class VertexInfo(region: Region, inPorts: Map[Edge, Point], outPorts: Map[Edge, Point]) extends Translatable[VertexInfo] {
-
-  def contentRegion: Region = region.copy(topLeft = region.topLeft.down.right, bottomRight = region.bottomRight.up.left)
-
-  def translate(down: Int = 0, right: Int = 0): VertexInfo = {
-    val newRegion = region.translate(down, right)
-    VertexInfo(
-      region.translate(down, right),
-      Utils.transformValues(inPorts)(_.translate(down, right)),
-      Utils.transformValues(outPorts)(_.translate(down, right)))
-  }
-
-  def setLeft(column: Int): VertexInfo = translate(right = column - region.leftColumn)
-
-}
-
-/**
- * Information about edges that pass between two adjacent layers.
- */
-case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point, reversed: Boolean) {
-
-  def inRank: Int = signum(startPort.column - finishPort.column) * finishPort.column
-
-  def requiresBend = startPort.column != finishPort.column
-
-}
-
-/**
- * VertexInfo's for all the vertices in a single layer.
- */
-case class LayerInfo(vertexInfos: Map[Vertex, VertexInfo]) extends Translatable[LayerInfo] {
-
-  def vertexInfo(v: Vertex): Option[VertexInfo] = vertexInfos.get(v)
-
-  def isEmpty = vertexInfos.isEmpty
-
-  def maxRow = vertexInfos.values.map(_.region.bottomRow).fold(0)(_ max _)
-
-  def maxColumn = vertexInfos.values.map(_.region.rightColumn).fold(0)(_ max _)
-
-  def translate(down: Int = 0, right: Int = 0) =
-    copy(vertexInfos = Utils.transformValues(vertexInfos)(_.translate(down, right)))
-
-  def realVertexInfos: List[(RealVertex, VertexInfo)] = vertexInfos.toList.collect {
-    case (vertex: RealVertex, info) ⇒ (vertex, info)
-  }
-
-}
-
-/**
- * Calculate vertical ordering of row bends
- */
-class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int) {
-
-  private val edgeRows: Map[EdgeInfo, Int] = orderEdgeBends(edgeInfos)
-  private def bendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 1 + 1
-
-  val edgeZoneBottomRow =
-    if (edgeInfos.isEmpty) // No edges
-      -1
-    else if (edgeRows.isEmpty) // No edges with bends
-      edgeZoneTopRow + 2
-    else
-      bendRow(edgeRows.values.max) + 2
-
-  def bendRow(edgeInfo: EdgeInfo): Int = bendRow(edgeRows(edgeInfo))
-
-  /**
-   * @return a vertical ordering of those edges that require bends.
-   */
-  private def orderEdgeBends(edgeInfos: List[EdgeInfo]): Map[EdgeInfo, Int] = {
-    // To avoid unnecessary crossings of edges arriving at the same vertex:
-    val sortedInfos: List[EdgeInfo] = edgeInfos.sortBy(_.inRank)
-    val edgeRows: Map[EdgeInfo, Int] = sortedInfos.filter(_.requiresBend).zipWithIndex.toMap
-    reorderEdgesWithSameStartAndEndColumns(edgeRows, sortedInfos)
-  }
-
-  /**
-   * Force edges that share start and end columns to be ordered so as to avoid conflicts
-   */
-  private def reorderEdgesWithSameStartAndEndColumns(edgeRows: Map[EdgeInfo, Int], sortedInfos: List[EdgeInfo]): Map[EdgeInfo, Int] = {
-    var updatedEdgeRows = edgeRows
-    var continue = true
-    while (continue) {
-      continue = false
-      for {
-        edgeInfo1 @ EdgeInfo(_, _, start1, finish1, _) ← sortedInfos
-        edgeInfo2 @ EdgeInfo(_, _, start2, finish2, _) ← sortedInfos
-        if edgeInfo1 != edgeInfo2
-        if start1.column == finish2.column
-        if start2.column != finish1.column // Prevents an infinite loop (issue #3), but TODO: still allows overlapping edges
-        row1 = updatedEdgeRows(edgeInfo1)
-        row2 = updatedEdgeRows(edgeInfo2)
-        if row1 > row2
-      } {
-        updatedEdgeRows += edgeInfo1 -> row2
-        updatedEdgeRows += edgeInfo2 -> row1
-        continue = true
-      }
-    }
-    updatedEdgeRows
-  }
-
-}
