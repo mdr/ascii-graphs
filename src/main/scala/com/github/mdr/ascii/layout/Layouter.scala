@@ -25,7 +25,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
     var incompleteEdges: Map[DummyVertex, List[Point]] = Map()
     var diagramElements: List[DrawingElement] = Nil
     for (layer ← layering.layers) {
-      val RowLayoutResult(elements, updatedLayerInfo, updatedIncompletedEdges) =
+      val LayerLayoutResult(elements, updatedLayerInfo, updatedIncompletedEdges) =
         layoutLayer(previousLayerInfo, layerInfos(layer), layering.edges, incompleteEdges)
       previousLayerInfo = updatedLayerInfo
       incompleteEdges = updatedIncompletedEdges
@@ -206,16 +206,20 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
     updatedEdgeRows
   }
 
-  private case class RowLayoutResult(
+  private case class LayerLayoutResult(
     drawingElements: List[DrawingElement],
     layerInfo: LayerInfo,
     updatedIncompletedEdges: Map[DummyVertex, List[Point]])
 
+  /**
+   * @param incompleteEdges -- map from a dummy vertex (part of a long edge) to the sequence of points that make up
+   * the edge built so far, from the start of the edge to the dummy vertex in the previousLayer.
+   */
   private def layoutLayer(
     previousLayerInfo: LayerInfo,
     currentLayerInfo: LayerInfo,
     edges: List[Edge],
-    incompleteEdges: Map[DummyVertex, List[Point]]): RowLayoutResult = {
+    incompleteEdges: Map[DummyVertex, List[Point]]): LayerLayoutResult = {
 
     val edgeInfos: List[EdgeInfo] =
       for {
@@ -272,7 +276,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
         val text = getText(vertexRenderingStrategy, realVertex, info.contentRegion.dimension)
         VertexDrawingElement(info.region, text)
     }
-    RowLayoutResult(vertexElements ++ edgeElements, updatedLayerInfo, updatedIncompleteEdges)
+    LayerLayoutResult(vertexElements ++ edgeElements, updatedLayerInfo, updatedIncompleteEdges)
   }
 
   private def getPreferredSize[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex) =
@@ -306,6 +310,9 @@ case class VertexInfo(region: Region, inPorts: Map[Edge, Point], outPorts: Map[E
 
 }
 
+/**
+ * Information about edges that pass between two adjacent layers.
+ */
 case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point, reversed: Boolean)
 
 /**
