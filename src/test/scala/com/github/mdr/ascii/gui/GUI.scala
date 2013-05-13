@@ -4,11 +4,9 @@ import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Font
-
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.layout.GraphLayout
 import com.github.mdr.ascii.layout.ToStringVertexRenderingStrategy
-
 import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JPanel
@@ -20,11 +18,13 @@ import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import javax.swing.UIManager
 
 object GUI extends App {
 
   SwingUtilities.invokeLater(new Runnable() {
     override def run {
+      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
       Frame.pack()
       Frame.setVisible(true)
     }
@@ -39,9 +39,10 @@ object Frame extends JFrame {
   setPreferredSize(new Dimension(640, 480))
   val splitPane = new JSplitPane
   val inputTextPane = new JTextPane
-  inputTextPane.setText("""A,B
-B,C
-A,C""")
+  inputTextPane.setText("""A,B,C
+A,C
+D,E,F
+E,G""")
   val outputTextPane = new JTextPane
   inputTextPane.setFont(new Font(Font.MONOSPACED, outputTextPane.getFont.getStyle, outputTextPane.getFont.getSize))
   outputTextPane.setFont(new Font(Font.MONOSPACED, outputTextPane.getFont.getStyle, outputTextPane.getFont.getSize))
@@ -57,7 +58,7 @@ A,C""")
     try {
       val text = inputTextPane.getText
       val pieces = text.split("\n").toList.map(_.split(",").toList)
-      val edges = pieces.collect { case List(a, b) ⇒ a -> b }
+      val edges = pieces.flatMap { chunks ⇒ chunks.zip(chunks.tail) }
       val vertices = pieces.flatten.toSet
       val graph = Graph(vertices, edges)
       outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy,
