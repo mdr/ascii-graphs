@@ -64,7 +64,9 @@ E,G""")
       outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy,
         OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected))
     } catch {
-      case e: Throwable ⇒ outputTextPane.setText(e.getMessage)
+      case e: Throwable ⇒
+        outputTextPane.setText(e.getMessage)
+        e.printStackTrace()
     }
   }
 
