@@ -3,6 +3,8 @@ package com.github.mdr.ascii.parser
 import com.github.mdr.ascii._
 import scala.annotation.tailrec
 
+class GraphParserException(message: String) extends RuntimeException(message)
+
 class DiagramParse(s: String) {
 
   private val rawRows: List[String] = if (s.isEmpty) Nil else s.split("(\r)?\n").toList
