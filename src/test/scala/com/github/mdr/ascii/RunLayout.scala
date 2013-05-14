@@ -113,10 +113,10 @@ object RunLayout extends App {
   var seed = new Random().nextInt
   // seed = -968951637
   // seed = 2085656038  empty.max
-  println(seed)
+  println("Seed = " + seed)
   implicit val random = new Random(seed)
   val graph4 = RandomGraph.randomGraph(random)
-  val graph = graph3
+  val graph = graph4
   //  println(graph)
 
   val cycleRemovalResult = CycleRemover.removeCycles(graph)

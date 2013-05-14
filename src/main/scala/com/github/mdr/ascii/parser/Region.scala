@@ -23,7 +23,13 @@ case class Region(topLeft: Point, bottomRight: Point) extends Translatable[Regio
 
   def rightColumn = bottomRight.column
 
-  def expandRight(n: Int) = copy(bottomRight = bottomRight.translate(0, n))
+  def expandRight(n: Int) = copy(bottomRight = bottomRight.right(n))
+
+  def expandDown(n: Int) = copy(bottomRight = bottomRight.down(n))
+
+  def expandUp(n: Int) = copy(topLeft = topLeft.up(n))
+
+  def expandLeft(n: Int) = copy(topLeft = topLeft.left(n))
 
   def contains(point: Point): Boolean = {
     point.row >= topRow && point.column >= leftColumn &&

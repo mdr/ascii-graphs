@@ -14,6 +14,13 @@ object Renderer {
 
 class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded: Boolean = true) {
 
+  def render(drawing: Drawing): String = {
+    val grid = new Grid(drawing.dimension)
+    drawing.vertexElements.foreach(vde ⇒ render(grid, vde))
+    drawing.edgeElements.foreach(ede ⇒ render(grid, ede, drawing))
+    grid.toString
+  }
+
   @tailrec
   private def drawLine(grid: Grid, point1: Point, direction: Direction, point2: Point) {
     val lineChar = direction match {
@@ -89,13 +96,6 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
 
     for ((line, index) ← element.textLines.zipWithIndex)
       grid(region.topLeft.right.down(index + 1)) = line
-  }
-
-  def render(drawing: Drawing): String = {
-    val grid = new Grid(drawing.dimension)
-    drawing.vertexElements.foreach(vde ⇒ render(grid, vde))
-    drawing.edgeElements.foreach(ede ⇒ render(grid, ede, drawing))
-    grid.toString
   }
 
   private def lineHorizontalChar = if (unicode) '│' else '|'
