@@ -28,15 +28,15 @@ class TopologicalSortTest extends FlatSpec with ShouldMatchers with Checkers {
       -----        """)
 
   def checkNoSort(diagram: String) {
-    "Topological sorting" should ("not be found: " + diagram) in {
-      val graph = Graph.fromDiagram(diagram)
+    val graph = Graph.fromDiagram(diagram)
+    "Topological sorting" should ("not be found: " + graph) in {
       GraphUtils.topologicalSort(graph) should be(None)
     }
   }
 
   def check(diagram: String, expectedOrdering: String*) {
-    "Topological sorting" should ("work: " + diagram) in {
-      val graph = Graph.fromDiagram(diagram)
+    val graph = Graph.fromDiagram(diagram)
+    "Topological sorting" should ("work: " + graph) in {
       val Some(actualOrdering) = GraphUtils.topologicalSort(graph)
       actualOrdering should be(expectedOrdering)
     }

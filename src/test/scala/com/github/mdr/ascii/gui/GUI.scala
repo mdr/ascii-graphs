@@ -36,11 +36,12 @@ object Frame extends JFrame {
 
   setTitle("ASCII Graph Layout")
   setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
-  setPreferredSize(new Dimension(640, 480))
+  setPreferredSize(new Dimension(1024, 640))
   val splitPane = new JSplitPane
   val inputTextPane = new JTextPane
   inputTextPane.setText("""A,B,C
 A,C
+B,B
 D,E,F
 E,G""")
   val outputTextPane = new JTextPane

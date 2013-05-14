@@ -15,9 +15,13 @@ case class LayerInfo(vertexInfos: Map[Vertex, VertexInfo]) extends Translatable[
 
   def isEmpty = vertexInfos.isEmpty
 
-  def maxRow = vertexInfos.values.map(_.boxRegion.bottomRow).fold(0)(_ max _)
+  def maxRow = vertexInfos.values.map(_.greaterRegion.bottomRow).fold(0)(_ max _)
 
-  def maxColumn = vertexInfos.values.map(_.boxRegion.rightColumn).fold(0)(_ max _)
+  def maxColumn = vertexInfos.values.map(_.greaterRegion.rightColumn).fold(0)(_ max _)
+
+  private def getSelfEdgeBuffer(vertexInfo: VertexInfo) =
+    if (vertexInfo.selfInPorts.size > 0) (vertexInfo.selfInPorts.size + 1) else 0
+  def topSelfEdgeBuffer: Int = vertexInfos.values.map(getSelfEdgeBuffer).fold(0)(_ max _)
 
   def translate(down: Int = 0, right: Int = 0) =
     copy(vertexInfos = transformValues(vertexInfos)(_.translate(down, right)))

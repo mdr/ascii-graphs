@@ -3,18 +3,18 @@ package com.github.mdr.ascii.layout
 /**
  * Calculate vertical ordering of row bends
  */
-class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int) {
+class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdgeBuffer: Int) {
 
   private val edgeRows: Map[EdgeInfo, Int] = orderEdgeBends(edgeInfos)
   private def bendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 1 + 1
 
   val edgeZoneBottomRow =
-    if (edgeInfos.isEmpty) // No edges
+    (if (edgeInfos.isEmpty) // No edges
       -1
     else if (edgeRows.isEmpty) // No edges with bends
       edgeZoneTopRow + 2
     else
-      bendRow(edgeRows.values.max) + 2
+      bendRow(edgeRows.values.max) + 2) + selfEdgeBuffer
 
   def bendRow(edgeInfo: EdgeInfo): Int = bendRow(edgeRows(edgeInfo))
 

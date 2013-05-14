@@ -20,14 +20,6 @@ object TopologicalSortSpecification extends Properties("Topological sort") {
 
   property("must cover all vertices") = forAll(dags) { g: Graph[String] ⇒
     val Some(ordering) = GraphUtils.topologicalSort(g)
-    if (ordering.sorted != g.vertices.toList.sorted) {
-      println("=====================================")
-      println(g)
-      println(g.vertices)
-      println(g.edges)
-      println(ordering.sorted)
-      println("=====================================")
-    }
     ordering.sorted == g.vertices.toList.sorted
   }
 

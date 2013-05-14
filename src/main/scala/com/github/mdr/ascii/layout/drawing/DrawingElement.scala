@@ -52,7 +52,7 @@ case class EdgeDrawingElement(
       else if (point1.column > point2.column)
         Left
       else
-        throw new RuntimeException("Same point")
+        throw new RuntimeException("Same point: " + point1)
     } else if (point1.column == point2.column) {
       if (point1.row < point2.row)
         Down
