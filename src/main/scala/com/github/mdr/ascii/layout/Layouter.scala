@@ -151,14 +151,15 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
     regions
   }
 
-  //--+ |
-  //--| |
+  /**
+   * Calculate the width of the diagram (assuming the widest row is packed together as closely as possible)
+   */
   private def calculateDiagramWidth(layerInfos: Map[Layer, LayerInfo]) = {
     def vertexWidth(vertexInfo: VertexInfo) = vertexInfo.greaterRegion.width
     def layerWidth(layerInfo: LayerInfo) = {
       val vertexInfos = layerInfo.vertexInfos.values
       val spacing = vertexInfos.size
-      vertexInfos.map(vertexWidth).sum + spacing
+      vertexInfos.map(vertexWidth).sum + spacing - 1
     }
     layerInfos.values.map(layerWidth).fold(0)(_ max _)
   }
@@ -175,7 +176,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
     val excessSpace = diagramWidth - layerVertexInfos.maxColumn
     val horizontalSpacing = math.max(excessSpace / (layerVertexInfos.vertexInfos.size + 1), 1)
 
-    var leftColumn = horizontalSpacing
+    var leftColumn = 0
     val newVertexInfos =
       for {
         v ← layer.vertices
@@ -224,6 +225,8 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
 
     val updatedLayerInfo = currentLayerInfo.down(edgeBendCalculator.edgeZoneBottomRow + 1)
 
+    val vertexElements = makeVertexElements(updatedLayerInfo)
+    val edgeElements = makeEdgeElements(edgeInfoToPoints)
     val selfEdgeElements = updatedLayerInfo.vertexInfos.collect {
       case (realVertex: RealVertex, vertexInfo) ⇒
         val boxRightEdge = vertexInfo.boxRegion.rightColumn
@@ -238,9 +241,6 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
             EdgeDrawingElement(List(p1, p2, p3, p4, p5, p6), false, true)
         }
     }.toList.flatten
-
-    val vertexElements = makeVertexElements(updatedLayerInfo)
-    val edgeElements = makeEdgeElements(edgeInfoToPoints)
     LayerLayoutResult(vertexElements ++ edgeElements ++ selfEdgeElements, updatedLayerInfo, updatedIncompleteEdges)
   }
 
@@ -273,6 +273,39 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
     for ((EdgeInfo(_, finishVertex: RealVertex, _, _, reversed), points) ← edgeInfoToPoints.toList)
       yield EdgeDrawingElement(points, reversed, !reversed)
 
+  private def makeSelfEdgeElements(layerInfo: LayerInfo): List[EdgeDrawingElement] =
+    layerInfo.vertexInfos.collect {
+      case (realVertex: RealVertex, vertexInfo) ⇒
+        vertexInfo.selfOutPorts.zip(vertexInfo.selfInPorts).reverse.zipWithIndex map {
+          case ((out, in), i) ⇒ makeSelfEdgeElement(vertexInfo, out, in, i)
+        }
+    }.toList.flatten
+
+  /**
+   * Trace out a self loop path around the right side of the box:
+   *
+   * p5 ╭───╮p4
+   * p6 v   │
+   *  ╭───╮ │
+   *  │ A │ │
+   *  ╰─┬─╯ │
+   * p1 │   │
+   * p2 ╰───╯p3
+   *
+   * @param selfEdgeIndex -- if there are multiple self edges, they are drawn nested inside. The edges are numbered
+   *  starting with those anchored on the rightmost ports, proceeding leftwards as the index increases.
+   */
+  private def makeSelfEdgeElement(vertexInfo: VertexInfo, outPort: Point, inPort: Point, selfEdgeIndex: Int): EdgeDrawingElement = {
+    val boxRightEdge = vertexInfo.boxRegion.rightColumn
+    val p1 = outPort.down(1)
+    val p2 = p1.down(selfEdgeIndex + 1)
+    val p3 = p2.right(boxRightEdge - p2.column + selfEdgeIndex * 2 + 2)
+    val p4 = p3.up(vertexInfo.boxRegion.height + 2 * (selfEdgeIndex + 1) + 1)
+    val p5 = p4.left(p4.column - inPort.column)
+    val p6 = inPort.up(1)
+    EdgeDrawingElement(List(p1, p2, p3, p4, p5, p6), false, true)
+  }
+
   private def makeVertexElements(layerInfo: LayerInfo): List[VertexDrawingElement] =
     layerInfo.realVertexInfos.map {
       case (realVertex, info) ⇒
@@ -287,4 +320,3 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
     vertexRenderingStrategy.getText(realVertex.contents.asInstanceOf[V], preferredSize)
 
 }
-
