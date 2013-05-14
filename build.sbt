@@ -14,6 +14,9 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
 
+// Screen-sized dependency graph:
+// libraryDependencies += "org.vert-x" % "vertx-core" % "1.3.1.final"
+
 EclipseKeys.withSource := true
 
 EclipseKeys.eclipseOutput := Some("bin")

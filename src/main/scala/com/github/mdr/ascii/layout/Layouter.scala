@@ -136,20 +136,23 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
    */
   private def calculateVertexRegions(layer: Layer, dimensions: Map[Vertex, Dimension]): Map[Vertex, (Region, Region)] = {
     var regions: Map[Vertex, (Region, Region)] = Map()
-    var pos = Point(0, 0)
+    var nextVertexTopLeft = Point(0, 0)
     for (vertex ← layer.vertices) {
-      val boxRegion = Region(pos, dimensions(vertex))
+      val boxRegion = Region(nextVertexTopLeft, dimensions(vertex))
+      // Spacing to the right of the vertex for self edges to wrap aroud:
       val selfEdgesSpacing = vertex match {
         case realVertex: RealVertex if realVertex.selfEdges > 0 ⇒ realVertex.selfEdges * 2
         case _                                                  ⇒ 0
       }
       val greaterRegion = boxRegion.expandRight(selfEdgesSpacing).expandUp(selfEdgesSpacing).expandDown(selfEdgesSpacing)
       regions += vertex -> (boxRegion, greaterRegion)
-      pos = boxRegion.topRight.right(1 + selfEdgesSpacing)
+      nextVertexTopLeft = boxRegion.topRight.right(selfEdgesSpacing + 2)
     }
     regions
   }
 
+  //--+ |
+  //--| |
   private def calculateDiagramWidth(layerInfos: Map[Layer, LayerInfo]) = {
     def vertexWidth(vertexInfo: VertexInfo) = vertexInfo.greaterRegion.width
     def layerWidth(layerInfo: LayerInfo) = {
@@ -228,7 +231,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
           case ((out, in), i) ⇒
             val p1 = out.down(1)
             val p2 = p1.down(i + 1)
-            val p3 = p2.right(boxRightEdge - p2.column + i * 2 + 1)
+            val p3 = p2.right(boxRightEdge - p2.column + i * 2 + 2)
             val p4 = p3.up(vertexInfo.boxRegion.height + 2 * (i + 1) + 1)
             val p5 = p4.left(p4.column - in.column)
             val p6 = in.up(1)

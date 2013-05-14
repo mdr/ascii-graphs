@@ -111,15 +111,19 @@ object RunLayout extends App {
 """)
 
   val v1 = """Person
-          |────────────
-          |name = "Bob"
-          |age = 42""".stripMargin
+             |────────────
+             |name = "Bob"
+             |age = 42""".stripMargin
   val v2 = """Person
-          |──────────────
-          |name = "Alice"
-          |age = 35""".stripMargin
-  val vertices4 = Set(v1, v2)
-  val edges4 = List((v1, v2))
+              |──────────────
+              |name = "Alice"
+              |age = 35""".stripMargin
+  val v3 = """Company
+              |────────────────────
+              |name = "Thingies Ltd"
+              |employees = 123""".stripMargin
+  val vertices4 = Set(v1, v2, v3)
+  val edges4 = List(v1 -> v2, v3 -> v1, v3 -> v2)
 
   val graph4 = Graph(vertices4, edges4)
 
@@ -129,7 +133,8 @@ object RunLayout extends App {
   println("Seed = " + seed)
   implicit val random = new Random(seed)
   val graph5 = RandomGraph.randomGraph(random)
-  val graph = graph4
+
+  val graph = graph5
   //  println(graph)
 
   val cycleRemovalResult = CycleRemover.removeCycles(graph)

@@ -8,7 +8,7 @@ import com.github.mdr.ascii.util.Utils
 
 object Renderer {
 
-  def render(drawing: Drawing) = new Renderer().render(drawing)
+  def render(drawing: Drawing, unicode: Boolean = true) = new Renderer(unicode = unicode).render(drawing)
 
 }
 
@@ -96,6 +96,19 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
 
     for ((line, index) ← element.textLines.zipWithIndex)
       grid(region.topLeft.right.down(index + 1)) = line
+
+    if (unicode) {
+      for {
+        row ← element.region.topRow + 1 to element.region.bottomRow - 1
+        point = Point(row, element.region.leftColumn)
+        if grid(point.right) == '─'
+      } grid(point) = if (doubleVertices) '╟' else '├'
+      for {
+        row ← element.region.topRow + 1 to element.region.bottomRow - 1
+        point = Point(row, element.region.rightColumn)
+        if grid(point.left) == '─'
+      } grid(point) = if (doubleVertices) '╢' else '┤'
+    }
   }
 
   private def lineHorizontalChar = if (unicode) '│' else '|'
@@ -108,13 +121,13 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
 
   private def intersectionCharOpt = if (unicode) Some('┼') else None
 
-  private def topLeftChar = if (doubleVertices) '╔' else if (rounded) '╭' else if (unicode) '┌' else '+'
-  private def topRightChar = if (doubleVertices) '╗' else if (rounded) '╮' else if (unicode) '┐' else '+'
-  private def bottomLeftChar = if (doubleVertices) '╚' else if (rounded) '╰' else if (unicode) '└' else '+'
-  private def bottomRightChar = if (doubleVertices) '╝' else if (rounded) '╯' else if (unicode) '┘' else '+'
+  private def topLeftChar = if (unicode) (if (doubleVertices) '╔' else if (rounded) '╭' else '┌') else '+'
+  private def topRightChar = if (unicode) (if (doubleVertices) '╗' else if (rounded) '╮' else '┐') else '+'
+  private def bottomLeftChar = if (unicode) (if (doubleVertices) '╚' else if (rounded) '╰' else '└') else '+'
+  private def bottomRightChar = if (unicode) (if (doubleVertices) '╝' else if (rounded) '╯' else '┘') else '+'
 
-  private def boxHorizontalChar = if (doubleVertices) '═' else if (unicode) '─' else '-'
-  private def boxVerticalChar = if (doubleVertices) '║' else if (unicode) '│' else '|'
+  private def boxHorizontalChar = if (unicode) (if (doubleVertices) '═' else '─') else '-'
+  private def boxVerticalChar = if (unicode) (if (doubleVertices) '║' else '│') else '|'
 
   private def joinChar1 = if (doubleVertices) '╤' else '┬'
   private def joinChar2 = if (doubleVertices) '╧' else '┴'

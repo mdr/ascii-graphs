@@ -63,7 +63,7 @@ E,G""")
       val vertices = if (text.trim.isEmpty) Set[String]() else pieces.flatten.toSet
       val graph = Graph(vertices, edges)
       outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy,
-        OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected))
+        OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected, OptionsPanel.unicodeBox.isSelected))
     } catch {
       case e: Throwable ⇒
         outputTextPane.setText(e.getMessage)
@@ -82,8 +82,10 @@ E,G""")
     setLayout(new FlowLayout)
     val removeKinksBox = new JCheckBox("Remove kinks")
     val compactifyBox = new JCheckBox("Compactify")
+    val unicodeBox = new JCheckBox("Unicode")
     add(removeKinksBox)
     add(compactifyBox)
+    add(unicodeBox)
     removeKinksBox.setSelected(true)
     removeKinksBox.addChangeListener(new ChangeListener() {
       def stateChanged(e: ChangeEvent) {
@@ -92,6 +94,12 @@ E,G""")
     })
     compactifyBox.setSelected(true)
     compactifyBox.addChangeListener(new ChangeListener() {
+      def stateChanged(e: ChangeEvent) {
+        refreshDiagram()
+      }
+    })
+    unicodeBox.setSelected(true)
+    unicodeBox.addChangeListener(new ChangeListener() {
       def stateChanged(e: ChangeEvent) {
         refreshDiagram()
       }
