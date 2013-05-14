@@ -116,7 +116,7 @@ object RunLayout extends App {
   println(seed)
   implicit val random = new Random(seed)
   val graph4 = RandomGraph.randomGraph(random)
-  val graph = graph4
+  val graph = graph3
   //  println(graph)
 
   val cycleRemovalResult = CycleRemover.removeCycles(graph)
