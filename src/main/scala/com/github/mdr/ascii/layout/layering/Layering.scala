@@ -1,13 +1,23 @@
 package com.github.mdr.ascii.layout.layering
 
 /**
- * Layering is a division of vertices into layers, and edges, which can go between multiple layers.
+ * Layering is a division of vertices into layers and the edges between them
  *
- * Each edge must finish at a later layer in the layer order than it starts.
+ * Each edge goes between two adjacent layers
  */
-case class Layering(layers: List[Layer], edges: List[Edge])
+case class Layering(layers: List[Layer], edges: List[Edge]) {
 
-case class Layer(vertices: List[Vertex])
+  def edgesInto(layer: Layer): List[Edge] = edges.filter { e ⇒ layer.contains(e.finishVertex) }
+
+}
+
+case class Layer(vertices: List[Vertex]) {
+
+  def contains(v: Vertex) = vertices contains v
+
+  def positionOf(v: Vertex) = vertices indexOf v
+
+}
 
 sealed abstract class Vertex
 

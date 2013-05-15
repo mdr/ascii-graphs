@@ -1,0 +1,72 @@
+package com.github.mdr.ascii.layout.layering
+
+import org.scalatest.FlatSpec
+import org.scalatest.matchers.ShouldMatchers
+import com.github.mdr.ascii.graph.Graph
+import com.github.mdr.ascii.graph.GraphUtils
+import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.layout.cycles.CycleRemover
+
+class CrossingCalculatorTest extends FlatSpec with ShouldMatchers {
+
+  // Note: layer ordering in test data is done alphabetically
+
+  check("""
+     +---+ +---+ +---+
+     | A | | B | | C |
+     +---+ +---+ +---+
+       |     |     |  
+       v     v     v  
+     +---+ +---+ +---+
+     | X | | Y | | Z |
+     +---+ +---+ +---+
+      """, expectedCrossings = 0)
+
+  check("""
+     +---+ +---+ +---+
+     | A | | B | | C |
+     +---+ +---+ +---+
+       |     |     |  
+     --+------     |  
+     | |           |  
+     | -------     |  
+     ---     |     |  
+       |     |     |  
+       v     v     v  
+     +---+ +---+ +---+
+     | X | | Y | | Z |
+     +---+ +---+ +---+
+      """, expectedCrossings = 1)
+
+  check("""
+     +---+ +---+ +---+
+     | A | | B | | C |
+     +---+ +---+ +---+
+       |     |     |  
+    ---+-----+------  
+    |  |     |        
+    |  |     -------  
+    |  -------     |  
+    ----     |     |  
+       |     |     |  
+       v     v     v  
+     +---+ +---+ +---+
+     | X | | Y | | Z |
+     +---+ +---+ +---+
+      """, expectedCrossings = 2)
+
+  private def check(diagram: String, expectedCrossings: Int) = {
+    val graph = Graph.fromDiagram(diagram)
+    "CrossingCalculator" should ("find " + expectedCrossings + " in \n" + diagram) in {
+      val cycleRemovalResult = CycleRemover.removeCycles(graph)
+      val (layering, _) = new LayeringCalculator[String].assignLayers(cycleRemovalResult)
+      val List(layer1, layer2) = layering.layers.map(sortVertices)
+      val edges = layering.edgesInto(layer2)
+      val crossingCalculator = new CrossingCalculator(layer1, layer2, edges)
+      crossingCalculator.numberOfCrossings should be(expectedCrossings)
+    }
+  }
+
+  private def sortVertices(layer: Layer): Layer = layer.copy(layer.vertices.sortBy(_.toString))
+
+}
