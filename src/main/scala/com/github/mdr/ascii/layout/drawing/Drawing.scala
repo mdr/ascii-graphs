@@ -18,10 +18,9 @@ case class Drawing(elements: List[DrawingElement]) {
   def replaceElement(element: DrawingElement, replacement: DrawingElement) =
     copy(elements = replacement :: elements.filterNot(_ == element))
 
-  def vertexElementAt(point: Point): Option[VertexDrawingElement] =
-    elements.collectFirst {
-      case vde: VertexDrawingElement if vde.region.contains(point) ⇒ vde
-    }
+  def vertexElementAt(point: Point): Option[VertexDrawingElement] = elements.collectFirst {
+    case vde: VertexDrawingElement if vde.region.contains(point) ⇒ vde
+  }
 
   def vertexElements: List[VertexDrawingElement] = elements.collect {
     case vde: VertexDrawingElement ⇒ vde
@@ -30,6 +29,9 @@ case class Drawing(elements: List[DrawingElement]) {
   def edgeElements: List[EdgeDrawingElement] = elements.collect {
     case ede: EdgeDrawingElement ⇒ ede
   }
+
+  def transpose: Drawing =
+    Drawing(elements.map(_.transpose))
 
 }
 

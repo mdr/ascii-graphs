@@ -15,7 +15,7 @@ object Layouter {
 
 }
 
-class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
+class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Boolean = true) {
 
   import Layouter._
 
@@ -313,10 +313,17 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_]) {
         VertexDrawingElement(info.boxRegion, text)
     }
 
-  private def getPreferredSize[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex) =
-    vertexRenderingStrategy.getPreferredSize(realVertex.contents.asInstanceOf[V])
+  private def getPreferredSize[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex): Dimension = {
+    val preferredSize = vertexRenderingStrategy.getPreferredSize(realVertex.contents.asInstanceOf[V])
+    if (vertical)
+      preferredSize
+    else
+      preferredSize.transpose
+  }
 
-  private def getText[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex, preferredSize: Dimension) =
-    vertexRenderingStrategy.getText(realVertex.contents.asInstanceOf[V], preferredSize)
+  private def getText[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex, preferredSize: Dimension) = {
+    val actualPreferredSize = if (vertical) preferredSize else preferredSize.transpose
+    vertexRenderingStrategy.getText(realVertex.contents.asInstanceOf[V], actualPreferredSize)
+  }
 
 }

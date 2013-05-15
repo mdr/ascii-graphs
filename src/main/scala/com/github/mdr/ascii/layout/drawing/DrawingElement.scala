@@ -8,11 +8,13 @@ import com.github.mdr.ascii.parser.Region
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.parser.Direction
 
-sealed trait DrawingElement {
+sealed trait DrawingElement extends Translatable[DrawingElement] {
 
   def translate(down: Int = 0, right: Int = 0): DrawingElement
 
   def points: List[Point]
+
+  def transpose: DrawingElement
 
 }
 
@@ -21,6 +23,8 @@ case class VertexDrawingElement(region: Region, textLines: List[String]) extends
   def translate(down: Int = 0, right: Int = 0) = copy(region = region.translate(down, right))
 
   def points = region.points
+
+  def transpose: VertexDrawingElement = copy(region = region.transpose)
 
 }
 
@@ -66,5 +70,7 @@ case class EdgeDrawingElement(
   lazy val segments: List[EdgeSegment] =
     for ((point1, point2) ← Utils.adjacentPairs(bendPoints))
       yield EdgeSegment(point1, direction(point1, point2), point2)
+
+  def transpose: EdgeDrawingElement = copy(bendPoints = bendPoints.map(_.transpose))
 
 }

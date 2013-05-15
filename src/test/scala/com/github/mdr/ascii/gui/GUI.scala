@@ -19,6 +19,7 @@ import javax.swing.event.ChangeListener
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.UIManager
+import javax.swing.BoxLayout
 
 object GUI extends App {
 
@@ -63,7 +64,8 @@ E,G""")
       val vertices = if (text.trim.isEmpty) Set[String]() else pieces.flatten.toSet
       val graph = Graph(vertices, edges)
       outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy,
-        OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected, OptionsPanel.unicodeBox.isSelected))
+        OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected, OptionsPanel.unicodeBox.isSelected,
+        OptionsPanel.verticalBox.isSelected))
     } catch {
       case e: Throwable ⇒
         outputTextPane.setText(e.getMessage)
@@ -79,13 +81,15 @@ E,G""")
   add(splitPane, BorderLayout.CENTER)
   add(OptionsPanel, BorderLayout.EAST)
   object OptionsPanel extends JPanel {
-    setLayout(new FlowLayout)
+    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS))
     val removeKinksBox = new JCheckBox("Remove kinks")
     val compactifyBox = new JCheckBox("Compactify")
     val unicodeBox = new JCheckBox("Unicode")
+    val verticalBox = new JCheckBox("Vertical")
     add(removeKinksBox)
     add(compactifyBox)
     add(unicodeBox)
+    add(verticalBox)
     removeKinksBox.setSelected(true)
     removeKinksBox.addChangeListener(new ChangeListener() {
       def stateChanged(e: ChangeEvent) {
@@ -100,6 +104,12 @@ E,G""")
     })
     unicodeBox.setSelected(true)
     unicodeBox.addChangeListener(new ChangeListener() {
+      def stateChanged(e: ChangeEvent) {
+        refreshDiagram()
+      }
+    })
+    verticalBox.setSelected(true)
+    verticalBox.addChangeListener(new ChangeListener() {
       def stateChanged(e: ChangeEvent) {
         refreshDiagram()
       }

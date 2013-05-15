@@ -61,9 +61,9 @@ case class Region(topLeft: Point, bottomRight: Point) extends Translatable[Regio
       column ← leftColumn to rightColumn
     } yield Point(row, column)
 
-  type Self = Region
-
   def translate(down: Int = 0, right: Int = 0): Region =
     Region(topLeft.translate(down, right), bottomRight.translate(down, right))
+
+  def transpose = Region(topLeft.transpose, bottomRight.transpose)
 
 }

@@ -8,6 +8,8 @@ case class Point(row: Int, column: Int) extends Translatable[Point] {
 
   def translate(down: Int = 0, right: Int = 0): Point = Point(row + down, column + right)
 
+  def transpose: Point = Point(column, row)
+
   def neighbours: List[Point] = List(up, right, down, left)
 
 }

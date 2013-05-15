@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.parser
 
-trait Translatable[Self] {
+trait Translatable[+Self] {
 
   def translate(down: Int = 0, right: Int = 0): Self
 
