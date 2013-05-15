@@ -13,6 +13,9 @@ import com.github.mdr.ascii.util.Utils
  *
  * In addition, dummy vertices are generated for edges that span multiple layers, corresponding to bends in the
  * displayed edge.
+ *
+ * Layers are assigned using longest-path layering, with each vertex assigned to a layer corresponding to the
+ * longest path from that vertex to a sink.
  */
 class LayeringCalculator[V] {
 

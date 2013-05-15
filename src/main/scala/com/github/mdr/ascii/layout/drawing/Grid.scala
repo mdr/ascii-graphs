@@ -11,7 +11,13 @@ class Grid(dimension: Dimension) {
 
   val chars: Array[Array[Char]] = Array.fill(dimension.height, dimension.width)(' ')
 
-  def apply(point: Point): Char = chars(point.row)(point.column)
+  def apply(point: Point): Char =
+    try
+      chars(point.row)(point.column)
+    catch {
+      case e: ArrayIndexOutOfBoundsException ⇒
+        throw new ArrayIndexOutOfBoundsException(point + " is not in " + dimension)
+    }
 
   def update(point: Point, char: Char) {
     val row = chars(point.row)

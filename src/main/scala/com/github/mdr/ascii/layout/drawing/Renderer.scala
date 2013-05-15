@@ -34,10 +34,8 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
 
   private def render(grid: Grid, element: EdgeDrawingElement, drawing: Drawing) {
     for ((previousSegmentOpt, segment @ EdgeSegment(point1, direction, point2)) ← Utils.withPrevious(element.segments)) {
-      val startPoint =
-        if (direction.isVertical && point1 != element.bendPoints.head) point1.go(direction) else point1
-      val endPoint =
-        if (direction.isVertical && point2 != element.bendPoints.last) point2.go(direction.opposite) else point2
+      val startPoint = point1
+      val endPoint = if (point2 == element.bendPoints.last) point2 else point2.go(direction.opposite)
 
       try
         drawLine(grid, startPoint, direction, endPoint)
@@ -45,13 +43,12 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
         case e: Throwable ⇒ throw new RuntimeException("Problem drawing segment " + segment + " in edge " + element, e)
       }
 
-      if (unicode)
-        condOpt(previousSegmentOpt.map(_.direction), direction) {
-          case (Some(Up), Right) | (Some(Left), Down) ⇒ grid(point1) = bendChar1
-          case (Some(Up), Left) | (Some(Right), Down) ⇒ grid(point1) = bendChar2
-          case (Some(Down), Right) | (Some(Left), Up) ⇒ grid(point1) = bendChar3
-          case (Some(Down), Left) | (Some(Right), Up) ⇒ grid(point1) = bendChar4
-        }
+      condOpt(previousSegmentOpt.map(_.direction), direction) {
+        case (Some(Up), Right) | (Some(Left), Down) ⇒ grid(point1) = bendChar1
+        case (Some(Up), Left) | (Some(Right), Down) ⇒ grid(point1) = bendChar2
+        case (Some(Down), Right) | (Some(Left), Up) ⇒ grid(point1) = bendChar3
+        case (Some(Down), Left) | (Some(Right), Up) ⇒ grid(point1) = bendChar4
+      }
     }
 
     def drawBoxIntersection(intersectionPoint: Point, direction: Direction) =
@@ -114,10 +111,10 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
   private def lineHorizontalChar = if (unicode) '│' else '|'
   private def lineVerticalChar = if (unicode) '─' else '-'
 
-  private def bendChar1 = if (rounded) '╭' else '┌'
-  private def bendChar2 = if (rounded) '╮' else '┐'
-  private def bendChar3 = if (rounded) '╰' else '└'
-  private def bendChar4 = if (rounded) '╯' else '┘'
+  private def bendChar1 = if (unicode) (if (rounded) '╭' else '┌') else '-'
+  private def bendChar2 = if (unicode) (if (rounded) '╮' else '┐') else '-'
+  private def bendChar3 = if (unicode) (if (rounded) '╰' else '└') else '-'
+  private def bendChar4 = if (unicode) (if (rounded) '╯' else '┘') else '-'
 
   private def intersectionCharOpt = if (unicode) Some('┼') else None
 

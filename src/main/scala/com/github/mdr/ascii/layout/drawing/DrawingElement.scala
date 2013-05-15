@@ -28,7 +28,15 @@ case class VertexDrawingElement(region: Region, textLines: List[String]) extends
 
 }
 
-case class EdgeSegment(start: Point, direction: Direction, finish: Point)
+case class EdgeSegment(start: Point, direction: Direction, finish: Point) {
+  require(direction match {
+    case Up    ⇒ start.row > finish.row
+    case Down  ⇒ start.row < finish.row
+    case Right ⇒ start.column < finish.column
+    case Left  ⇒ start.column > finish.column
+  }, "Invalid segment: " + start + ", " + direction + ", " + finish)
+
+}
 
 case class EdgeDrawingElement(
   bendPoints: List[Point],
@@ -67,7 +75,7 @@ case class EdgeDrawingElement(
     } else
       throw new RuntimeException("Points not aligned: " + point1 + ", " + point2)
 
-  lazy val segments: List[EdgeSegment] =
+  val segments: List[EdgeSegment] =
     for ((point1, point2) ← Utils.adjacentPairs(bendPoints))
       yield EdgeSegment(point1, direction(point1, point2), point2)
 

@@ -62,7 +62,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
     def getOutEdges(vertex: Vertex) = outEdges collect { case e @ Edge(`vertex`, v2) ⇒ e }
 
     def getDimension(vertex: Vertex): Dimension = vertex match {
-      case v: RealVertex  ⇒ calculateDimension(v, getInEdges(vertex).size, getOutEdges(vertex).size)
+      case v: RealVertex  ⇒ calculateVertexDimension(v, getInEdges(vertex).size, getOutEdges(vertex).size)
       case _: DummyVertex ⇒ Dimension(height = 1, width = 1)
     }
     val dimensions: Map[Vertex, Dimension] = makeMap(layer.vertices, getDimension)
@@ -117,10 +117,15 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
   /**
    * Calculate dimension based on vertex rendering strategy together with the number of in/out edges
    */
-  private def calculateDimension(v: RealVertex, inDegree: Int, outDegree: Int) = {
+  private def calculateVertexDimension(v: RealVertex, inDegree: Int, outDegree: Int) = {
     val selfEdges = v.selfEdges
-    val requiredInputWidth = (inDegree + selfEdges) * 2 + 3
-    val requiredOutputWidth = (outDegree + selfEdges) * 2 + 3
+    def requiredWidth(degree: Int) =
+      if (vertical)
+        (degree + selfEdges) * 2 + 1 + 2
+      else
+        degree + selfEdges + 2
+    val requiredInputWidth = requiredWidth(inDegree)
+    val requiredOutputWidth = requiredWidth(outDegree)
     val Dimension(preferredHeight, preferredWidth) = getPreferredSize(vertexRenderingStrategy, v)
     val width = math.max(math.max(requiredInputWidth, requiredOutputWidth), preferredWidth + 2)
     val height = math.max(MINIMUM_VERTEX_HEIGHT, preferredHeight + 2)
