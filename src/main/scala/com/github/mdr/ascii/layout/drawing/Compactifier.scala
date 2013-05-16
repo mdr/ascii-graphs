@@ -2,25 +2,48 @@ package com.github.mdr.ascii.layout.drawing
 
 import com.github.mdr.ascii.util.Utils._
 import com.github.mdr.ascii.common.Direction._
+
 import scala.annotation.tailrec
 
 object Compactifier {
 
   def compactify(drawing: Drawing): Drawing = removeRedundantRows(elevateEdges(drawing))
 
-  private def elevateEdges(drawing: Drawing): Drawing = iterate(drawing, elevateEdge)
+  //  private def elevateEdges(drawing: Drawing): Drawing = iterate(drawing, elevateEdge)
+  //
+  //  private def elevateEdge(drawing: Drawing): Option[Drawing] = {
+  //    val grid = new OccupancyGrid(drawing)
+  //    for {
+  //      edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
+  //      updatedElement ← elevateEdge(edgeElement, grid)
+  //    } {
+  //      val updatedDrawing = drawing.replaceElement(edgeElement, updatedElement)
+  //      return Some(updatedDrawing)
+  //    }
+  //    None
+  //  }
 
-  private def elevateEdge(drawing: Drawing): Option[Drawing] = {
-    val grid = new OccupancyGrid(drawing)
+  private def elevateEdge(drawing: Drawing, grid: OccupancyGrid): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
     for {
-      edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
+      edgeElement ← drawing.edgeElements
       updatedElement ← elevateEdge(edgeElement, grid)
-    } {
-      //      println("Shifted edge up in " + edgeElement + ", " + updatedElement)
-      val updatedDrawing = drawing.replaceElement(edgeElement, updatedElement)
-      return Some(updatedDrawing)
-    }
+    } return Some(edgeElement -> updatedElement)
     None
+  }
+
+  def elevateEdges(drawing: Drawing): Drawing = {
+    val grid = new OccupancyGrid(drawing)
+    var currentDrawing = drawing
+    while (true) {
+      elevateEdge(currentDrawing, grid) match {
+        case None ⇒
+          return currentDrawing
+        case Some((oldEdge, updatedEdge)) ⇒
+          currentDrawing = currentDrawing.replaceElement(oldEdge, updatedEdge)
+          grid.replace(oldEdge, updatedEdge)
+      }
+    }
+    return currentDrawing
   }
 
   private def elevateEdge(edgeElement: EdgeDrawingElement, grid: OccupancyGrid): Option[EdgeDrawingElement] = {

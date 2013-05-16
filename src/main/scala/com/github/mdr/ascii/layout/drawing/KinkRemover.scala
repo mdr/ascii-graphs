@@ -6,18 +6,52 @@ import com.github.mdr.ascii.common.Direction._
 import com.github.mdr.ascii.common.Point
 import com.github.mdr.ascii.util.Utils._
 
+/**
+ * Remove kinks in edges where this can be achieved by removing an edge segment. For example:
+ *
+ *  ╭───────────╮        ╭───────────╮
+ *  │Aberystwyth│        │Aberystwyth│
+ *  ╰─────┬─────╯        ╰─┬─────────╯
+ *        │        ==>     │
+ *    ╭───╯                │
+ *    │                    │
+ *    v                    v
+ *  ╭───╮                ╭───╮
+ *  │ X │                │ X │
+ *  ╰───╯                ╰───╯
+ */
 object KinkRemover {
 
-  def removeKinks(drawing: Drawing): Drawing = iterate(drawing, removeKink)
+  // def removeKinks(drawing: Drawing) = iterate(drawing, removeKink)
+  //
+  //  private def removeKink(drawing: Drawing): Option[Drawing] = {
+  //    val grid = new OccupancyGrid(drawing)
+  //    for {
+  //      edgeElement ← drawing.edgeElements
+  //      updatedElement ← removeKink(edgeElement, drawing, grid)
+  //    } return Some(drawing.replaceElement(edgeElement, updatedElement))
+  //    None
+  //  }
 
-  private def removeKink(drawing: Drawing): Option[Drawing] = {
+  def removeKinks(drawing: Drawing): Drawing = {
     val grid = new OccupancyGrid(drawing)
+    var currentDrawing = drawing
+    while (true)
+      removeKink(currentDrawing, grid) match {
+        case None ⇒
+          return currentDrawing
+        case Some((oldEdge, updatedEdge)) ⇒
+          currentDrawing = currentDrawing.replaceElement(oldEdge, updatedEdge)
+          grid.replace(oldEdge, updatedEdge)
+      }
+    return currentDrawing
+  }
+
+  private def removeKink(drawing: Drawing, grid: OccupancyGrid): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
     for {
-      edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
-      updatedElement ← removeKink(edgeElement, drawing, grid)
-    } {
-      return Some(drawing.replaceElement(edgeElement, updatedElement))
-    }
+      edgeElement ← drawing.edgeElements
+      newEdgeElement ← removeKink(edgeElement, drawing, grid)
+    } return Some(edgeElement -> newEdgeElement)
     None
   }
 

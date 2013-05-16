@@ -1,13 +1,10 @@
 package com.github.mdr.ascii.layout
 
-import com.github.mdr.ascii.layout.cycles.CycleRemover
-import com.github.mdr.ascii.layout.coordAssign._
-import com.github.mdr.ascii.layout.layering.LayeringCalculator
-import com.github.mdr.ascii.layout.drawing.Compactifier
-import com.github.mdr.ascii.layout.layering.LayerOrderingCalculator
 import com.github.mdr.ascii.graph.Graph
-import com.github.mdr.ascii.layout.drawing.Renderer
-import com.github.mdr.ascii.layout.drawing.KinkRemover
+import com.github.mdr.ascii.layout.coordAssign._
+import com.github.mdr.ascii.layout.cycles.CycleRemover
+import com.github.mdr.ascii.layout.drawing._
+import com.github.mdr.ascii.layout.layering._
 
 object GraphLayout {
 
@@ -31,7 +28,5 @@ object GraphLayout {
       drawing = drawing.transpose
     Renderer.render(drawing, unicode)
   }
-
-  private val toStringLayouter = new Layouter(ToStringVertexRenderingStrategy)
 
 }
