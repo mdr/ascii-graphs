@@ -1,25 +1,12 @@
 package com.github.mdr.ascii.gui
 
-import java.awt.BorderLayout
-import java.awt.Dimension
-import java.awt.FlowLayout
-import java.awt.Font
+import java.awt._
+import java.awt.event._
+import javax.swing._
+import javax.swing.event._
 import com.github.mdr.ascii.graph.Graph
-import com.github.mdr.ascii.layout.GraphLayout
-import com.github.mdr.ascii.layout.ToStringVertexRenderingStrategy
-import javax.swing.JCheckBox
-import javax.swing.JFrame
-import javax.swing.JPanel
-import javax.swing.JScrollPane
-import javax.swing.JSplitPane
-import javax.swing.JTextPane
-import javax.swing.SwingUtilities
-import javax.swing.event.ChangeEvent
-import javax.swing.event.ChangeListener
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
-import javax.swing.UIManager
-import javax.swing.BoxLayout
+import com.github.mdr.ascii.layout.coordAssign._
+import com.github.mdr.ascii.layout._
 
 object GUI extends App {
 
@@ -40,13 +27,13 @@ object Frame extends JFrame {
   setPreferredSize(new Dimension(1024, 640))
   val splitPane = new JSplitPane
   val inputTextPane = new JTextPane
-  inputTextPane.setText("""A,B,C
-A,C
-B,B
-D,E,F
-E,G""")
+  inputTextPane.setText("""|A,B,C
+                           |A,C
+                           |B,B
+                           |D,E,F
+                           |E,G""".stripMargin)
   val outputTextPane = new JTextPane
-  inputTextPane.setFont(new Font(Font.MONOSPACED, outputTextPane.getFont.getStyle, outputTextPane.getFont.getSize))
+  inputTextPane.setFont(new Font(Font.MONOSPACED, inputTextPane.getFont.getStyle, inputTextPane.getFont.getSize))
   outputTextPane.setFont(new Font(Font.MONOSPACED, outputTextPane.getFont.getStyle, outputTextPane.getFont.getSize))
   outputTextPane.setEditable(false)
   inputTextPane.getDocument.addDocumentListener {
@@ -56,16 +43,17 @@ E,G""")
       def changedUpdate(e: DocumentEvent) { refreshDiagram() }
     }
   }
+
   private def refreshDiagram() {
     try {
       val text = inputTextPane.getText
-      val pieces = text.split("\n").toList.map(_.split(",").toList)
+      val pieces = text.split("\n").toList.map(_.split(",").toList.map(_.replace("\\n", "\n")))
       val edges = pieces.flatMap { chunks ⇒ chunks.zip(chunks.tail) }
       val vertices = if (text.trim.isEmpty) Set[String]() else pieces.flatten.toSet
       val graph = Graph(vertices, edges)
       outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy,
-        OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected, OptionsPanel.unicodeBox.isSelected,
-        OptionsPanel.verticalBox.isSelected))
+        OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected,
+        OptionsPanel.unicodeBox.isSelected, OptionsPanel.verticalBox.isSelected))
     } catch {
       case e: Throwable ⇒
         outputTextPane.setText(e.getMessage)
@@ -78,42 +66,38 @@ E,G""")
   splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT)
   splitPane.setDividerLocation(0.5)
   splitPane.setResizeWeight(0.5)
+
   add(splitPane, BorderLayout.CENTER)
   add(OptionsPanel, BorderLayout.EAST)
+
   object OptionsPanel extends JPanel {
+
     setLayout(new BoxLayout(this, BoxLayout.Y_AXIS))
+
     val removeKinksBox = new JCheckBox("Remove kinks")
     val compactifyBox = new JCheckBox("Compactify")
     val unicodeBox = new JCheckBox("Unicode")
     val verticalBox = new JCheckBox("Vertical")
+
     add(removeKinksBox)
     add(compactifyBox)
     add(unicodeBox)
     add(verticalBox)
+
+    val refreshListener = new ActionListener() {
+      def actionPerformed(e: ActionEvent) {
+        refreshDiagram()
+      }
+    }
+
     removeKinksBox.setSelected(true)
-    removeKinksBox.addChangeListener(new ChangeListener() {
-      def stateChanged(e: ChangeEvent) {
-        refreshDiagram()
-      }
-    })
+    removeKinksBox.addActionListener(refreshListener)
     compactifyBox.setSelected(true)
-    compactifyBox.addChangeListener(new ChangeListener() {
-      def stateChanged(e: ChangeEvent) {
-        refreshDiagram()
-      }
-    })
+    compactifyBox.addActionListener(refreshListener)
     unicodeBox.setSelected(true)
-    unicodeBox.addChangeListener(new ChangeListener() {
-      def stateChanged(e: ChangeEvent) {
-        refreshDiagram()
-      }
-    })
+    unicodeBox.addActionListener(refreshListener)
     verticalBox.setSelected(true)
-    verticalBox.addChangeListener(new ChangeListener() {
-      def stateChanged(e: ChangeEvent) {
-        refreshDiagram()
-      }
-    })
+    verticalBox.addActionListener(refreshListener)
   }
 
 }

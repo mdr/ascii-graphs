@@ -25,7 +25,9 @@ sealed abstract class Vertex
  * A vertex used as a bend point when an edge passes through a layer.
  */
 class DummyVertex() extends Vertex {
+
   override def toString = "DummyVertex"
+
 }
 
 class RealVertex(val contents: Any, val selfEdges: Int) extends Vertex {

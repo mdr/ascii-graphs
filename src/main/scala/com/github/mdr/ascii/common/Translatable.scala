@@ -2,6 +2,9 @@ package com.github.mdr.ascii.common
 
 import com.github.mdr.ascii.common.Direction._
 
+/**
+ * An object that can be shifted in 2 dimensions.
+ */
 trait Translatable[+Self] {
 
   def translate(down: Int = 0, right: Int = 0): Self

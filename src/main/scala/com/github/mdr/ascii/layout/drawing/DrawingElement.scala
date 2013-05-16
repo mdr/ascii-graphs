@@ -1,15 +1,16 @@
 package com.github.mdr.ascii.layout.drawing
 
 import scala.annotation.tailrec
-import com.github.mdr.ascii.common.Translatable
-import com.github.mdr.ascii.common._
-import com.github.mdr.ascii.common.Point
-import com.github.mdr.ascii.common.Region
-import com.github.mdr.ascii.util.Utils
-import com.github.mdr.ascii.common.Direction._
-import com.github.mdr.ascii.common.Direction
 
-sealed trait DrawingElement extends Translatable[DrawingElement] {
+import com.github.mdr.ascii.common.Direction
+import com.github.mdr.ascii.common.Direction._
+import com.github.mdr.ascii.common._
+import com.github.mdr.ascii.util.Utils
+
+/**
+ * A visual artifact in a rendered graph.
+ */
+sealed trait DrawingElement extends Translatable[DrawingElement] with Transposable[DrawingElement] {
 
   def translate(down: Int = 0, right: Int = 0): DrawingElement
 
@@ -19,7 +20,13 @@ sealed trait DrawingElement extends Translatable[DrawingElement] {
 
 }
 
-case class VertexDrawingElement(region: Region, textLines: List[String]) extends DrawingElement with Translatable[VertexDrawingElement] {
+/**
+ * Visual rendering of a graph vertex.
+ */
+case class VertexDrawingElement(region: Region, textLines: List[String])
+    extends DrawingElement
+    with Translatable[VertexDrawingElement]
+    with Transposable[VertexDrawingElement] {
 
   def translate(down: Int = 0, right: Int = 0) = copy(region = region.translate(down, right))
 
@@ -29,21 +36,16 @@ case class VertexDrawingElement(region: Region, textLines: List[String]) extends
 
 }
 
-case class EdgeSegment(start: Point, direction: Direction, finish: Point) {
-  require(direction match {
-    case Up    ⇒ start.row > finish.row
-    case Down  ⇒ start.row < finish.row
-    case Right ⇒ start.column < finish.column
-    case Left  ⇒ start.column > finish.column
-  }, "Invalid segment: " + start + ", " + direction + ", " + finish)
-
-}
-
+/**
+ * Visual rendering of a directed edge.
+ *
+ * @param bendPoints -- points of flex in the edge, includes start and finish points
+ */
 case class EdgeDrawingElement(
   bendPoints: List[Point],
   hasArrow1: Boolean,
   hasArrow2: Boolean)
-    extends DrawingElement {
+    extends DrawingElement with Translatable[EdgeDrawingElement] with Transposable[EdgeDrawingElement] {
 
   private def getPoints(segment: EdgeSegment): List[Point] = {
     @tailrec def scanForPoints(start: Point, direction: Direction, finish: Point, accum: List[Point]): List[Point] =
@@ -76,10 +78,12 @@ case class EdgeDrawingElement(
     } else
       throw new RuntimeException("Points not aligned: " + point1 + ", " + point2)
 
-  val segments: List[EdgeSegment] =
+  lazy val segments: List[EdgeSegment] =
     for ((point1, point2) ← Utils.adjacentPairs(bendPoints))
       yield EdgeSegment(point1, direction(point1, point2), point2)
 
   def transpose: EdgeDrawingElement = copy(bendPoints = bendPoints.map(_.transpose))
 
 }
+
+case class EdgeSegment(start: Point, direction: Direction, finish: Point)

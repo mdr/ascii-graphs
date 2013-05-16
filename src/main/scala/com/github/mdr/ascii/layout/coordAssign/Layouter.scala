@@ -1,4 +1,4 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.layout.coordAssign
 
 import com.github.mdr.ascii.layout.drawing._
 import com.github.mdr.ascii.layout.layering._

@@ -2,9 +2,8 @@ package com.github.mdr.ascii
 
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.graph.RandomGraph
-import com.github.mdr.ascii.layout.Layouter
-import com.github.mdr.ascii.layout.Layouter
-import com.github.mdr.ascii.layout.ToStringVertexRenderingStrategy
+import com.github.mdr.ascii.layout.coordAssign._
+import com.github.mdr.ascii.layout._
 import com.github.mdr.ascii.layout.cycles.CycleRemover
 import com.github.mdr.ascii.layout.layering.LayerOrderingCalculator
 import com.github.mdr.ascii.layout.layering.LayeringCalculator

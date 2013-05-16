@@ -1,6 +1,7 @@
 package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii.layout.cycles.CycleRemover
+import com.github.mdr.ascii.layout.coordAssign._
 import com.github.mdr.ascii.layout.layering.LayeringCalculator
 import com.github.mdr.ascii.layout.drawing.Compactifier
 import com.github.mdr.ascii.layout.layering.LayerOrderingCalculator

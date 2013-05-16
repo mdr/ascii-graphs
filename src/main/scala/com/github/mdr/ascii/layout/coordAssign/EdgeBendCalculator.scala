@@ -1,4 +1,4 @@
-package com.github.mdr.ascii.layout
+package com.github.mdr.ascii.layout.coordAssign
 
 /**
  * Calculate vertical ordering of row bends

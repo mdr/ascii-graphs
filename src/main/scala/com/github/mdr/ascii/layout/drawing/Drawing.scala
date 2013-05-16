@@ -1,25 +1,24 @@
 package com.github.mdr.ascii.layout.drawing
 
-import com.github.mdr.ascii.common.Dimension
-import com.github.mdr.ascii.common.Point
+import com.github.mdr.ascii.common._
 
-case class Drawing(elements: List[DrawingElement]) {
+case class Drawing(elements: List[DrawingElement]) extends Transposable[Drawing] {
 
   lazy val dimension: Dimension = {
-    val largestPoint = elements.flatMap(getMaxPoints).foldLeft(Point(-1, -1))(_ maxRowCol _)
-    Dimension(width = largestPoint.column + 1, height = largestPoint.row + 1)
+    val largestPoint = elements.map(maxPoint).foldLeft(Point(-1, -1))(_ maxRowCol _)
+    Dimension.fromPoint(largestPoint)
   }
 
-  private def getMaxPoints(element: DrawingElement) = element match {
-    case element: VertexDrawingElement ⇒ List(element.region.bottomRight)
-    case element: EdgeDrawingElement   ⇒ element.bendPoints
+  private def maxPoint(element: DrawingElement): Point = element match {
+    case element: VertexDrawingElement ⇒ element.region.bottomRight
+    case element: EdgeDrawingElement   ⇒ element.bendPoints.reduce(_ maxRowCol _)
   }
 
   def replaceElement(element: DrawingElement, replacement: DrawingElement) =
     copy(elements = replacement :: elements.filterNot(_ == element))
 
   def vertexElementAt(point: Point): Option[VertexDrawingElement] = elements.collectFirst {
-    case vde: VertexDrawingElement if vde.region.contains(point) ⇒ vde
+    case vde: VertexDrawingElement if vde.region contains point ⇒ vde
   }
 
   def vertexElements: List[VertexDrawingElement] = elements.collect {
@@ -30,8 +29,7 @@ case class Drawing(elements: List[DrawingElement]) {
     case ede: EdgeDrawingElement ⇒ ede
   }
 
-  def transpose: Drawing =
-    Drawing(elements.map(_.transpose))
+  def transpose: Drawing = Drawing(elements.map(_.transpose))
 
 }
 

@@ -1,37 +1,27 @@
 package com.github.mdr.ascii.graph
 
 import scala.PartialFunction.cond
+
+import com.github.mdr.ascii.diagram.Diagram
+import com.github.mdr.ascii.layout.GraphLayout
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.util.Utils._
-import com.github.mdr.ascii.layout.Layouter
-import com.github.mdr.ascii.diagram.Diagram
-import com.github.mdr.ascii.diagram.Box
-import com.github.mdr.ascii.layout.GraphLayout
 
 object Graph {
 
   def fromDiagram(s: String): Graph[String] = fromDiagram(Diagram(s))
 
-  def fromDiagram(diagram: Diagram): Graph[String] = {
-    val boxToVertexMap: Map[Box, String] = makeMap(diagram.childBoxes, _.text)
-
-    val vertices = boxToVertexMap.values.toSet
-    val edges =
-      for {
-        edge ← diagram.allEdges
-        vertex1 ← boxToVertexMap.get(edge.box1)
-        vertex2 ← boxToVertexMap.get(edge.box2)
-      } yield {
-        if (edge.hasArrow2)
-          vertex1 -> vertex2
-        else
-          vertex2 -> vertex1
-      }
-    Graph(vertices, edges)
-  }
+  def fromDiagram(diagram: Diagram): Graph[String] = DiagramToGraphConvertor.toGraph(diagram)
 
 }
 
+/**
+ * A directed graph, allowing multi-edges and loops.
+ *
+ * Two vertex objects are considered indistinguishable if they compare the same via .equals().
+ *
+ * @param edges, vertices in the edges must be present in the vertices.
+ */
 case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
 
   val outMap: Map[V, List[V]] = edges.groupBy(_._1).map { case (k, vs) ⇒ (k, vs.map(_._2)) }

@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.common
 
-case class Point(row: Int, column: Int) extends Translatable[Point] {
+case class Point(row: Int, column: Int) extends Translatable[Point] with Transposable[Point] {
 
   def maxRowCol(that: Point): Point = Point(math.max(this.row, that.row), math.max(this.column, that.column))
 
