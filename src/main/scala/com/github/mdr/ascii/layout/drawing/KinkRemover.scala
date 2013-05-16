@@ -36,10 +36,11 @@ object KinkRemover {
   def removeKinks(drawing: Drawing): Drawing = {
     val grid = new OccupancyGrid(drawing)
     var currentDrawing = drawing
-    while (true)
+    var continue = true
+    while (continue)
       removeKink(currentDrawing, grid) match {
         case None ⇒
-          return currentDrawing
+          continue = false
         case Some((oldEdge, updatedEdge)) ⇒
           currentDrawing = currentDrawing.replaceElement(oldEdge, updatedEdge)
           grid.replace(oldEdge, updatedEdge)
@@ -55,11 +56,14 @@ object KinkRemover {
     None
   }
 
-  private def removeStraightLines(points: List[Point]): List[Point] = points match {
-    case Nil | List(_) | List(_, _) ⇒ points
-    case (p1 @ Point(r1, c1)) :: Point(r2, c2) :: (p3 @ Point(r3, c3)) :: remainder if c1 == c2 && c2 == c3 || r1 == r2 && r2 == r3 ⇒
-      removeStraightLines(p1 :: p3 :: remainder)
-    case p :: ps ⇒ p :: removeStraightLines(ps)
+  private def sameColumn(p1: Point, p2: Point, p3: Point) = p1.column == p2.column && p2.column == p3.column
+  private def sameRow(p1: Point, p2: Point, p3: Point) = p1.row == p2.row && p2.row == p3.row
+  private def colinear(p1: Point, p2: Point, p3: Point) = sameColumn(p1, p2, p3) || sameRow(p1, p2, p3)
+
+  private def removeRedundantPoints(points: List[Point]): List[Point] = points match {
+    case List() | List(_) | List(_, _)                       ⇒ points
+    case p1 :: p2 :: p3 :: remainder if colinear(p1, p2, p3) ⇒ removeRedundantPoints(p1 :: p3 :: remainder)
+    case p :: ps                                             ⇒ p :: removeRedundantPoints(ps)
   }
 
   private def removeKink(element: EdgeDrawingElement, drawing: Drawing, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
@@ -79,7 +83,7 @@ object KinkRemover {
             drawing.vertexElementAt(start.up).get.region.leftColumn != alternativeMiddle.column) {
             val oldBendPoints = element.bendPoints
             val oldIndex = oldBendPoints.indexOf(start).ensuring(_ >= 0)
-            val newBendPoints = removeStraightLines(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
+            val newBendPoints = removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
             val updated = element.copy(bendPoints = newBendPoints)
             return Some(updated)
           }
@@ -98,7 +102,7 @@ object KinkRemover {
             drawing.vertexElementAt(end.down).get.region.leftColumn != alternativeMiddle.column) {
             val oldBendPoints = element.bendPoints
             val oldIndex = oldBendPoints.indexOf(start).ensuring(_ >= 0)
-            val newBendPoints = removeStraightLines(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
+            val newBendPoints = removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
             val updated = element.copy(bendPoints = newBendPoints)
             return Some(updated)
           }
