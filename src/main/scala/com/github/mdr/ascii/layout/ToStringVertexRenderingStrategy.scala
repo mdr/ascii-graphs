@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.layout
 
-import com.github.mdr.ascii.parser.Dimension
+import com.github.mdr.ascii.common.Dimension
 
 object ToStringVertexRenderingStrategy extends VertexRenderingStrategy[Any] {
 

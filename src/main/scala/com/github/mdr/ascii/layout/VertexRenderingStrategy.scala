@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.layout
 
-import com.github.mdr.ascii.parser.Dimension
+import com.github.mdr.ascii.common.Dimension
 
 /**
  * Control how a vertex box gets sized and populated in a graph drawing.

@@ -1,8 +1,8 @@
 package com.github.mdr.ascii.layout.drawing
 
-import com.github.mdr.ascii.parser.Region
-import com.github.mdr.ascii.parser.Dimension
-import com.github.mdr.ascii.parser.Point
+import com.github.mdr.ascii.common.Region
+import com.github.mdr.ascii.common.Dimension
+import com.github.mdr.ascii.common.Point
 
 /**
  * Array of characters used to render the final diagram

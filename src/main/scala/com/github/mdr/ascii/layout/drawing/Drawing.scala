@@ -1,7 +1,7 @@
 package com.github.mdr.ascii.layout.drawing
 
-import com.github.mdr.ascii.parser.Dimension
-import com.github.mdr.ascii.parser.Point
+import com.github.mdr.ascii.common.Dimension
+import com.github.mdr.ascii.common.Point
 
 case class Drawing(elements: List[DrawingElement]) {
 

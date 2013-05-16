@@ -1,12 +1,13 @@
 package com.github.mdr.ascii.layout.drawing
 
 import scala.annotation.tailrec
-import com.github.mdr.ascii.parser.Translatable
-import com.github.mdr.ascii.parser._
-import com.github.mdr.ascii.parser.Point
-import com.github.mdr.ascii.parser.Region
+import com.github.mdr.ascii.common.Translatable
+import com.github.mdr.ascii.common._
+import com.github.mdr.ascii.common.Point
+import com.github.mdr.ascii.common.Region
 import com.github.mdr.ascii.util.Utils
-import com.github.mdr.ascii.parser.Direction
+import com.github.mdr.ascii.common.Direction._
+import com.github.mdr.ascii.common.Direction
 
 sealed trait DrawingElement extends Translatable[DrawingElement] {
 

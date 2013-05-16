@@ -1,4 +1,4 @@
-package com.github.mdr.ascii.parser
+package com.github.mdr.ascii.common
 
 object Region {
 

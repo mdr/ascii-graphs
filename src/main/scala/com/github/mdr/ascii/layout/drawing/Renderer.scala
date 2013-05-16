@@ -3,8 +3,9 @@ package com.github.mdr.ascii.layout.drawing
 import scala.annotation.tailrec
 import scala.PartialFunction.condOpt
 
-import com.github.mdr.ascii.parser._
+import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.common.Direction._
 
 object Renderer {
 
@@ -62,13 +63,13 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
 
     for (EdgeSegment(point, direction, _) ← element.segments.headOption)
       if (element.hasArrow1)
-        grid(point) = direction.opposite.arrow
+        grid(point) = arrow(direction.opposite)
       else
         drawBoxIntersection(point.go(direction.opposite), direction.opposite)
 
     for (EdgeSegment(_, direction, point) ← element.segments.lastOption)
       if (element.hasArrow2)
-        grid(point) = direction.arrow
+        grid(point) = arrow(direction)
       else
         drawBoxIntersection(point.go(direction), direction)
 
@@ -132,6 +133,13 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
   private def joinChar4 = if (doubleVertices) '╟' else '├'
 
   private def backgroundChar = ' '
+
+  private def arrow(direction: Direction): Char = direction match {
+    case Up    ⇒ '^'
+    case Down  ⇒ 'v'
+    case Left  ⇒ '<'
+    case Right ⇒ '>'
+  }
 
 }
 

@@ -1,4 +1,9 @@
-package com.github.mdr.ascii.parser
+package com.github.mdr.ascii.diagram
+
+import com.github.mdr.ascii.common._
+import com.github.mdr.ascii.diagram.parser.DiagramParse
+
+class GraphParserException(message: String) extends RuntimeException(message)
 
 object Diagram {
 

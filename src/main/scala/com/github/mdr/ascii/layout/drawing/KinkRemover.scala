@@ -1,12 +1,10 @@
 package com.github.mdr.ascii.layout.drawing
 
-import com.github.mdr.ascii.parser.Point
+import com.github.mdr.ascii.common.Point
 import com.github.mdr.ascii.util.Utils._
 import com.github.mdr.ascii._
 import scala.annotation.tailrec
-import com.github.mdr.ascii.parser.Right
-import com.github.mdr.ascii.parser.Left
-import com.github.mdr.ascii.parser.Down
+import com.github.mdr.ascii.common.Direction._
 
 object KinkRemover {
 

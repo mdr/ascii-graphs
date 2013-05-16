@@ -1,4 +1,6 @@
-package com.github.mdr.ascii.parser
+package com.github.mdr.ascii.diagram
+
+import com.github.mdr.ascii.common.Point
 
 trait Edge {
 

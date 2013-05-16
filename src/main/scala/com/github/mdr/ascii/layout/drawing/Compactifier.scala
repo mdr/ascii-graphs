@@ -1,7 +1,7 @@
 package com.github.mdr.ascii.layout.drawing
 
 import com.github.mdr.ascii.util.Utils._
-import com.github.mdr.ascii.parser.Down
+import com.github.mdr.ascii.common.Direction._
 import scala.annotation.tailrec
 
 object Compactifier {

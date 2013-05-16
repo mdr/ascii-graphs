@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.layout
 
-import com.github.mdr.ascii.parser.Translatable
+import com.github.mdr.ascii.common.Translatable
 import com.github.mdr.ascii.layout.layering.RealVertex
 import com.github.mdr.ascii.layout.layering.Vertex
 import com.github.mdr.ascii.util.Utils

@@ -1,4 +1,6 @@
-package com.github.mdr.ascii.parser
+package com.github.mdr.ascii.common
+
+import com.github.mdr.ascii.common.Direction._
 
 trait Translatable[+Self] {
 

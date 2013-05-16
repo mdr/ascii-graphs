@@ -1,6 +1,6 @@
 package com.github.mdr.ascii
 
-import com.github.mdr.ascii.parser.Diagram
+import com.github.mdr.ascii.diagram.Diagram
 
 object Main {
 

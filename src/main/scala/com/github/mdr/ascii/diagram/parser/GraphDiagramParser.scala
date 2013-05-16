@@ -1,9 +1,10 @@
-package com.github.mdr.ascii.parser
+package com.github.mdr.ascii.diagram.parser
 
-import com.github.mdr.ascii._
 import scala.annotation.tailrec
-
-class GraphParserException(message: String) extends RuntimeException(message)
+import com.github.mdr.ascii._
+import com.github.mdr.ascii.common.Direction._
+import com.github.mdr.ascii.common._
+import com.github.mdr.ascii.diagram._
 
 class DiagramParse(s: String) {
 

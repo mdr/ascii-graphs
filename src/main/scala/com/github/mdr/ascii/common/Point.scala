@@ -1,4 +1,4 @@
-package com.github.mdr.ascii.parser
+package com.github.mdr.ascii.common
 
 case class Point(row: Int, column: Int) extends Translatable[Point] {
 

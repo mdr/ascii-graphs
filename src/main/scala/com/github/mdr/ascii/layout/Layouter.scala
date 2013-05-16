@@ -2,10 +2,10 @@ package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii.layout.drawing._
 import com.github.mdr.ascii.layout.layering._
-import com.github.mdr.ascii.parser.Dimension
-import com.github.mdr.ascii.parser.Point
-import com.github.mdr.ascii.parser.Region
-import com.github.mdr.ascii.parser.Translatable
+import com.github.mdr.ascii.common.Dimension
+import com.github.mdr.ascii.common.Point
+import com.github.mdr.ascii.common.Region
+import com.github.mdr.ascii.common.Translatable
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.util.Utils._
 

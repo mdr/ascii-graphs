@@ -3,7 +3,7 @@ package com.github.mdr.ascii
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
 import com.github.mdr.ascii.graph.Graph
-import com.github.mdr.ascii.parser.Diagram
+import com.github.mdr.ascii.diagram.Diagram
 
 class Issue1DirectedEdgeNotParsedTest extends FlatSpec with ShouldMatchers {
 

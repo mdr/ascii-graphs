@@ -1,7 +1,7 @@
 package com.github.mdr.ascii.layout
 
 import com.github.mdr.ascii.layout.layering.Vertex
-import com.github.mdr.ascii.parser.Point
+import com.github.mdr.ascii.common.Point
 import com.github.mdr.ascii.util.Utils._
 
 /**

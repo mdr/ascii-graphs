@@ -4,8 +4,8 @@ import scala.PartialFunction.cond
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.util.Utils._
 import com.github.mdr.ascii.layout.Layouter
-import com.github.mdr.ascii.parser.Diagram
-import com.github.mdr.ascii.parser.Box
+import com.github.mdr.ascii.diagram.Diagram
+import com.github.mdr.ascii.diagram.Box
 import com.github.mdr.ascii.layout.GraphLayout
 
 object Graph {
