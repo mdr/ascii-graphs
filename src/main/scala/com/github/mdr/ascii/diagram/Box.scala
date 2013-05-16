@@ -8,12 +8,12 @@ trait Box extends Container {
   def edges: List[Edge]
 
   /**
-   * @return edges and other boxes incident to this box, filtered according to the given mode.
+   * @return edges and other boxes incident to this box, filtered according to the given edge type.
    */
-  def connections(mode: ConnectMode = ConnectMode.All): List[(Edge, Box)] =
+  def connections(edgeType: EdgeType = EdgeType.All): List[(Edge, Box)] =
     for {
       edge ← edges
-      if mode.includeEdge(edge, this)
+      if edgeType.includeEdge(edge, this)
       otherBox = edge.otherBox(this)
     } yield edge -> otherBox
 
