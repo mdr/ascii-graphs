@@ -6,7 +6,7 @@ import com.github.mdr.ascii.common.Direction._
 import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.diagram._
 
-class DiagramParse(s: String) {
+class DiagramParser(s: String) {
 
   private val rawRows: List[String] = if (s.isEmpty) Nil else s.split("(\r)?\n").toList
 
@@ -122,13 +122,13 @@ class DiagramParse(s: String) {
         case (Some('v' | 'V'), _, _, _)                             ⇒ followEdge(Down, ahead :: edgeSoFar)
         case (Some('^'), _, _, _)                                   ⇒ followEdge(Up, ahead :: edgeSoFar)
         case (Some('-'), _, _, Some(c)) if isEdgeChar(c)            ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case (Some('-' | '|'), Some('^'), Some('v' | 'V'), _)       ⇒ throw new GraphParserException("Ambiguous turn at " + ahead)
+        case (Some('-' | '|'), Some('^'), Some('v' | 'V'), _)       ⇒ throw new DiagramParseException("Ambiguous turn at " + ahead)
         case (Some('-' | '|'), Some('^'), _, _)                     ⇒ followEdge(Up, ahead :: edgeSoFar)
         case (Some('-' | '|'), _, Some('v' | 'V'), _)               ⇒ followEdge(Down, ahead :: edgeSoFar)
-        case (Some('-' | '|'), Some('|' | '+'), Some('|' | '+'), _) ⇒ throw new GraphParserException("Ambiguous turn at " + ahead)
+        case (Some('-' | '|'), Some('|' | '+'), Some('|' | '+'), _) ⇒ throw new DiagramParseException("Ambiguous turn at " + ahead)
         case (Some('-' | '|'), Some('|' | '+'), _, _)               ⇒ followEdge(Up, ahead :: edgeSoFar)
         case (Some('-' | '|'), _, Some('|' | '+'), _)               ⇒ followEdge(Down, ahead :: edgeSoFar)
-        case (Some('|'), Some('-'), Some('-'), _)                   ⇒ throw new GraphParserException("Ambiguous turn at " + ahead)
+        case (Some('|'), Some('-'), Some('-'), _)                   ⇒ throw new DiagramParseException("Ambiguous turn at " + ahead)
         case (Some('|'), Some('-'), _, _)                           ⇒ followEdge(Up, ahead :: edgeSoFar)
         case (Some('|'), _, Some('-'), _)                           ⇒ followEdge(Down, ahead :: edgeSoFar)
         case (Some('<'), _, _, _) if direction == Left              ⇒ followEdge(direction, ahead :: edgeSoFar)
@@ -211,7 +211,7 @@ class DiagramParse(s: String) {
         label ← completeLabel(startPoint, edge.parent)
       } yield label).toSet
     if (labels.size > 1)
-      throw new GraphParserException("Multiple labels for edge " + edge + ", " + labels.map(_.text).mkString(","))
+      throw new DiagramParseException("Multiple labels for edge " + edge + ", " + labels.map(_.text).mkString(","))
     edge.label_ = labels.headOption
   }
 
