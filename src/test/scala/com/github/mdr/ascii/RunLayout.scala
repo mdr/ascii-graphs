@@ -127,8 +127,8 @@ object RunLayout extends App {
   val graph4 = Graph(vertices4, edges4)
 
   var seed = new Random().nextInt
-  // seed = -968951637
-  // seed = 2085656038  empty.max
+  // seed = 426608661 // reverse sweep
+  // seed = -323464708 // inf loop
   println("Seed = " + seed)
   implicit val random = new Random(seed)
   val graph5 = RandomGraph.randomGraph(random)
@@ -138,10 +138,19 @@ object RunLayout extends App {
 
   val cycleRemovalResult = CycleRemover.removeCycles(graph)
   val (layering, _) = new LayeringCalculator[String].assignLayers(cycleRemovalResult)
+  val reorderedLayering = LayerOrderingCalculator.reorder(layering)
   val layouter = new Layouter(ToStringVertexRenderingStrategy)
-  val drawing0 = layouter.layout(layering)
+  val drawing0 = layouter.layout(reorderedLayering)
   val updatedDrawing1 = KinkRemover.removeKinks(drawing0)
   val updatedDrawing2 = Compactifier.compactify(updatedDrawing1)
-  println(Renderer.render(updatedDrawing2))
+  val rendered = Renderer.render(updatedDrawing2)
+  // println(rendered)
+  println(GraphLayout.renderGraph(graph))
+  if (true)
+    for (n ← 1 to 4000) {
+      val seed = new Random().nextInt
+      println(seed + ": ")
+      println(GraphLayout.renderGraph(RandomGraph.randomGraph(new Random(seed))))
+    }
 
 }

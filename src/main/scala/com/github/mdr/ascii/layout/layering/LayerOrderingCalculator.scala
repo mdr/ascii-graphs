@@ -5,6 +5,7 @@ package com.github.mdr.ascii.layout.layering
  */
 object LayerOrderingCalculator {
 
+  // 426608661 -- reverse sweep would help
   /**
    * Sweep through the layers from top to bottom
    */

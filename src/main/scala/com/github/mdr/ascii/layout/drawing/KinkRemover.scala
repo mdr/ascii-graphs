@@ -66,44 +66,50 @@ object KinkRemover {
     case p :: ps                                             ⇒ p :: removeRedundantPoints(ps)
   }
 
-  private def removeKink(element: EdgeDrawingElement, drawing: Drawing, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
-    val segments: List[EdgeSegment] = element.segments
+  private def removeKink(edge: EdgeDrawingElement, drawing: Drawing, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
+    val segments: List[EdgeSegment] = edge.segments
     adjacentPairs(segments) collect {
+
+      // ...-- start -.... alternativeMiddle
+      //             |   .
+      //      middle ----- end
+      //                 |
+      //                 .
+      //                 .
+      //                 .
+
       case (segment1 @ EdgeSegment(start, Down, middle), segment2 @ EdgeSegment(_, Left | Right, end)) ⇒
         val alternativeMiddle = Point(start.row, end.column)
-        val fakeElement = new EdgeDrawingElement(List(start, alternativeMiddle, end), false, false)
-        val newPoints = fakeElement.points.filterNot(element.points.contains)
+        val fakeEdge = new EdgeDrawingElement(List(start, alternativeMiddle, end), false, false)
+        val newPoints = fakeEdge.points.filterNot(edge.points.contains)
         val allClear = !newPoints.exists(grid.isOccupied)
         if (allClear) {
-          val originalStartVertex = drawing.vertexElementAt(start)
-          val newStartVertex = drawing.vertexElementAt(alternativeMiddle)
-          if (segment1 != element.segments.head ||
+          if (segment1 != edge.segments.head ||
             drawing.vertexElementAt(start.up) == drawing.vertexElementAt(alternativeMiddle.up) &&
             drawing.vertexElementAt(start.up).get.region.rightColumn != alternativeMiddle.column &&
             drawing.vertexElementAt(start.up).get.region.leftColumn != alternativeMiddle.column) {
-            val oldBendPoints = element.bendPoints
-            val oldIndex = oldBendPoints.indexOf(start).ensuring(_ >= 0)
+            val oldBendPoints = edge.bendPoints
+            val oldIndex = oldBendPoints.indexOf(start)
             val newBendPoints = removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
-            val updated = element.copy(bendPoints = newBendPoints)
+            val updated = edge.copy(bendPoints = newBendPoints)
             return Some(updated)
           }
         }
+
       case (segment1 @ EdgeSegment(start, Left | Right, middle), segment2 @ EdgeSegment(_, Down, end)) ⇒
         val alternativeMiddle = Point(end.row, start.column)
-        val fakeElement = new EdgeDrawingElement(List(start, alternativeMiddle, end), false, false)
-        val newPoints = fakeElement.points.filterNot(element.points.contains)
+        val fakeEdge = new EdgeDrawingElement(List(start, alternativeMiddle, end), false, false)
+        val newPoints = fakeEdge.points.filterNot(edge.points.contains)
         val allClear = !newPoints.exists(grid.isOccupied)
         if (allClear) {
-          val originalStartVertex = drawing.vertexElementAt(end)
-          val newStartVertex = drawing.vertexElementAt(alternativeMiddle)
-          if (segment2 != element.segments.last ||
+          if (segment2 != edge.segments.last ||
             drawing.vertexElementAt(end.down) == drawing.vertexElementAt(alternativeMiddle.down) &&
             drawing.vertexElementAt(end.down).get.region.rightColumn != alternativeMiddle.column &&
             drawing.vertexElementAt(end.down).get.region.leftColumn != alternativeMiddle.column) {
-            val oldBendPoints = element.bendPoints
-            val oldIndex = oldBendPoints.indexOf(start).ensuring(_ >= 0)
+            val oldBendPoints = edge.bendPoints
+            val oldIndex = oldBendPoints.indexOf(start)
             val newBendPoints = removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
-            val updated = element.copy(bendPoints = newBendPoints)
+            val updated = edge.copy(bendPoints = newBendPoints)
             return Some(updated)
           }
         }

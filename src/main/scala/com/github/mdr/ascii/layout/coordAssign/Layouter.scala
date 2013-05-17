@@ -76,23 +76,30 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
 
   private def makeVertexInfo(vertex: Vertex, boxRegion: Region, greaterRegion: Region, inEdges: List[Edge], outEdges: List[Edge]): VertexInfo =
     vertex match {
-      case realVertex: RealVertex ⇒
-        val inDegree = inEdges.size + realVertex.selfEdges
-        val outDegree = outEdges.size + realVertex.selfEdges
-        val inPorts: List[Point] = portOffsets(inDegree, boxRegion.width).map(boxRegion.topLeft.right)
-        val outPorts: List[Point] = portOffsets(outDegree, boxRegion.width).map(boxRegion.bottomLeft.right)
-        val inEdgeToPortMap = inEdges.zip(inPorts).toMap
-        val outEdgeToPortMap = outEdges.zip(outPorts).toMap
-        val selfInPorts = inPorts.drop(inEdges.size)
-        val selfOutPorts = outPorts.drop(outEdges.size)
-        VertexInfo(boxRegion, greaterRegion, inEdgeToPortMap, outEdgeToPortMap, selfInPorts, selfOutPorts)
-      case _: DummyVertex ⇒
-        val List(inVertex) = inEdges
-        val List(outVertex) = outEdges
-        val inEdgeToPortMap = Map(inVertex -> boxRegion.topLeft)
-        val outEdgeToPortMap = Map(outVertex -> boxRegion.topLeft)
-        VertexInfo(boxRegion, greaterRegion, inEdgeToPortMap, outEdgeToPortMap, Nil, Nil)
+      case realVertex: RealVertex   ⇒ makeVertexInfo(realVertex, boxRegion, greaterRegion, inEdges, outEdges)
+      case dummyVertex: DummyVertex ⇒ makeVertexInfo(dummyVertex, boxRegion, greaterRegion, inEdges, outEdges)
     }
+
+  private def makeVertexInfo(vertex: RealVertex, boxRegion: Region, greaterRegion: Region, inEdges: List[Edge], outEdges: List[Edge]): VertexInfo = {
+    val inDegree = inEdges.size + vertex.selfEdges
+    val inPorts: List[Point] = portOffsets(inDegree, boxRegion.width).map(boxRegion.topLeft.right)
+    val inEdgeToPortMap = inEdges.zip(inPorts).toMap
+    val selfInPorts = inPorts.drop(inEdges.size)
+
+    val outDegree = outEdges.size + vertex.selfEdges
+    val outPorts: List[Point] = portOffsets(outDegree, boxRegion.width).map(boxRegion.bottomLeft.right)
+    val outEdgeToPortMap = outEdges.zip(outPorts).toMap
+    val selfOutPorts = outPorts.drop(outEdges.size)
+
+    VertexInfo(boxRegion, greaterRegion, inEdgeToPortMap, outEdgeToPortMap, selfInPorts, selfOutPorts)
+  }
+
+  private def makeVertexInfo(vertex: DummyVertex, boxRegion: Region, greaterRegion: Region, inEdges: List[Edge], outEdges: List[Edge]): VertexInfo = {
+    val (List(inVertex), List(outVertex)) = (inEdges, outEdges)
+    val inEdgeToPortMap = Map(inVertex -> boxRegion.topLeft)
+    val outEdgeToPortMap = Map(outVertex -> boxRegion.topLeft)
+    VertexInfo(boxRegion, greaterRegion, inEdgeToPortMap, outEdgeToPortMap, Nil, Nil)
+  }
 
   /**
    * Space out edge ports even along the edge of a vertex.
