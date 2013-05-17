@@ -117,7 +117,7 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
   private def bendChar3 = if (unicode) (if (rounded) '╰' else '└') else '-'
   private def bendChar4 = if (unicode) (if (rounded) '╯' else '┘') else '-'
 
-  private def intersectionCharOpt = if (unicode) Some('┼') else None
+  private def intersectionCharOpt = if (unicode) Some('┼') else Some('-') // None
 
   private def topLeftChar = if (unicode) (if (doubleVertices) '╔' else if (rounded) '╭' else '┌') else '+'
   private def topRightChar = if (unicode) (if (doubleVertices) '╗' else if (rounded) '╮' else '┐') else '+'

@@ -1,5 +1,7 @@
 package com.github.mdr.ascii.layout.coordAssign
 
+import com.github.mdr.ascii.util.Utils._
+
 /**
  * Calculate vertical ordering of row bends
  */
@@ -19,39 +21,73 @@ class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdg
   def bendRow(edgeInfo: EdgeInfo): Int = bendRow(edgeRows(edgeInfo))
 
   /**
-   * @return a vertical ordering of those edges that require bends.
+   * @return a map of those edges that require bends to a unique row number for that edge.
    */
   private def orderEdgeBends(edgeInfos: List[EdgeInfo]): Map[EdgeInfo, Int] = {
-    // To avoid unnecessary crossings of edges arriving at the same vertex:
-    val sortedInfos: List[EdgeInfo] = edgeInfos.sortBy(_.inRank)
-    val edgeRows: Map[EdgeInfo, Int] = sortedInfos.filter(_.requiresBend).zipWithIndex.toMap
-    reorderEdgesWithSameStartAndEndColumns(edgeRows, sortedInfos)
+    // We sort so as to avoid unnecessary crossings of edges in or out of a common vertex:
+    //
+    //  ╭─────╮                  ╭─────╮           
+    //  │  a  │                  │  a  │           
+    //  ╰─┬─┬─╯                  ╰─┬─┬─╯           
+    //    │ │                      │ │             
+    //    ╰─┼─╮             vs     │ ╰──────────╮  
+    //      ╰─┼────────╮           ╰───╮        │  
+    //        │        │               │        │  
+    //        v        v               v        v  
+    //  ╭──────────╮ ╭───╮       ╭──────────╮ ╭───╮
+    //  │aaaaaaaaaa│ │ b │       │aaaaaaaaaa│ │ b │
+    //  ╰──────────╯ ╰───╯       ╰──────────╯ ╰───╯
+    //
+    //  ╭──────────╮ ╭───╮       ╭──────────╮ ╭───╮
+    //  │aaaaaaaaaa│ │ b │       │aaaaaaaaaa│ │ b │
+    //  ╰─────┬────╯ ╰─┬─╯       ╰─────┬────╯ ╰─┬─╯
+    //        │        │               │        │  
+    //      ╭─┼────────╯    vs     ╭───╯        │  
+    //    ╭─┼─╯                    │ ╭──────────╯  
+    //    │ │                      │ │             
+    //    v v                      v v             
+    //  ╭─────╮                  ╭─────╮           
+    //  │  a  │                  │  a  │           
+    //  ╰─────╯                  ╰─────╯           
+
+    /**
+     * Magic ranking to ensure that the edge bends ordered this way minimise crossings.
+     */
+    def edgeRank(edgeInfo: EdgeInfo): Int = {
+      val startColumn = edgeInfo.startColumn
+      val finishColumn = edgeInfo.finishColumn
+      signum(startColumn - finishColumn) * finishColumn
+    }
+
+    val orderedEdges = edgeInfos.filter(_.requiresBend).sortBy(edgeRank)
+    val edgeToRowMap: Map[EdgeInfo, Int] = orderedEdges.zipWithIndex.toMap
+    reorderEdgesWithSameStartAndEndColumns(edgeToRowMap)
   }
 
   /**
-   * Force edges that share start and end columns to be ordered so as to avoid conflicts
+   * Reorder edges that share start and end columns as to avoid conflicts
    */
-  private def reorderEdgesWithSameStartAndEndColumns(edgeRows: Map[EdgeInfo, Int], sortedInfos: List[EdgeInfo]): Map[EdgeInfo, Int] = {
-    var updatedEdgeRows = edgeRows
+  private def reorderEdgesWithSameStartAndEndColumns(edgeToRowMap: Map[EdgeInfo, Int]): Map[EdgeInfo, Int] = {
+    var updatedEdgeToRowMap = edgeToRowMap
     var continue = true
     while (continue) {
       continue = false
       for {
-        edgeInfo1 @ EdgeInfo(_, _, start1, finish1, _) ← sortedInfos
-        edgeInfo2 @ EdgeInfo(_, _, start2, finish2, _) ← sortedInfos
+        edgeInfo1 @ EdgeInfo(_, _, start1, finish1, _) ← edgeToRowMap.keys
+        edgeInfo2 @ EdgeInfo(_, _, start2, finish2, _) ← edgeToRowMap.keys
         if edgeInfo1 != edgeInfo2
         if start1.column == finish2.column
         if start2.column != finish1.column // Prevents an infinite loop (issue #3), but TODO: still allows overlapping edges
-        row1 = updatedEdgeRows(edgeInfo1)
-        row2 = updatedEdgeRows(edgeInfo2)
+        row1 = updatedEdgeToRowMap(edgeInfo1)
+        row2 = updatedEdgeToRowMap(edgeInfo2)
         if row1 > row2
       } {
-        updatedEdgeRows += edgeInfo1 -> row2
-        updatedEdgeRows += edgeInfo2 -> row1
+        updatedEdgeToRowMap += edgeInfo1 -> row2
+        updatedEdgeToRowMap += edgeInfo2 -> row1
         continue = true
       }
     }
-    updatedEdgeRows
+    updatedEdgeToRowMap
   }
 
 }

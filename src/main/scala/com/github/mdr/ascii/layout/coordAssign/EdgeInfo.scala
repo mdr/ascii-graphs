@@ -2,15 +2,18 @@ package com.github.mdr.ascii.layout.coordAssign
 
 import com.github.mdr.ascii.layout.layering.Vertex
 import com.github.mdr.ascii.common.Point
-import com.github.mdr.ascii.util.Utils._
 
 /**
  * Information about edges that pass between two adjacent layers.
+ *
+ * @param finishPort -- column is correct, but not row
  */
 case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point, finishPort: Point, reversed: Boolean) {
 
-  def inRank: Int = signum(startPort.column - finishPort.column) * finishPort.column
+  def startColumn = startPort.column
 
-  def requiresBend = startPort.column != finishPort.column
+  def finishColumn = finishPort.column
+
+  def requiresBend = startColumn != finishColumn
 
 }

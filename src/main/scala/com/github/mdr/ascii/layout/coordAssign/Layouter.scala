@@ -188,7 +188,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
     val excessSpace = diagramWidth - layerVertexInfos.maxColumn
     val horizontalSpacing = math.max(excessSpace / (layerVertexInfos.vertexInfos.size + 1), 1)
 
-    var leftColumn = 0
+    var leftColumn = horizontalSpacing
     val newVertexInfos =
       for {
         v ← layer.vertices
@@ -262,7 +262,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
       previousVertexInfo ← previousLayerInfo.vertexInfo(v1)
       currentVertexInfo ← currentLayerInfo.vertexInfo(v2)
       start = previousVertexInfo.outEdgeToPortMap(edge).down
-      finish = currentVertexInfo.inEdgeToPortMap(edge).up // Note that this will be at the wrong absolute vertical position, we'll adjust later
+      finish = currentVertexInfo.inEdgeToPortMap(edge).up // Note that this will be at the wrong row, we'll adjust later
     } yield EdgeInfo(v1, v2, start, finish, edge.reversed)
 
   private def getEdgePoints(edgeInfo: EdgeInfo, edgeBendCalculator: EdgeBendCalculator, incompleteEdges: Map[DummyVertex, List[Point]]): List[Point] = {
