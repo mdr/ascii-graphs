@@ -12,30 +12,14 @@ object RandomGraph {
       (1 to (random.nextInt(20) + 1)).toList.map(_ ⇒ mkChar).mkString
     }
 
-    val numberOfVertices = random.nextInt(10) + 1
+    val numberOfVertices = random.nextInt(12) + 1
 
-    val vertices = (1 to numberOfVertices).toList.map(_ ⇒ mkVertex)
+    val vertices = List.fill(numberOfVertices)(mkVertex)
 
-    val edges =
-      if (vertices.isEmpty)
-        Nil
-      else {
-        val numberOfEdges = random.nextInt(numberOfVertices * 2)
-
-        def mkEdge: (String, String) = {
-          val i1 = random.nextInt(numberOfVertices)
-          var i2 = random.nextInt(numberOfVertices)
-          if (i2 == i1)
-            i2 = (i1 + 1) % numberOfVertices
-          val v1 = vertices(i1)
-          val v2 = vertices(i2)
-
-          (v1, v2)
-        }
-
-        (1 to numberOfVertices).toList.map(_ ⇒ mkEdge)
-
-      }
+    val numberOfEdges = random.nextInt(numberOfVertices * 2)
+    def randomVertex = vertices(random.nextInt(numberOfVertices))
+    def randomEdge: (String, String) = (randomVertex, randomVertex)
+    val edges = List.fill(numberOfEdges)(randomEdge)
 
     Graph(vertices.toSet, edges)
 
