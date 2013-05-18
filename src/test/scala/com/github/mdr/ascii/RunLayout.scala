@@ -128,7 +128,7 @@ object RunLayout extends App {
 
   var seed = new Random().nextInt
   // seed = 426608661 // reverse sweep
-  // seed = -323464708 // inf loop
+  seed = -323464708 // inf loop
   println("Seed = " + seed)
   implicit val random = new Random(seed)
   val graph5 = RandomGraph.randomGraph(random)

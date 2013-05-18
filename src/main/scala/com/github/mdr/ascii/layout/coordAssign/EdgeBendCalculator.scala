@@ -21,7 +21,7 @@ class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdg
   def bendRow(edgeInfo: EdgeInfo): Int = bendRow(edgeRows(edgeInfo))
 
   /**
-   * @return a map of those edges that require bends to a unique row number for that edge.
+   * @return a map of the edges that require bends to a unique row number.
    */
   private def orderEdgeBends(edgeInfos: List[EdgeInfo]): Map[EdgeInfo, Int] = {
     // We sort so as to avoid unnecessary crossings of edges in or out of a common vertex:
@@ -65,11 +65,13 @@ class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdg
   }
 
   /**
-   * Reorder edges that share start and end columns as to avoid conflicts
+   * Reorder edges that share start and end columns as to avoid edges being drawn over each other.
+   *
    */
   private def reorderEdgesWithSameStartAndEndColumns(edgeToRowMap: Map[EdgeInfo, Int]): Map[EdgeInfo, Int] = {
     var updatedEdgeToRowMap = edgeToRowMap
     var continue = true
+    var swappedEdges = Set[(EdgeInfo, EdgeInfo)]()
     while (continue) {
       continue = false
       for {
@@ -77,13 +79,15 @@ class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdg
         edgeInfo2 @ EdgeInfo(_, _, start2, finish2, _) ← edgeToRowMap.keys
         if edgeInfo1 != edgeInfo2
         if start1.column == finish2.column
-        if start2.column != finish1.column // Prevents an infinite loop (issue #3), but TODO: still allows overlapping edges
+        if start2.column != finish1.column // Prevents an infinite loop (issue #3)
         row1 = updatedEdgeToRowMap(edgeInfo1)
         row2 = updatedEdgeToRowMap(edgeInfo2)
         if row1 > row2
+        if !swappedEdges.contains((edgeInfo1, edgeInfo2)) // Prevents more involved infinite loops
       } {
         updatedEdgeToRowMap += edgeInfo1 -> row2
         updatedEdgeToRowMap += edgeInfo2 -> row1
+        swappedEdges += ((edgeInfo1, edgeInfo2))
         continue = true
       }
     }
