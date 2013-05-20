@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.layout.cycles
 
-import scala.util.Random.javaRandomToRandom
+import scala.util.Random._
 
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen

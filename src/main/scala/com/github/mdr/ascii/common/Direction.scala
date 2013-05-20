@@ -12,6 +12,8 @@ sealed trait Direction {
 
   def isVertical = this == Up || this == Down
 
+  def isHorizontal = !isVertical
+
 }
 
 object Direction {

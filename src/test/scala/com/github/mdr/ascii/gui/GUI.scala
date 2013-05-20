@@ -32,6 +32,7 @@ object Frame extends JFrame {
                            |B,B
                            |D,E,F
                            |E,G""".stripMargin)
+  val outputWrapper = new JPanel(new BorderLayout)
   val outputTextPane = new JTextPane
   inputTextPane.setFont(new Font(Font.MONOSPACED, inputTextPane.getFont.getStyle, inputTextPane.getFont.getSize))
   outputTextPane.setFont(new Font(Font.MONOSPACED, outputTextPane.getFont.getStyle, outputTextPane.getFont.getSize))
@@ -61,8 +62,9 @@ object Frame extends JFrame {
     }
   }
 
+  outputWrapper.add(outputTextPane)
   splitPane.setTopComponent(new JScrollPane(inputTextPane))
-  splitPane.setBottomComponent(new JScrollPane(outputTextPane))
+  splitPane.setBottomComponent(new JScrollPane(outputWrapper))
   splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT)
   splitPane.setDividerLocation(0.5)
   splitPane.setResizeWeight(0.5)

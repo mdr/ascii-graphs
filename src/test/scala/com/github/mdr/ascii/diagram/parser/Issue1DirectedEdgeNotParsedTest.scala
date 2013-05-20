@@ -1,4 +1,4 @@
-package com.github.mdr.ascii
+package com.github.mdr.ascii.diagram.parser
 
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec

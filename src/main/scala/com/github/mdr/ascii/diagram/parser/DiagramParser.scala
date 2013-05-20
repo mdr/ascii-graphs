@@ -5,6 +5,7 @@ import com.github.mdr.ascii._
 import com.github.mdr.ascii.common.Direction._
 import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.diagram._
+import scala.PartialFunction.cond
 
 class DiagramParser(s: String) {
 
@@ -16,37 +17,64 @@ class DiagramParser(s: String) {
 
   private val numberOfRows = rows.length
 
+  private val diagramRegion = Region(Point(0, 0), Point(numberOfRows - 1, numberOfColumns - 1))
+
+  private def inDiagram(p: Point): Boolean = diagramRegion contains p
+
   private def charAt(point: Point): Char = rows(point.row)(point.column)
+
   private def charAtOpt(point: Point): Option[Char] = if (inDiagram(point)) Some(charAt(point)) else None
 
-  private def inDiagram(point: Point) = point match {
-    case Point(row, column) ⇒
-      row >= 0 && column >= 0 && row < numberOfRows && column < numberOfColumns
+  private def isTopRightCorner(c: Char): Boolean = cond(c) { case '╗' | '╮' | '┐' | '+' ⇒ true }
+  private def isBottomRightCorner(c: Char): Boolean = cond(c) { case '╝' | '╯' | '┘' | '+' ⇒ true }
+  private def isTopLeftCorner(c: Char): Boolean = cond(c) { case '╔' | '╭' | '┌' | '+' ⇒ true }
+  private def isBottomLeftCorner(c: Char): Boolean = cond(c) { case '╚' | '╰' | '└' | '+' ⇒ true }
+  private def isHorizontalBoxEdge(c: Char): Boolean = cond(c) {
+    case '═' | '─' | '-' | '╤' | '┬' | '╧' | '┴' | '╪' | '┼' ⇒ true
   }
+  private def isVerticalBoxEdge(c: Char): Boolean = cond(c) {
+    case '║' | '│' | '|' | '╢' | '┤' | '╟' | '├' | '╫' | '┼' ⇒ true
+  }
+  private def isArrow(c: Char) = isDownArrow(c) || isUpArrow(c) || isLeftArrow(c) || isRightArrow(c)
+  private def isDownArrow(c: Char) = c == 'v' || c == 'V'
+  private def isUpArrow(c: Char) = c == '^'
+  private def isLeftArrow(c: Char) = c == '<'
+  private def isRightArrow(c: Char) = c == '>'
+  private def isEdgeCrossing(c: Char): Boolean = c == '+' || c == '┼'
+  private def isEdge(c: Char) =
+    isArrow(c) || isEdgeCrossing(c) || isHorizontalEdge(c) || isVerticalEdge(c) || isBendChar(c)
+  private def isHorizontalEdge(c: Char) = c == '─' || c == '-'
+  private def isVerticalEdge(c: Char) = c == '│' || c == '|'
+
+  private def isRightToDownEdgeBend(c: Char) = c == '╮' || c == '┐'
+  private def isRightToUpEdgeBend(c: Char) = c == '╯' || c == '┘'
+  private def isLeftToDownEdgeBend(c: Char) = c == '╭' | c == '┌'
+  private def isLeftToUpEdgeBend(c: Char) = c == '╰' || c == '└'
+  private def isBendChar(c: Char) =
+    isRightToDownEdgeBend(c) || isRightToUpEdgeBend(c) || isLeftToDownEdgeBend(c) || isLeftToUpEdgeBend(c)
 
   @tailrec
-  private def scanBoxEdgeRight(start: Point): Option[Point] = charAt(start) match {
-    case '+'                           ⇒ Some(start)
-    case '-' if inDiagram(start.right) ⇒ scanBoxEdgeRight(start.right)
-    case _                             ⇒ None
-  }
-
-  @tailrec
-  private def scanBoxEdgeDown(start: Point): Option[Point] = charAt(start) match {
-    case '+'                          ⇒ Some(start)
-    case '|' if inDiagram(start.down) ⇒ scanBoxEdgeDown(start.down)
-    case _                            ⇒ None
-  }
+  private def scanBoxEdge(p: Point, dir: Direction, isCorner: Char ⇒ Boolean, isEdge: Char ⇒ Boolean): Option[Point] =
+    if (inDiagram(p)) {
+      val c = charAt(p)
+      if (isCorner(c))
+        Some(p)
+      else if (isEdge(c))
+        scanBoxEdge(p.go(dir), dir, isCorner, isEdge)
+      else
+        None
+    } else
+      None
 
   /**
    * @return bottomRight of box if all edges are correct
    */
   private def completeBox(topLeft: Point): Option[Point] =
     for {
-      topRight ← scanBoxEdgeRight(topLeft.right)
-      bottomRight ← scanBoxEdgeDown(topRight.down)
-      bottomLeft ← scanBoxEdgeDown(topLeft.down)
-      bottomRight2 ← scanBoxEdgeRight(bottomLeft.right)
+      topRight ← scanBoxEdge(topLeft.right, Right, isTopRightCorner, isHorizontalBoxEdge)
+      bottomRight ← scanBoxEdge(topRight.down, Down, isBottomRightCorner, isVerticalBoxEdge)
+      bottomLeft ← scanBoxEdge(topLeft.down, Down, isBottomLeftCorner, isVerticalBoxEdge)
+      bottomRight2 ← scanBoxEdge(bottomLeft.right, Right, isBottomRightCorner, isHorizontalBoxEdge)
       if bottomRight == bottomRight2
     } yield bottomRight
 
@@ -55,10 +83,12 @@ class DiagramParser(s: String) {
       row ← (0 until numberOfRows - 1).toList
       column ← 0 until numberOfColumns - 1
       point = Point(row, column)
-      if charAt(point) == '+'
-      if charAt(point.right) == '-'
-      if charAt(point.down) == '|'
+      if isTopLeftCorner(charAt(point))
+      if isUnicode(charAt(point.right)) || isHorizontalBoxEdge(charAt(point.right)) // Unicode chars don't require even a single right / left box char
+      if isUnicode(charAt(point.down)) || isVerticalBoxEdge(charAt(point.down))
     } yield point
+
+  private def isUnicode(c: Char) = c > 1000 // TODO
 
   private val allBoxes =
     for {
@@ -95,12 +125,14 @@ class DiagramParser(s: String) {
     box.parent = Some(diagram)
   }
 
+  private def isBoxEdge(point: Point) = inDiagram(point) && allBoxes.exists(_.boundaryPoints.contains(point))
+
   @tailrec
   private def followEdge(direction: Direction, edgeSoFar: List[Point]): Option[EdgeImpl] = {
     val currentPoint = edgeSoFar.head
     if (!inDiagram(currentPoint))
       return None
-    def isBoxEdge(point: Point) = inDiagram(point) && allBoxes.exists(_.boundaryPoints.contains(point))
+
     def finaliseEdge(connectPoint: Point): Option[EdgeImpl] = {
       val points = (connectPoint :: edgeSoFar).reverse
       if (points.size <= 2)
@@ -110,55 +142,139 @@ class DiagramParser(s: String) {
     }
     val ahead: Point = currentPoint.go(direction)
 
-    def isEdgeChar(c: Char) = c match {
-      case '-' | '+' | 'v' | 'V' | '^' | '>' | '<' | '|' ⇒ true
-      case _                                             ⇒ false
+    def mkMatcher(pred: Char ⇒ Boolean) = new {
+      def unapply(cOpt: Option[Char]) = cOpt.flatMap { c ⇒ if (pred(c)) Some(c) else None }
     }
 
-    if (direction == Left || direction == Right)
+    val UpArrow = mkMatcher(isUpArrow)
+    val DownArrow = mkMatcher(isDownArrow)
+    val LeftArrow = mkMatcher(isLeftArrow)
+    val RightArrow = mkMatcher(isRightArrow)
+    val EdgeCrossing = mkMatcher(isEdgeCrossing)
+    val EdgeChar = mkMatcher(isEdge)
+    val Horizontal = mkMatcher(isHorizontalEdge)
+    val Vertical = mkMatcher(isVerticalEdge)
+    val HorizOrVert = mkMatcher(c ⇒ isVerticalEdge(c) || isHorizontalEdge(c))
+    val VertOrCrossing = mkMatcher(c ⇒ isVerticalEdge(c) || isEdgeCrossing(c))
+    val HorizOrCrossing = mkMatcher(c ⇒ isHorizontalEdge(c) || isEdgeCrossing(c))
+
+    val RightToDown = mkMatcher(isRightToDownEdgeBend)
+    val RightToUp = mkMatcher(isRightToUpEdgeBend)
+    val LeftToDown = mkMatcher(isLeftToDownEdgeBend)
+    val LeftToUp = mkMatcher(isLeftToUpEdgeBend)
+
+    if (direction.isHorizontal)
       (charAtOpt(ahead), charAtOpt(ahead.go(Up)), charAtOpt(ahead.go(Down)), charAtOpt(ahead.go(direction))) match {
-        case _ if isBoxEdge(ahead)                                  ⇒ finaliseEdge(ahead)
-        case (Some('+'), _, _, _)                                   ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case (Some('v' | 'V'), _, _, _)                             ⇒ followEdge(Down, ahead :: edgeSoFar)
-        case (Some('^'), _, _, _)                                   ⇒ followEdge(Up, ahead :: edgeSoFar)
-        case (Some('-'), _, _, Some(c)) if isEdgeChar(c)            ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case (Some('-' | '|'), Some('^'), Some('v' | 'V'), _)       ⇒ throw new DiagramParseException("Ambiguous turn at " + ahead)
-        case (Some('-' | '|'), Some('^'), _, _)                     ⇒ followEdge(Up, ahead :: edgeSoFar)
-        case (Some('-' | '|'), _, Some('v' | 'V'), _)               ⇒ followEdge(Down, ahead :: edgeSoFar)
-        case (Some('-' | '|'), Some('|' | '+'), Some('|' | '+'), _) ⇒ throw new DiagramParseException("Ambiguous turn at " + ahead)
-        case (Some('-' | '|'), Some('|' | '+'), _, _)               ⇒ followEdge(Up, ahead :: edgeSoFar)
-        case (Some('-' | '|'), _, Some('|' | '+'), _)               ⇒ followEdge(Down, ahead :: edgeSoFar)
-        case (Some('|'), Some('-'), Some('-'), _)                   ⇒ throw new DiagramParseException("Ambiguous turn at " + ahead)
-        case (Some('|'), Some('-'), _, _)                           ⇒ followEdge(Up, ahead :: edgeSoFar)
-        case (Some('|'), _, Some('-'), _)                           ⇒ followEdge(Down, ahead :: edgeSoFar)
-        case (Some('<'), _, _, _) if direction == Left              ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case (Some('>'), _, _, _) if direction == Right             ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case _                                                      ⇒ None
+        case _ if isBoxEdge(ahead)                                     ⇒ finaliseEdge(ahead)
+        case (EdgeCrossing(_), _, _, _)                                ⇒ followEdge(direction, ahead :: edgeSoFar)
+        case (DownArrow(_), _, _, _)                                   ⇒ followEdge(Down, ahead :: edgeSoFar)
+        case (UpArrow(_), _, _, _)                                     ⇒ followEdge(Up, ahead :: edgeSoFar)
+        case (Horizontal(_), _, _, EdgeChar(_))                        ⇒ followEdge(direction, ahead :: edgeSoFar)
+        case (RightToUp(_), _, _, _) if direction == Right             ⇒ followEdge(Up, ahead :: edgeSoFar)
+        case (RightToDown(_), _, _, _) if direction == Right           ⇒ followEdge(Down, ahead :: edgeSoFar)
+        case (LeftToUp(_), _, _, _) if direction == Left               ⇒ followEdge(Up, ahead :: edgeSoFar)
+        case (LeftToDown(_), _, _, _) if direction == Left             ⇒ followEdge(Down, ahead :: edgeSoFar)
+        case (HorizOrVert(_), UpArrow(_), DownArrow(_), _)             ⇒ None
+        case (HorizOrVert(_), UpArrow(_), _, _)                        ⇒ followEdge(Up, ahead :: edgeSoFar)
+        case (HorizOrVert(_), _, DownArrow(_), _)                      ⇒ followEdge(Down, ahead :: edgeSoFar)
+        case (HorizOrVert(_), VertOrCrossing(_), VertOrCrossing(_), _) ⇒ None
+        case (HorizOrVert(_), VertOrCrossing(_), _, _)                 ⇒ followEdge(Up, ahead :: edgeSoFar)
+        case (HorizOrVert(_), _, VertOrCrossing(_), _)                 ⇒ followEdge(Down, ahead :: edgeSoFar)
+        case (Vertical(_), Horizontal(_), Horizontal(_), _)            ⇒ None
+        case (Vertical(_), Horizontal(_), _, _)                        ⇒ followEdge(Up, ahead :: edgeSoFar)
+        case (Vertical(_), _, Horizontal(_), _)                        ⇒ followEdge(Down, ahead :: edgeSoFar)
+        case (LeftArrow(_), _, _, _) if direction == Left              ⇒ followEdge(direction, ahead :: edgeSoFar)
+        case (RightArrow(_), _, _, _) if direction == Right            ⇒ followEdge(direction, ahead :: edgeSoFar)
+        case _                                                         ⇒ None
       }
     else
       (charAtOpt(ahead), charAtOpt(ahead.go(Left)), charAtOpt(ahead.go(Right)), charAtOpt(ahead.go(direction))) match {
-        case _ if isBoxEdge(ahead)                                  ⇒ finaliseEdge(ahead)
-        case (Some('+'), _, _, _)                                   ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case (Some('<'), _, _, _)                                   ⇒ followEdge(Left, ahead :: edgeSoFar)
-        case (Some('>'), _, _, _)                                   ⇒ followEdge(Right, ahead :: edgeSoFar)
-        case (Some('|'), _, _, Some(c)) if isEdgeChar(c)            ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case (Some('-' | '|'), Some('<'), Some('>'), _)             ⇒ throw new RuntimeException("Ambiguous turn at " + ahead)
-        case (Some('-' | '|'), Some('<'), _, _)                     ⇒ followEdge(Left, ahead :: edgeSoFar)
-        case (Some('-' | '|'), _, Some('>'), _)                     ⇒ followEdge(Right, ahead :: edgeSoFar)
-        case (Some('-' | '|'), Some('-' | '+'), Some('-' | '+'), _) ⇒ throw new RuntimeException("Ambiguous turn at " + ahead)
-        case (Some('-' | '|'), Some('-' | '+'), _, _)               ⇒ followEdge(Left, ahead :: edgeSoFar)
-        case (Some('-' | '|'), _, Some('-' | '+'), _)               ⇒ followEdge(Right, ahead :: edgeSoFar)
-        case (Some('-'), Some('|'), Some('|'), _)                   ⇒ throw new RuntimeException("Ambiguous turn at " + ahead)
-        case (Some('-'), Some('|'), _, _)                           ⇒ followEdge(Left, ahead :: edgeSoFar)
-        case (Some('-'), _, Some('|'), _)                           ⇒ followEdge(Right, ahead :: edgeSoFar)
-        case (Some('^'), _, _, _) if direction == Up                ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case (Some('V' | 'v'), _, _, _) if direction == Down        ⇒ followEdge(direction, ahead :: edgeSoFar)
-        case _                                                      ⇒ None
+        case _ if isBoxEdge(ahead)                                       ⇒ finaliseEdge(ahead)
+        case (EdgeCrossing(_), _, _, _)                                  ⇒ followEdge(direction, ahead :: edgeSoFar)
+        case (LeftArrow(_), _, _, _)                                     ⇒ followEdge(Left, ahead :: edgeSoFar)
+        case (RightArrow(_), _, _, _)                                    ⇒ followEdge(Right, ahead :: edgeSoFar)
+        case (Vertical(_), _, _, EdgeChar(_))                            ⇒ followEdge(direction, ahead :: edgeSoFar)
+        case (RightToUp(_), _, _, _) if direction == Down                ⇒ followEdge(Left, ahead :: edgeSoFar)
+        case (RightToDown(_), _, _, _) if direction == Up                ⇒ followEdge(Left, ahead :: edgeSoFar)
+        case (LeftToUp(_), _, _, _) if direction == Down                 ⇒ followEdge(Right, ahead :: edgeSoFar)
+        case (LeftToDown(_), _, _, _) if direction == Up                 ⇒ followEdge(Right, ahead :: edgeSoFar)
+        case (HorizOrVert(_), LeftArrow(_), RightArrow(_), _)            ⇒ None
+        case (HorizOrVert(_), LeftArrow(_), _, _)                        ⇒ followEdge(Left, ahead :: edgeSoFar)
+        case (HorizOrVert(_), _, RightArrow(_), _)                       ⇒ followEdge(Right, ahead :: edgeSoFar)
+        case (HorizOrVert(_), HorizOrCrossing(_), HorizOrCrossing(_), _) ⇒ None
+        case (HorizOrVert(_), HorizOrCrossing(_), _, _)                  ⇒ followEdge(Left, ahead :: edgeSoFar)
+        case (HorizOrVert(_), _, HorizOrCrossing(_), _)                  ⇒ followEdge(Right, ahead :: edgeSoFar)
+        case (Horizontal(_), Vertical(_), Vertical(_), _)                ⇒ None
+        case (Horizontal(_), Vertical(_), _, _)                          ⇒ followEdge(Left, ahead :: edgeSoFar)
+        case (Horizontal(_), _, Vertical(_), _)                          ⇒ followEdge(Right, ahead :: edgeSoFar)
+        case (UpArrow(_), _, _, _) if direction == Up                    ⇒ followEdge(direction, ahead :: edgeSoFar)
+        case (DownArrow(_), _, _, _) if direction == Down                ⇒ followEdge(direction, ahead :: edgeSoFar)
+        case _                                                           ⇒ None
       }
   }
 
   private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] =
-    followEdge(direction, startPoint :: Nil)
+    if (isEdgeStart(charAt(startPoint), direction))
+      followEdge2(startPoint.go(direction) :: startPoint :: Nil, direction)
+    else if (!isUnicode(charAt(startPoint)))
+      followEdge(direction, startPoint :: Nil)
+    else
+      None
+
+  @tailrec
+  private def followEdge2(points: List[Point], direction: Direction): Option[EdgeImpl] = {
+    val currentPoint = points.head
+    if (!inDiagram(currentPoint))
+      return None
+    val c = charAt(currentPoint)
+    if (isBoxEdge(currentPoint))
+      Some(new EdgeImpl(points.reverse))
+    else if (isStraightAhead(c, direction) || isCrossing(c) || isAheadArrow(c, direction))
+      followEdge2(currentPoint.go(direction) :: points, direction)
+    else if (isLeftTurn(c, direction))
+      followEdge2(currentPoint.go(direction.turnLeft) :: points, direction.turnLeft)
+    else if (isRightTurn(c, direction))
+      followEdge2(currentPoint.go(direction.turnRight) :: points, direction.turnRight)
+    else
+      None
+  }
+
+  private def isEdgeStart(c: Char, direction: Direction): Boolean = cond(c, direction) {
+    case ('╤' | '┬', Down)         ⇒ true
+    case ('╪' | '┼', Up | Down)    ⇒ true
+    case ('╧' | '┴', Up)           ⇒ true
+    case ('╟' | '├', Right)        ⇒ true
+    case ('╫' | '┼', Right | Left) ⇒ true
+    case ('╢' | '┤', Left)         ⇒ true
+  }
+
+  private def isStraightAhead(c: Char, direction: Direction): Boolean = cond(c, direction) {
+    case ('─', Right | Left) ⇒ true
+    case ('│', Up | Down)    ⇒ true
+  }
+
+  private def isAheadArrow(c: Char, direction: Direction): Boolean = cond(c, direction) {
+    case ('^', Up)         ⇒ true
+    case ('v' | 'V', Down) ⇒ true
+    case ('<', Left)       ⇒ true
+    case ('>', Right)      ⇒ true
+  }
+
+  private def isLeftTurn(c: Char, direction: Direction): Boolean = cond(c, direction) {
+    case ('╮' | '┐', Up)    ⇒ true
+    case ('╯' | '┘', Right) ⇒ true
+    case ('╭' | '┌', Left)  ⇒ true
+    case ('╰' | '└', Down)  ⇒ true
+  }
+
+  private def isRightTurn(c: Char, direction: Direction): Boolean = cond(c, direction) {
+    case ('╮' | '┐', Right) ⇒ true
+    case ('╯' | '┘', Down)  ⇒ true
+    case ('╭' | '┌', Up)    ⇒ true
+    case ('╰' | '└', Left)  ⇒ true
+  }
+
+  private def isCrossing(c: Char): Boolean = c == '┼'
 
   private val edges =
     allBoxes.flatMap { box ⇒
@@ -176,13 +292,6 @@ class DiagramParser(s: String) {
   }
 
   val allEdgePoints = diagram.allEdges.flatMap(_.points)
-
-  //  for {
-  //    box1 ← allBoxes
-  //    box2 ← allBoxes
-  //    if box1 != box2
-  //    if box1.region.intersects(box2.region)
-  //  } throw new GraphParserException("Overlapping boxes: " + box1 + box2)
 
   def collectText(container: ContainerImpl): String = {
     val region = container.contentsRegion
@@ -275,11 +384,6 @@ class DiagramParser(s: String) {
 
   }
 
-  private def isArrow(c: Char) = c match {
-    case '^' | 'v' | 'V' | '>' | '<' ⇒ true
-    case _                           ⇒ false
-  }
-
   private class EdgeImpl(val points: List[Point]) extends Edge {
 
     val box1: BoxImpl = diagram.boxAt(points.head).get
@@ -340,7 +444,7 @@ class DiagramParser(s: String) {
 
     def boxAt(point: Point): Option[BoxImpl] = allBoxes.find(_.boundaryPoints.contains(point))
 
-    def region: Region = Region(Point(0, 0), Point(numberOfRows - 1, numberOfColumns - 1))
+    def region: Region = diagramRegion
 
     def contentsRegion = region
 
@@ -366,4 +470,3 @@ class DiagramParser(s: String) {
   }
 
 }
-
