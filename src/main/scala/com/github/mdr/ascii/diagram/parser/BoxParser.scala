@@ -26,7 +26,13 @@ trait BoxParser { self: DiagramParser ⇒
       row ← (0 until numberOfRows - 1).toList
       column ← 0 until numberOfColumns - 1
       point = Point(row, column)
-      if isTopLeftCorner(charAt(point))
+      cornerChar = charAt(point)
+      if isTopLeftCorner(cornerChar)
+      if isHorizontalBoxEdge(charAt(point go Right)) || isUnicode(cornerChar)
+      if isVerticalBoxEdge(charAt(point go Down)) || isUnicode(cornerChar)
+      // +-++-+ ^^
+      // |A||B| Avoid closely-packed ASCII boxes parsing as 3 boxes, not 2
+      // +-++-+
     } yield point
 
   @tailrec

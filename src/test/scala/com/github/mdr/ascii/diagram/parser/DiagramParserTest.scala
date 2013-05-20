@@ -75,7 +75,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
     checkEdges(diagram, "foobar" -> "xx", "foobar" -> "yy")
   }
 
-  "Parser" should "parse empty box" in {
+  it should "parse an empty box" in {
     val diagram = Diagram("""                
       ╭─╮
       ╰─╯
@@ -83,6 +83,26 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
     val List(box) = diagram.allBoxes
     box.text should be("")
     diagram.allEdges should be(Nil)
+  }
+
+  it should "find an edge between adjacent connected boxes (Unicode)" in {
+    val diagram = Diagram("""                
+     ╭─╮╭─╮
+     │A├┤B│
+     ╰─╯╰─╯
+    """)
+    diagram.allBoxes.map(text).toSet should equal(Set("A", "B"))
+    checkEdges(diagram, "A" -> "B")
+  }
+
+  it should "not find an edge between adjacent connected boxes (ASCII)" in {
+    val diagram = Diagram("""                
+     +-++-+
+     |A||B|
+     +-++-+
+    """)
+    diagram.allBoxes.map(text).toSet should equal(Set("A", "B"))
+    checkEdges(diagram)
   }
 
   private def checkEdges(diagram: Diagram, expectedEdges: (String, String)*) {

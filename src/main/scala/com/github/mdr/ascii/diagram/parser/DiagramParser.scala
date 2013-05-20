@@ -35,7 +35,7 @@ class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementat
   /**
    * @return true iff c is a Unicode Box Drawing character
    */
-  private def isUnicode(c: Char) = c >= 0x2500 && c <= 0x257f
+  protected def isUnicode(c: Char) = c >= 0x2500 && c <= 0x257f
 
   def getDiagram: Diagram = diagram
 
