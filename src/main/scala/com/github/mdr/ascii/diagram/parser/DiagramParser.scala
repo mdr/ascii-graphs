@@ -7,7 +7,7 @@ import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.diagram._
 import scala.PartialFunction.cond
 
-class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementation with BoxParser with AsciiEdgeParser {
+class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementation with BoxParser with AsciiEdgeParser with LabelParser {
 
   private val rawRows: List[String] = if (s.isEmpty) Nil else s.split("(\r)?\n").toList
 
@@ -37,18 +37,16 @@ class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementat
    */
   private def isUnicode(c: Char) = c >= 0x2500 && c <= 0x257f
 
-  private val allBoxes: List[BoxImpl] = findAllBoxes
-
   def getDiagram: Diagram = diagram
 
   protected val diagram = new DiagramImpl(numberOfRows, numberOfColumns)
 
-  diagram.allBoxes = allBoxes
+  diagram.allBoxes = findAllBoxes
 
   private val boxContains: Map[BoxImpl, BoxImpl] =
     (for {
-      outerBox ← allBoxes
-      innerBox ← allBoxes
+      outerBox ← diagram.allBoxes
+      innerBox ← diagram.allBoxes
       if outerBox != innerBox
       if outerBox.region contains innerBox.region
     } yield outerBox -> innerBox).toMap
@@ -63,47 +61,62 @@ class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementat
     parentBox.childBoxes ::= childBox
   }
 
-  for (box ← allBoxes if box.parent.isEmpty) {
+  for (box ← diagram.allBoxes if box.parent.isEmpty) {
     diagram.childBoxes ::= box
     box.parent = Some(diagram)
   }
 
-  protected def isBoxEdge(point: Point) = inDiagram(point) && allBoxes.exists(_.boundaryPoints.contains(point))
+  protected def isBoxEdge(point: Point) = inDiagram(point) && diagram.allBoxes.exists(_.boundaryPoints.contains(point))
 
   private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] =
     if (isEdgeStart(charAt(startPoint), direction))
       followUnicodeEdge(startPoint.go(direction) :: startPoint :: Nil, direction)
     else if (!isUnicode(charAt(startPoint)))
-      followEdge(direction, startPoint :: Nil)
+      followAsciiEdge(direction, startPoint :: Nil)
     else
       None
 
   private val edges =
-    allBoxes.flatMap { box ⇒
+    diagram.allBoxes.flatMap { box ⇒
       box.rightBoundary.flatMap(followEdge(Right, _)) ++
         box.leftBoundary.flatMap(followEdge(Left, _)) ++
         box.topBoundary.flatMap(followEdge(Up, _)) ++
         box.bottomBoundary.flatMap(followEdge(Down, _))
     }
 
+  // Each edge may occur twice (scanned from both ends), so eliminate duplicates:
   diagram.allEdges = edges.groupBy(_.points.toSet).values.toList.map(_.head)
+
+  // Wire up edges to boxes:
   for (edge ← diagram.allEdges) {
     edge.box1.edges ::= edge
     if (edge.box1 != edge.box2)
       edge.box2.edges ::= edge
   }
 
-  val allEdgePoints = diagram.allEdges.flatMap(_.points)
+  protected lazy val allEdgePoints: Set[Point] = diagram.allEdges.flatMap(_.points).toSet
 
+  private lazy val allLabelPoints: Set[Point] =
+    (for {
+      edge ← diagram.allEdges
+      label ← edge.label_.toList
+      point ← label.points
+    } yield point).toSet
+
+  /**
+   * Collect all the text inside a container that isn't part of another diagram element (i.e. a box, edge or label).
+   */
   def collectText(container: ContainerImpl): String = {
+    val childBoxPoints = container.childBoxes.flatMap(_.region.points).toSet
+    val diagramPoints = childBoxPoints ++ allEdgePoints ++ allLabelPoints
+
     val region = container.contentsRegion
-    val allPoints = (container.childBoxes.flatMap(_.region.points) ++ allEdgePoints ++ allLabelPoints).toSet
     val sb = new StringBuilder
     for (row ← region.topLeft.row to region.bottomRight.row) {
       for {
         column ← region.topLeft.column to region.bottomRight.column
         point = Point(row, column)
-        if !allPoints.contains(point)
+        if !diagramPoints.contains(point)
         c = charAt(point)
       } sb.append(c)
       sb.append("\n")
@@ -113,61 +126,11 @@ class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementat
     sb.toString
   }
 
-  for (edge ← diagram.allEdges) {
-    val labels: Set[Label] =
-      (for {
-        point ← edge.points
-        startPoint ← point.neighbours
-        ('[' | ']') ← charAtOpt(startPoint)
-        label ← completeLabel(startPoint, edge.parent)
-      } yield label).toSet
-    if (labels.size > 1)
-      throw new DiagramParseException("Multiple labels for edge " + edge + ", " + labels.map(_.text).mkString(","))
-    edge.label_ = labels.headOption
-  }
+  for (edge ← diagram.allEdges)
+    edge.label_ = getLabel(edge)
 
-  private lazy val allLabelPoints: Set[Point] =
-    (for {
-      edge ← diagram.allEdges
-      label ← edge.label_.toList
-      point ← label.points
-    } yield point).toSet
-
-  for (box ← allBoxes)
+  for (box ← diagram.allBoxes)
     box.text = collectText(box)
   diagram.text = collectText(diagram)
-
-  private def completeLabel(startPoint: Point, parent: ContainerImpl): Option[Label] = {
-    val occupiedPoints = parent.childBoxes.flatMap(_.region.points) ++ allEdgePoints toSet
-    val (finalChar, direction) = charAt(startPoint) match {
-      case '[' ⇒ (']', Right)
-      case ']' ⇒ ('[', Left)
-    }
-
-    def search(point: Point): Option[Label] = charAtOpt(point) flatMap {
-      case `finalChar` ⇒
-        val List(p1, p2) = List(startPoint, point).sortBy(_.column)
-        Some(Label(p1, p2))
-      case _ if occupiedPoints.contains(point) ⇒
-        None
-      case _ ⇒
-        search(point.go(direction))
-    }
-
-    search(startPoint.go(direction))
-  }
-
-  def diagramRegionToString(region: Region, includePoint: Point ⇒ Boolean = p ⇒ true) = {
-    val sb = new StringBuilder("\n")
-    for (row ← region.topLeft.row to region.bottomRight.row) {
-      for {
-        column ← region.topLeft.column to region.bottomRight.column
-        point = Point(row, column)
-        c = if (includePoint(point)) charAt(point) else ' '
-      } sb.append(c)
-      sb.append("\n")
-    }
-    sb.toString
-  }
 
 }

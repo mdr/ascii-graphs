@@ -109,4 +109,17 @@ trait DiagramImplementation { self: DiagramParser ⇒
 
   }
 
+  private def diagramRegionToString(region: Region, includePoint: Point ⇒ Boolean = p ⇒ true) = {
+    val sb = new StringBuilder("\n")
+    for (row ← region.topLeft.row to region.bottomRight.row) {
+      for {
+        column ← region.topLeft.column to region.bottomRight.column
+        point = Point(row, column)
+        c = if (includePoint(point)) charAt(point) else ' '
+      } sb.append(c)
+      sb.append("\n")
+    }
+    sb.toString
+  }
+
 }

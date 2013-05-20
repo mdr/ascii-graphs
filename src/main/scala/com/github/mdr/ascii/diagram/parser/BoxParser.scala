@@ -21,7 +21,7 @@ trait BoxParser { self: DiagramParser ⇒
       bottomRight ← completeBox(topLeft)
     } yield new BoxImpl(topLeft, bottomRight)
 
-  private val possibleTopLefts: List[Point] =
+  private def possibleTopLefts: List[Point] =
     for {
       row ← (0 until numberOfRows - 1).toList
       column ← 0 until numberOfColumns - 1
