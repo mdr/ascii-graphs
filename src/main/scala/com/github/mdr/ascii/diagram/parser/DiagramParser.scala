@@ -8,7 +8,12 @@ import com.github.mdr.ascii.diagram._
 import com.github.mdr.ascii.layout.drawing.BoxDrawingCharacters._
 import scala.PartialFunction.cond
 
-class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementation with BoxParser with AsciiEdgeParser with LabelParser {
+class DiagramParser(s: String)
+    extends UnicodeEdgeParser
+    with DiagramImplementation
+    with BoxParser
+    with AsciiEdgeParser
+    with LabelParser {
 
   private val rawRows: List[String] = if (s.isEmpty) Nil else s.split("(\r)?\n").toList
 

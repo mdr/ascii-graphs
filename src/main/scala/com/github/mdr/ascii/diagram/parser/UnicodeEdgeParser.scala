@@ -12,19 +12,24 @@ import scala.PartialFunction.cond
  */
 trait UnicodeEdgeParser { self: DiagramParser ⇒
 
+  /**
+   * @param points -- list of points in the edge so far, in reverse order
+   * @param direction -- direction taken to reach the tip of the edge
+   * @return Some(edge) if the edge is well-formed and terminates at a box, otherwise None.
+   */
   @tailrec
   protected final def followUnicodeEdge(points: List[Point], direction: Direction): Option[EdgeImpl] = {
     val currentPoint = points.head
     if (!inDiagram(currentPoint))
       return None
-    val c = charAt(currentPoint)
     if (isBoxEdge(currentPoint))
-      Some(new EdgeImpl(points.reverse))
-    else if (isStraightAhead(c, direction) || isCrossing(c) || isAheadArrow(c, direction))
+      return Some(new EdgeImpl(points.reverse))
+    val c = charAt(currentPoint)
+    if (isStraightAhead(c, direction) || isCrossing(c) || isAheadArrow(c, direction))
       followUnicodeEdge(currentPoint.go(direction) :: points, direction)
-    else if (isLeftTurn(c, direction))
+    else if (isLeftTurn(c, direction) || isLeftArrow(c, direction))
       followUnicodeEdge(currentPoint.go(direction.turnLeft) :: points, direction.turnLeft)
-    else if (isRightTurn(c, direction))
+    else if (isRightTurn(c, direction) || isRightArrow(c, direction))
       followUnicodeEdge(currentPoint.go(direction.turnRight) :: points, direction.turnRight)
     else
       None
@@ -43,6 +48,10 @@ trait UnicodeEdgeParser { self: DiagramParser ⇒
     case ('─', Right | Left) ⇒ true
     case ('│', Up | Down)    ⇒ true
   }
+
+  private def isLeftArrow(c: Char, direction: Direction) = isAheadArrow(c, direction.turnLeft)
+
+  private def isRightArrow(c: Char, direction: Direction) = isAheadArrow(c, direction.turnRight)
 
   private def isAheadArrow(c: Char, direction: Direction): Boolean = cond(c, direction) {
     case ('^', Up)         ⇒ true

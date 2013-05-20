@@ -105,6 +105,16 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
     diagram.allEdges should be(Nil)
   }
 
+  it should "handle arrows along edge" in {
+    val diagram = Diagram("""                
+               ╭─────v               
+     ╭──────╮  │   ╭───╮   
+     │foobar├──╯   │yyy│              
+     ╰──────╯      ╰───╯
+       """)
+    checkEdges(diagram, "foobar" -> "yyy")
+  }
+
   private def checkEdges(diagram: Diagram, expectedEdges: (String, String)*) {
     diagram.allEdges.map(e ⇒ text(e.box1) -> text(e.box2)).toSet should equal(expectedEdges.toSet)
   }
