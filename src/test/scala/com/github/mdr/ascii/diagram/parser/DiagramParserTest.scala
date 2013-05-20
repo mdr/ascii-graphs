@@ -134,6 +134,36 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
     checkEdges(diagram, "foobar" -> "yyy")
   }
 
+  it should "handle misc arrows" in {
+    val diagram = Diagram("""                
+               ╭──╮                     ╭──────╮             
+               │AA├────────────────────>│      │   
+            ╭─>│  ├─╮   ╭────────────╮  │      │              
+            │  ╰──╯ │   │            │  │      │
+   ╭──────╮ │       │   │    ╭───╮   │  │  FF  │
+   │      ├─╯       ╰───┼───>│   │   │  │      │
+   │  BB  ├─────────────╯╭───┤ D ├──╮│  │      │
+   │      │<─────────────╯╭─>│   │<╮││  │      │
+   ╰──────╯               │  ╰───╯ │││  ╰──────╯
+               ╭──────╮   │        │││          
+               │      │   │        │││  ╭──╮    
+               │  CC  │   │        ││╰─>│  │    
+               │      ├───╯        │╰──>│EE│    
+               │      │            ╰────┤  │    
+               ╰──────╯                 ╰──╯    
+   """)
+    checkEdges(diagram,
+      "AA" -> "FF",
+      "AA" -> "D",
+      "BB" -> "AA",
+      "BB" -> "EE",
+      "CC" -> "D",
+      "D" -> "BB",
+      "D" -> "EE",
+      "EE" -> "D")
+
+  }
+
   private def checkEdges(diagram: Diagram, expectedEdges: (String, String)*) {
     diagram.allEdges.map(e ⇒ text(e.box1) -> text(e.box2)).toSet should equal(expectedEdges.toSet)
   }
