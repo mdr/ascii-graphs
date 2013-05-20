@@ -5,6 +5,7 @@ import com.github.mdr.ascii._
 import com.github.mdr.ascii.common.Direction._
 import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.diagram._
+import com.github.mdr.ascii.layout.drawing.BoxDrawingCharacters._
 import scala.PartialFunction.cond
 
 class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementation with BoxParser with AsciiEdgeParser with LabelParser {
@@ -18,26 +19,6 @@ class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementat
   protected val numberOfRows = rows.length
 
   protected val diagramRegion = Region(Point(0, 0), Point(numberOfRows - 1, numberOfColumns - 1))
-
-  protected def inDiagram(p: Point): Boolean = diagramRegion contains p
-
-  protected def charAt(point: Point): Char = rows(point.row)(point.column)
-
-  protected def charAtOpt(point: Point): Option[Char] = if (inDiagram(point)) Some(charAt(point)) else None
-
-  protected def isArrow(c: Char) = isDownArrow(c) || isUpArrow(c) || isLeftArrow(c) || isRightArrow(c)
-
-  protected def isDownArrow(c: Char) = c == 'v' || c == 'V'
-  protected def isUpArrow(c: Char) = c == '^'
-  protected def isLeftArrow(c: Char) = c == '<'
-  protected def isRightArrow(c: Char) = c == '>'
-
-  /**
-   * @return true iff c is a Unicode Box Drawing character
-   */
-  protected def isUnicode(c: Char) = c >= 0x2500 && c <= 0x257f
-
-  def getDiagram: Diagram = diagram
 
   protected val diagram = new DiagramImpl(numberOfRows, numberOfColumns)
 
@@ -66,16 +47,6 @@ class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementat
     box.parent = Some(diagram)
   }
 
-  protected def isBoxEdge(point: Point) = inDiagram(point) && diagram.allBoxes.exists(_.boundaryPoints.contains(point))
-
-  private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] =
-    if (isEdgeStart(charAt(startPoint), direction))
-      followUnicodeEdge(startPoint.go(direction) :: startPoint :: Nil, direction)
-    else if (!isUnicode(charAt(startPoint)))
-      followAsciiEdge(direction, startPoint :: Nil)
-    else
-      None
-
   private val edges =
     diagram.allBoxes.flatMap { box ⇒
       box.rightBoundary.flatMap(followEdge(Right, _)) ++
@@ -103,34 +74,59 @@ class DiagramParser(s: String) extends UnicodeEdgeParser with DiagramImplementat
       point ← label.points
     } yield point).toSet
 
-  /**
-   * Collect all the text inside a container that isn't part of another diagram element (i.e. a box, edge or label).
-   */
-  def collectText(container: ContainerImpl): String = {
-    val childBoxPoints = container.childBoxes.flatMap(_.region.points).toSet
-    val diagramPoints = childBoxPoints ++ allEdgePoints ++ allLabelPoints
-
-    val region = container.contentsRegion
-    val sb = new StringBuilder
-    for (row ← region.topLeft.row to region.bottomRight.row) {
-      for {
-        column ← region.topLeft.column to region.bottomRight.column
-        point = Point(row, column)
-        if !diagramPoints.contains(point)
-        c = charAt(point)
-      } sb.append(c)
-      sb.append("\n")
-    }
-    if (sb.nonEmpty)
-      sb.deleteCharAt(sb.length - 1)
-    sb.toString
-  }
-
   for (edge ← diagram.allEdges)
     edge.label_ = getLabel(edge)
 
   for (box ← diagram.allBoxes)
     box.text = collectText(box)
   diagram.text = collectText(diagram)
+
+  protected def inDiagram(p: Point): Boolean = diagramRegion contains p
+
+  protected def charAt(point: Point): Char = rows(point.row)(point.column)
+
+  protected def charAtOpt(point: Point): Option[Char] =
+    if (inDiagram(point)) Some(charAt(point)) else None
+
+  protected def isArrow(c: Char) = isDownArrow(c) || isUpArrow(c) || isLeftArrow(c) || isRightArrow(c)
+
+  protected def isDownArrow(c: Char) = c == 'v' || c == 'V'
+  protected def isUpArrow(c: Char) = c == '^'
+  protected def isLeftArrow(c: Char) = c == '<'
+  protected def isRightArrow(c: Char) = c == '>'
+
+  def getDiagram: Diagram = diagram
+
+  protected def isBoxEdge(point: Point) = inDiagram(point) && diagram.allBoxes.exists(_.boundaryPoints.contains(point))
+
+  private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] =
+    if (isEdgeStart(charAt(startPoint), direction))
+      followUnicodeEdge(startPoint.go(direction) :: startPoint :: Nil, direction)
+    else if (!isBoxDrawingCharacter(charAt(startPoint)))
+      followAsciiEdge(direction, startPoint :: Nil)
+    else
+      None
+
+  /**
+   * Collect all the text inside a container that isn't part of another diagram element (i.e. a box, edge or label).
+   */
+  private def collectText(container: ContainerImpl): String = {
+    val childBoxPoints = container.childBoxes.flatMap(_.region.points).toSet
+    val occupiedPoints = childBoxPoints ++ allEdgePoints ++ allLabelPoints
+
+    val sb = new StringBuilder
+    val region = container.contentsRegion
+    for (row ← region.topLeft.row to region.bottomRight.row) {
+      for {
+        column ← region.topLeft.column to region.bottomRight.column
+        point = Point(row, column)
+        if !occupiedPoints.contains(point)
+      } sb.append(charAt(point))
+      sb.append("\n")
+    }
+    if (sb.nonEmpty)
+      sb.deleteCharAt(sb.length - 1) // Delete trailing newline
+    sb.toString
+  }
 
 }

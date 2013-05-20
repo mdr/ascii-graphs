@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.PartialFunction.cond
 import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.common.Direction._
+import com.github.mdr.ascii.layout.drawing.BoxDrawingCharacters._
 
 /**
  * Responsible for detecting boxes in the diagram, e.g.
@@ -28,9 +29,9 @@ trait BoxParser { self: DiagramParser ⇒
       point = Point(row, column)
       cornerChar = charAt(point)
       if isTopLeftCorner(cornerChar)
-      if isHorizontalBoxEdge(charAt(point go Right)) || isUnicode(cornerChar)
-      if isVerticalBoxEdge(charAt(point go Down)) || isUnicode(cornerChar)
-      // +-++-+ ^^
+      if isHorizontalBoxEdge(charAt(point go Right)) || isBoxDrawingCharacter(cornerChar)
+      if isVerticalBoxEdge(charAt(point go Down)) || isBoxDrawingCharacter(cornerChar)
+      // +-++-+
       // |A||B| Avoid closely-packed ASCII boxes parsing as 3 boxes, not 2
       // +-++-+
     } yield point

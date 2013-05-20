@@ -29,7 +29,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
 
   }
 
-  "Parser" should "support Unicode box-drawing characters" in {
+  it should "support Unicode box-drawing characters" in {
 
     val diagram = Diagram("""
       ╭─────╮   
@@ -47,7 +47,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
     checkEdges(diagram, "A" -> "B", "A" -> "C")
   }
 
-  "Parser" should "support Unicode box-drawing characters 2" in {
+  it should "support Unicode box-drawing characters 2" in {
     val diagram = Diagram("""             
                   ╭──╮
       ╭──────╮ ╭─>│ee│
@@ -61,7 +61,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
     checkEdges(diagram, "feadda" -> "ee", "feadda" -> "db\nfb")
   }
 
-  "Parser" should "support Unicode box-drawing characters 3" in {
+  it should "support Unicode box-drawing characters 3" in {
     val diagram = Diagram("""                
                  ╭──╮
               ╭─>│xx│
@@ -102,7 +102,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
      +-++-+
     """)
     diagram.allBoxes.map(text).toSet should equal(Set("A", "B"))
-    checkEdges(diagram)
+    diagram.allEdges should be(Nil)
   }
 
   private def checkEdges(diagram: Diagram, expectedEdges: (String, String)*) {
