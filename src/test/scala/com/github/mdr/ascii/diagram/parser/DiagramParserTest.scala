@@ -7,26 +7,45 @@ import com.github.mdr.ascii.diagram.Box
 
 class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
 
-  "Parser" should "work" in {
+  "Parser" should "parse labels" in {
 
     val diagram = Diagram("""
-             +-+             
-    ---------|E|----------   
-    |        +-+         |   
- [9]|                 [6]|   
-    |                    |   
-   +-+  [2]  +-+  [11]  +-+  
-   |F|-------|C|--------|D|  
-   +-+       +-+        +-+  
-    |         |          |   
-[14]|     [10]|      [15]|   
-    |         |          |   
-   +-+       +-+         |   
-   |A|-------|B|----------   
-   +-+  [7]  +-+          """)
+                 +-+             
+        ---------|E|----------   
+        |        +-+         |   
+     [9]|                 [6]|   
+        |                    |   
+       +-+  [2]  +-+  [11]  +-+  
+       |F|-------|C|--------|D|  
+       +-+       +-+        +-+  
+        |         |          |   
+    [14]|     [10]|      [15]|   
+        |         |          |   
+       +-+       +-+         |   
+       |A|-------|B|----------   
+       +-+  [7]  +-+          """)
 
     diagram.allBoxes.map(_.text).toSet should equal("ABCDEF".map(_.toString).toSet)
 
+  }
+
+  it should "parse complex edge paths" in {
+    val diagram = Diagram("""
+       +-+  +-+  
+       |A|  |B|
+       +-+  +-+    
+        |    |
+        -----|---       
+             |  |
+        |-------|
+        |    | 
+        -----+----
+             v   v
+            +-+ +-+ 
+            |C| |D|  
+            +-+ +-+
+    """)
+    checkEdges(diagram, "A" -> "D", "B" -> "C")
   }
 
   it should "support Unicode box-drawing characters" in {

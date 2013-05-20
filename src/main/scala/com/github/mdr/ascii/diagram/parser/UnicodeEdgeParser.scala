@@ -1,10 +1,10 @@
 package com.github.mdr.ascii.diagram.parser
 
-import scala.annotation.tailrec
 import com.github.mdr.ascii._
 import com.github.mdr.ascii.common.Direction._
 import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.diagram._
+import scala.annotation.tailrec
 import scala.PartialFunction.cond
 
 /**
@@ -13,7 +13,7 @@ import scala.PartialFunction.cond
 trait UnicodeEdgeParser { self: DiagramParser ⇒
 
   /**
-   * @param points -- list of points in the edge so far, in reverse order
+   * @param points -- non-empty list of points in the edge so far, in reverse order
    * @param direction -- direction taken to reach the tip of the edge
    * @return Some(edge) if the edge is well-formed and terminates at a box, otherwise None.
    */
@@ -60,19 +60,14 @@ trait UnicodeEdgeParser { self: DiagramParser ⇒
     case ('>', Right)      ⇒ true
   }
 
-  private def isLeftTurn(c: Char, direction: Direction): Boolean = cond(c, direction) {
-    case ('╮' | '┐', Up)    ⇒ true
-    case ('╯' | '┘', Right) ⇒ true
-    case ('╭' | '┌', Left)  ⇒ true
-    case ('╰' | '└', Down)  ⇒ true
-  }
-
   private def isRightTurn(c: Char, direction: Direction): Boolean = cond(c, direction) {
     case ('╮' | '┐', Right) ⇒ true
     case ('╯' | '┘', Down)  ⇒ true
     case ('╭' | '┌', Up)    ⇒ true
     case ('╰' | '└', Left)  ⇒ true
   }
+
+  private def isLeftTurn(c: Char, direction: Direction): Boolean = isRightTurn(c, direction.turnRight)
 
   private def isCrossing(c: Char): Boolean = c == '┼'
 

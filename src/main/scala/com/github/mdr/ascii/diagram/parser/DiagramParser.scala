@@ -93,24 +93,19 @@ class DiagramParser(s: String)
   protected def charAtOpt(point: Point): Option[Char] =
     if (inDiagram(point)) Some(charAt(point)) else None
 
-  protected def isArrow(c: Char) = isDownArrow(c) || isUpArrow(c) || isLeftArrow(c) || isRightArrow(c)
-
-  protected def isDownArrow(c: Char) = c == 'v' || c == 'V'
-  protected def isUpArrow(c: Char) = c == '^'
-  protected def isLeftArrow(c: Char) = c == '<'
-  protected def isRightArrow(c: Char) = c == '>'
-
   def getDiagram: Diagram = diagram
 
   protected def isBoxEdge(point: Point) = inDiagram(point) && diagram.allBoxes.exists(_.boundaryPoints.contains(point))
 
-  private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] =
+  private def followEdge(direction: Direction, startPoint: Point): Option[EdgeImpl] = {
+    val initialPoints = startPoint.go(direction) :: startPoint :: Nil
     if (isEdgeStart(charAt(startPoint), direction))
-      followUnicodeEdge(startPoint.go(direction) :: startPoint :: Nil, direction)
+      followUnicodeEdge(initialPoints, direction)
     else if (!isBoxDrawingCharacter(charAt(startPoint)))
-      followAsciiEdge(direction, startPoint :: Nil)
+      followAsciiEdge(initialPoints, direction)
     else
       None
+  }
 
   /**
    * Collect all the text inside a container that isn't part of another diagram element (i.e. a box, edge or label).

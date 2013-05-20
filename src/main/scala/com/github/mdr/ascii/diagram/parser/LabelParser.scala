@@ -16,7 +16,7 @@ trait LabelParser { self: DiagramParser ⇒
         label ← completeLabel(startPoint, edge.parent)
       } yield label
     if (labels.distinct.size > 1)
-      throw new DiagramParseException("Multiple labels for edge " + edge + ", " + labels.distinct.map(_.text).mkString(","))
+      throw new DiagramParserException("Multiple labels for edge " + edge + ", " + labels.distinct.map(_.text).mkString(","))
     else
       labels.headOption
   }

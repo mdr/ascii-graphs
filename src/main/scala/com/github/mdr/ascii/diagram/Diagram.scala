@@ -5,7 +5,7 @@ import com.github.mdr.ascii.diagram.parser._
 
 object Diagram {
 
-  @throws(classOf[DiagramParseException])
+  @throws(classOf[DiagramParserException])
   def apply(s: String): Diagram = new DiagramParser(s).getDiagram
 
 }

@@ -2,6 +2,7 @@ package com.github.mdr.ascii.diagram.parser
 
 import com.github.mdr.ascii.diagram._
 import com.github.mdr.ascii.common._
+import scala.PartialFunction.cond
 
 /**
  * Concrete implementations of Diagram types
@@ -120,6 +121,10 @@ trait DiagramImplementation { self: DiagramParser ⇒
       sb.append("\n")
     }
     sb.toString
+  }
+
+  private def isArrow(c: Char) = cond(c) {
+    case '^' | '<' | '>' | 'V' | 'v' ⇒ true
   }
 
 }
