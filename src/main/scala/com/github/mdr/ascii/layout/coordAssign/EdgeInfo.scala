@@ -2,6 +2,7 @@ package com.github.mdr.ascii.layout.coordAssign
 
 import com.github.mdr.ascii.layout.layering.Vertex
 import com.github.mdr.ascii.common.Point
+import com.github.mdr.ascii.layout.layering.Edge
 
 /**
  * Information about edges that pass between two adjacent layers.
@@ -18,6 +19,6 @@ case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point,
 
   def isStraight = startColumn == finishColumn
 
-  def withFinishColumn(column: Int) = copy(finishPort = finishPort.copy(column = column))
+  def withFinishColumn(column: Int) = copy(finishPort = finishPort.withColumn(column))
 
 }

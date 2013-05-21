@@ -8,8 +8,11 @@ object RandomGraph {
 
     def mkVertex: String = {
       val chars = "abcdef\n"
+      // val chars = "abcdefghijklmnopqrstuvwyx".toUpperCase()
       def mkChar = chars(random.nextInt(chars.length))
-      (1 to (random.nextInt(20) + 1)).toList.map(_ ⇒ mkChar).mkString
+      val length = random.nextInt(20) + 1
+      // val length = 1
+      List.fill(length)(mkChar).mkString
     }
 
     val numberOfVertices = random.nextInt(12) + 1

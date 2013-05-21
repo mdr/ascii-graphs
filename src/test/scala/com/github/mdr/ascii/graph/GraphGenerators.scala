@@ -16,6 +16,7 @@ object GraphGenerators {
   implicit val arbitraryGraph = Arbitrary(graphGen)
 
   implicit val shrinkGraph = Shrink { g: Graph[String] ⇒
+    // println("Shrink! |v| = " + g.vertices.size + ", |g| = " + g.edges.size)
     (for (edge ← g.edges.toStream) yield g.removeEdge(edge)) append
       (for (v ← g.vertices.toStream) yield g.removeVertex(v))
   }

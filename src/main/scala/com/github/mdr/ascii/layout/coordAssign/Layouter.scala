@@ -2,10 +2,7 @@ package com.github.mdr.ascii.layout.coordAssign
 
 import com.github.mdr.ascii.layout.drawing._
 import com.github.mdr.ascii.layout.layering._
-import com.github.mdr.ascii.common.Dimension
-import com.github.mdr.ascii.common.Point
-import com.github.mdr.ascii.common.Region
-import com.github.mdr.ascii.common.Translatable
+import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.util.Utils._
 
@@ -19,20 +16,25 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
 
   import Layouter._
 
+  case class LayoutState(previousLayerInfo: LayerInfo, incompleteEdges: Map[DummyVertex, List[Point]], drawingElements: List[DrawingElement]) {
+
+    def mergeLayerResult(result: LayerLayoutResult): LayoutState = {
+      val LayerLayoutResult(elements, updatedLayerInfo, updatedIncompletedEdges) = result
+      LayoutState(updatedLayerInfo, updatedIncompletedEdges, drawingElements ++ elements)
+    }
+
+  }
+
   def layout(layering: Layering): Drawing = {
     val layerInfos: Map[Layer, LayerInfo] = calculateLayerInfos(layering)
 
-    var previousLayerInfo: LayerInfo = LayerInfo(Map())
-    var incompleteEdges: Map[DummyVertex, List[Point]] = Map()
-    var diagramElements: List[DrawingElement] = Nil
+    var layoutState = LayoutState(LayerInfo(Map()), Map(), Nil)
     for (layer ← layering.layers) {
-      val LayerLayoutResult(elements, updatedLayerInfo, updatedIncompletedEdges) =
-        layoutLayer(previousLayerInfo, layerInfos(layer), layering.edges, incompleteEdges)
-      previousLayerInfo = updatedLayerInfo
-      incompleteEdges = updatedIncompletedEdges
-      diagramElements ++= elements
+      val layerResult = layoutLayer(layoutState.previousLayerInfo, layerInfos(layer), layering.edges, layoutState.incompleteEdges)
+      layoutState = layoutState.mergeLayerResult(layerResult)
     }
-    Drawing(diagramElements)
+
+    Drawing(layoutState.drawingElements)
   }
 
   /**
@@ -42,10 +44,47 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
   private def calculateLayerInfos(layering: Layering): Map[Layer, LayerInfo] = {
     var layerInfos: Map[Layer, LayerInfo] = Map()
     for ((previousLayerOpt, currentLayer, nextLayerOpt) ← Utils.withPreviousAndNext(layering.layers)) {
-      val vertexInfos = calculateLayerInfo(currentLayer, layering.edges, previousLayerOpt, nextLayerOpt)
-      layerInfos += currentLayer -> vertexInfos
+      val layerInfo = calculateLayerInfo(currentLayer, layering.edges, previousLayerOpt, nextLayerOpt)
+      layerInfos += currentLayer -> layerInfo
     }
-    spaceVertices(layerInfos)
+    nudge(layering, spaceVertices(layerInfos))
+  }
+
+  private def nudge(layering: Layering, layerInfos: Map[Layer, LayerInfo]): Map[Layer, LayerInfo] = {
+    var updatedLayerInfos = layerInfos
+    for {
+      (previousLayerOpt, currentLayer) ← Utils.withPrevious(layering.layers)
+    } yield {
+      val previousEdgeColumns: Set[Int] =
+        previousLayerOpt.toList.flatMap(updatedLayerInfos(_).vertexInfos.values.flatMap(_.outEdgeToPortMap.values.map(_.column))).toSet
+      val currentLayerInfo = updatedLayerInfos(currentLayer)
+
+      def nudgeVertexInfo(vertex: Vertex, vertexInfo: VertexInfo): VertexInfo = {
+        def isStraight(edge: Edge) = {
+          val col2 = vertexInfo.inEdgeToPortMap(edge).column
+          val col1 = previousLayerOpt.map { previousLayer ⇒
+            val previousLayerInfo = updatedLayerInfos(previousLayer)
+            val previousVertexInfo = previousLayerInfo.vertexInfo(edge.startVertex).get
+            previousVertexInfo.outEdgeToPortMap(edge).column
+          }.getOrElse(-1000)
+          col1 == col2
+        }
+        def nudge(port: Point, edge: Edge): Boolean = previousEdgeColumns.contains(port.column) && !isStraight(edge)
+        var nudged: Set[Int] = Set()
+        val newInEdgeToPortMap = vertexInfo.inEdgeToPortMap.map {
+          case (edge, port) ⇒ edge -> { if (nudge(port, edge)) { nudged += port.column; port.right } else port }
+        }
+        val newOutEdgeToPortMap = vertex match {
+          case _: DummyVertex ⇒ vertexInfo.outEdgeToPortMap.map { case (edge, port) ⇒ edge -> { if (nudged contains port.column) port.right else port } }
+          case _              ⇒ vertexInfo.outEdgeToPortMap
+        }
+        vertexInfo.copy(inEdgeToPortMap = newInEdgeToPortMap, outEdgeToPortMap = newOutEdgeToPortMap)
+      }
+      val newVertexInfos = currentLayerInfo.vertexInfos.map { case (vertex, vertexInfo) ⇒ vertex -> nudgeVertexInfo(vertex, vertexInfo) }
+      val updatedLayerInfo = currentLayerInfo.copy(vertexInfos = newVertexInfos)
+      updatedLayerInfos += currentLayer -> updatedLayerInfo
+    }
+    updatedLayerInfos
   }
 
   /**
@@ -87,7 +126,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
     val selfInPorts = inPorts.drop(inEdges.size)
 
     val outDegree = outEdges.size + vertex.selfEdges
-    val outPorts: List[Point] = portOffsets(outDegree, boxRegion.width).map(boxRegion.bottomLeft.right)
+    val outPorts = portOffsets(outDegree, boxRegion.width).map(boxRegion.bottomLeft.right)
     val outEdgeToPortMap = outEdges.zip(outPorts).toMap
     val selfOutPorts = outPorts.drop(outEdges.size)
 
@@ -96,8 +135,9 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
 
   private def makeVertexInfo(vertex: DummyVertex, boxRegion: Region, greaterRegion: Region, inEdges: List[Edge], outEdges: List[Edge]): VertexInfo = {
     val (List(inVertex), List(outVertex)) = (inEdges, outEdges)
-    val inEdgeToPortMap = Map(inVertex -> boxRegion.topLeft)
-    val outEdgeToPortMap = Map(outVertex -> boxRegion.topLeft)
+    val port = boxRegion.topLeft
+    val inEdgeToPortMap = Map(inVertex -> port)
+    val outEdgeToPortMap = Map(outVertex -> port)
     VertexInfo(boxRegion, greaterRegion, inEdgeToPortMap, outEdgeToPortMap, Nil, Nil)
   }
 
@@ -130,7 +170,8 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
       if (vertical)
         (degree + selfEdges) * 2 + 1 + 2
       else
-        degree + selfEdges + 2
+        (degree + selfEdges) * 2 + 1 + 2
+    //degree + selfEdges + 2
     val requiredInputWidth = requiredWidth(inDegree)
     val requiredOutputWidth = requiredWidth(outDegree)
     val Dimension(preferredHeight, preferredWidth) = getPreferredSize(vertexRenderingStrategy, v)
@@ -233,7 +274,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
 
     val updatedIncompleteEdges: Map[DummyVertex, List[Point]] =
       for ((EdgeInfo(_, finishVertex: DummyVertex, _, _, _), points) ← edgeInfoToPoints)
-        yield finishVertex -> points.init
+        yield finishVertex -> points
 
     val updatedLayerInfo = currentLayerInfo.down(edgeBendCalculator.edgeZoneBottomRow + 1)
 
@@ -273,12 +314,15 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
       case _: RealVertex   ⇒ List(start)
     }
     val lastPriorPoint = priorPoints.last
-    if (lastPriorPoint.column == trueFinish.column) // No bend required
-      priorPoints :+ trueFinish
-    else {
-      val row = edgeBendCalculator.bendRow(edgeInfo)
-      priorPoints ++ List(lastPriorPoint.copy(row = row), trueFinish.copy(row = row), trueFinish)
-    }
+    val edgePoints =
+      if (lastPriorPoint.column == trueFinish.column) // No bend required
+        priorPoints :+ trueFinish
+      else {
+        require(edgeInfo.requiresBend, edgeInfo + ", " + priorPoints)
+        val bendRow = edgeBendCalculator.bendRow(edgeInfo)
+        priorPoints ++ List(lastPriorPoint.withRow(bendRow), trueFinish.withRow(bendRow), trueFinish)
+      }
+    Point.removeRedundantPoints(edgePoints)
   }
 
   private def makeEdgeElements(edgeInfoToPoints: Map[EdgeInfo, List[Point]]): List[EdgeDrawingElement] =

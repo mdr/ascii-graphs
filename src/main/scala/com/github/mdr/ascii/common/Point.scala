@@ -26,4 +26,8 @@ case class Point(row: Int, column: Int) extends Translatable[Point] with Transpo
 
   def neighbours: List[Point] = List(up, right, down, left)
 
+  def withRow(newRow: Int) = copy(row = newRow)
+
+  def withColumn(newColumn: Int) = copy(column = newColumn)
+
 }

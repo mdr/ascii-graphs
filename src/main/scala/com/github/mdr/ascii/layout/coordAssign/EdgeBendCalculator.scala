@@ -8,6 +8,8 @@ import com.github.mdr.ascii.util.Utils._
 class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdgeBuffer: Int) {
 
   private val edgeRows: Map[EdgeInfo, Int] = orderEdgeBends(edgeInfos)
+  require(edgeInfos.forall { edge ⇒ edge.isStraight || edgeRows.contains(edge) })
+
   private def bendRow(rowIndex: Int) = edgeZoneTopRow + rowIndex * 1 + 1
 
   val edgeZoneBottomRow =
@@ -66,7 +68,6 @@ class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdg
 
   /**
    * Reorder edges that share start and end columns as to avoid edges being drawn over each other.
-   *
    */
   private def reorderEdgesWithSameStartAndEndColumns(edgeToRowMap: Map[EdgeInfo, Int]): Map[EdgeInfo, Int] = {
     var updatedEdgeToRowMap = edgeToRowMap
