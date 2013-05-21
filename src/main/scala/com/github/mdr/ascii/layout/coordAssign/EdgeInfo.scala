@@ -14,6 +14,10 @@ case class EdgeInfo(startVertex: Vertex, finishVertex: Vertex, startPort: Point,
 
   def finishColumn = finishPort.column
 
-  def requiresBend = startColumn != finishColumn
+  def requiresBend = !isStraight
+
+  def isStraight = startColumn == finishColumn
+
+  def withFinishColumn(column: Int) = copy(finishPort = finishPort.copy(column = column))
 
 }

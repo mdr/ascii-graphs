@@ -56,16 +56,6 @@ object KinkRemover {
     None
   }
 
-  private def sameColumn(p1: Point, p2: Point, p3: Point) = p1.column == p2.column && p2.column == p3.column
-  private def sameRow(p1: Point, p2: Point, p3: Point) = p1.row == p2.row && p2.row == p3.row
-  private def colinear(p1: Point, p2: Point, p3: Point) = sameColumn(p1, p2, p3) || sameRow(p1, p2, p3)
-
-  private def removeRedundantPoints(points: List[Point]): List[Point] = points match {
-    case List() | List(_) | List(_, _)                       ⇒ points
-    case p1 :: p2 :: p3 :: remainder if colinear(p1, p2, p3) ⇒ removeRedundantPoints(p1 :: p3 :: remainder)
-    case p :: ps                                             ⇒ p :: removeRedundantPoints(ps)
-  }
-
   private def removeKink(edge: EdgeDrawingElement, drawing: Drawing, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
     val segments: List[EdgeSegment] = edge.segments
     adjacentPairs(segments) collect {
@@ -90,7 +80,7 @@ object KinkRemover {
             drawing.vertexElementAt(start.up).get.region.leftColumn != alternativeMiddle.column) {
             val oldBendPoints = edge.bendPoints
             val oldIndex = oldBendPoints.indexOf(start)
-            val newBendPoints = removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
+            val newBendPoints = Point.removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
             val updated = edge.copy(bendPoints = newBendPoints)
             return Some(updated)
           }
@@ -108,7 +98,7 @@ object KinkRemover {
             drawing.vertexElementAt(end.down).get.region.leftColumn != alternativeMiddle.column) {
             val oldBendPoints = edge.bendPoints
             val oldIndex = oldBendPoints.indexOf(start)
-            val newBendPoints = removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
+            val newBendPoints = Point.removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
             val updated = edge.copy(bendPoints = newBendPoints)
             return Some(updated)
           }
