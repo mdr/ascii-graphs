@@ -189,12 +189,15 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
   }
 
   /**
-   * Space out vertices horizontally across the full width of the diagram
+   * Space out vertices horizontally across the full width of the diagram, and centre them vertically within
+   * the layer.
    */
   private def spaceVertices(layer: Layer, layerVertexInfos: LayerInfo, diagramWidth: Int): LayerInfo = {
     val excessSpace = diagramWidth - layerVertexInfos.maxColumn
     val horizontalSpacing = math.max(excessSpace / (layerVertexInfos.vertexInfos.size + 1), 1)
-    // val verticalSpacing = layerVertexInfos.vertexInfos.values.map(_.greaterRegion.height).max
+
+    // Height of the vertices in the layer (excluding self edges)
+    val layerHeight = layerVertexInfos.vertexInfos.values.map(_.boxRegion.height).max
 
     var leftColumn = horizontalSpacing
     val newVertexInfos =
@@ -205,7 +208,8 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
         val oldLeftColumn = leftColumn
         leftColumn += vertexInfo.greaterRegion.width
         leftColumn += horizontalSpacing
-        v -> vertexInfo.setLeft(oldLeftColumn)
+        val verticalCenteringOffset = (layerHeight - vertexInfo.boxRegion.height) / 2
+        v -> vertexInfo.setLeft(oldLeftColumn).down(verticalCenteringOffset)
       }
     LayerInfo(newVertexInfos.toMap)
   }
