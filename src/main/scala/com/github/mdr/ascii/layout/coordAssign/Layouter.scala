@@ -47,44 +47,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
       val layerInfo = calculateLayerInfo(currentLayer, layering.edges, previousLayerOpt, nextLayerOpt)
       layerInfos += currentLayer -> layerInfo
     }
-    nudge(layering, spaceVertices(layerInfos))
-  }
-
-  private def nudge(layering: Layering, layerInfos: Map[Layer, LayerInfo]): Map[Layer, LayerInfo] = {
-    var updatedLayerInfos = layerInfos
-    for {
-      (previousLayerOpt, currentLayer) ← Utils.withPrevious(layering.layers)
-    } yield {
-      val previousEdgeColumns: Set[Int] =
-        previousLayerOpt.toList.flatMap(updatedLayerInfos(_).vertexInfos.values.flatMap(_.outEdgeToPortMap.values.map(_.column))).toSet
-      val currentLayerInfo = updatedLayerInfos(currentLayer)
-
-      def nudgeVertexInfo(vertex: Vertex, vertexInfo: VertexInfo): VertexInfo = {
-        def isStraight(edge: Edge) = {
-          val col2 = vertexInfo.inEdgeToPortMap(edge).column
-          val col1 = previousLayerOpt.map { previousLayer ⇒
-            val previousLayerInfo = updatedLayerInfos(previousLayer)
-            val previousVertexInfo = previousLayerInfo.vertexInfo(edge.startVertex).get
-            previousVertexInfo.outEdgeToPortMap(edge).column
-          }.getOrElse(-1000)
-          col1 == col2
-        }
-        def nudge(port: Point, edge: Edge): Boolean = previousEdgeColumns.contains(port.column) && !isStraight(edge)
-        var nudged: Set[Int] = Set()
-        val newInEdgeToPortMap = vertexInfo.inEdgeToPortMap.map {
-          case (edge, port) ⇒ edge -> { if (nudge(port, edge)) { nudged += port.column; port.right } else port }
-        }
-        val newOutEdgeToPortMap = vertex match {
-          case _: DummyVertex ⇒ vertexInfo.outEdgeToPortMap.map { case (edge, port) ⇒ edge -> { if (nudged contains port.column) port.right else port } }
-          case _              ⇒ vertexInfo.outEdgeToPortMap
-        }
-        vertexInfo.copy(inEdgeToPortMap = newInEdgeToPortMap, outEdgeToPortMap = newOutEdgeToPortMap)
-      }
-      val newVertexInfos = currentLayerInfo.vertexInfos.map { case (vertex, vertexInfo) ⇒ vertex -> nudgeVertexInfo(vertex, vertexInfo) }
-      val updatedLayerInfo = currentLayerInfo.copy(vertexInfos = newVertexInfos)
-      updatedLayerInfos += currentLayer -> updatedLayerInfo
-    }
-    updatedLayerInfos
+    PortNudger.nudge(layering, spaceVertices(layerInfos))
   }
 
   /**
@@ -169,9 +132,12 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
     def requiredWidth(degree: Int) =
       if (vertical)
         (degree + selfEdges) * 2 + 1 + 2
-      else
+      else {
+        // We could draw horizontal diagrams more compactly , but the PortNudger requires 
+        // space at the moment.
+        // degree + selfEdges + 2  
         (degree + selfEdges) * 2 + 1 + 2
-    //degree + selfEdges + 2
+      }
     val requiredInputWidth = requiredWidth(inDegree)
     val requiredOutputWidth = requiredWidth(outDegree)
     val Dimension(preferredHeight, preferredWidth) = getPreferredSize(vertexRenderingStrategy, v)
@@ -228,6 +194,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
   private def spaceVertices(layer: Layer, layerVertexInfos: LayerInfo, diagramWidth: Int): LayerInfo = {
     val excessSpace = diagramWidth - layerVertexInfos.maxColumn
     val horizontalSpacing = math.max(excessSpace / (layerVertexInfos.vertexInfos.size + 1), 1)
+    // val verticalSpacing = layerVertexInfos.vertexInfos.values.map(_.greaterRegion.height).max
 
     var leftColumn = horizontalSpacing
     val newVertexInfos =
