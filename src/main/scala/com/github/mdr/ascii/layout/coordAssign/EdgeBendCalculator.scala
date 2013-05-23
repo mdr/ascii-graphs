@@ -68,6 +68,10 @@ class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdg
 
   /**
    * Reorder edges that share start and end columns as to avoid edges being drawn over each other.
+   *
+   * NOTE: edge nudging means that this routine isn't needed, for now.
+   * However, if we nudge just the vertices required to break edge "cycles", this can be used to remove
+   * any other overlaps.
    */
   private def reorderEdgesWithSameStartAndEndColumns(edgeToRowMap: Map[EdgeInfo, Int]): Map[EdgeInfo, Int] = {
     var updatedEdgeToRowMap = edgeToRowMap

@@ -4,6 +4,7 @@ import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
 import com.github.mdr.ascii.diagram.Diagram
 import com.github.mdr.ascii.diagram.Box
+import com.github.mdr.ascii.util.Utils
 
 class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
 
@@ -164,8 +165,76 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
 
   }
 
+  it should "support ASCII edge bend characters" in {
+    val diagram = Diagram("""                
+               +-+      
+         +-+   | |      
+    +-+  | |   |D|      
+    | |->|H|-->| |      
+    | |  | |/->| |      
+    |I|  +-+|  +-+      
+    | |-----/           
+    +-+             
+       """)
+    checkEdges(diagram, "I" -> "H", "H" -> "D", "I" -> "D")
+  }
+
+  it should "support ASCII edge bend characters 2" in {
+    val diagram = Diagram("""                
+         +-+     +-+
+         | |     | |
+    +-+  | |---->| |    
+    | |  |M|     |W|    
+    | |->| |  /->| |    
+    | |->| |  |  | |
+    | |  +-+  |  +-+
+    |A|       |     
+    | |<-----\|  +-+
+    | |      ||  | |
+    | |-----\||  | |
+    | |     |\---|D|
+    +-+  +-+\--->| |
+         | |  |  | |
+         |E|--/  +-+
+         | |        
+         +-+
+    """)
+    checkEdges(diagram, "A" -> "D", "E" -> "W", "D" -> "A", "A" -> "M", "A" -> "M", "M" -> "W")
+  }
+
+  it should "support ASCII edge bend characters 3" in {
+    val diagram = Diagram("""                
+           +-+        +-+
+           | |  +-+   | |
+           | |  | |-->| |
+      +-+  |J|->| |   | |
+      | |  | |  | |   |L|
+      | |<-| |<-|K|<--| |
+      | |  +-+  | |/->| |
+      |F|------>| ||  | |
+      | |       | ||  +-+
+      | |       +-+|     
+      | |----------/  +-+
+      +-+             |R|
+                      +-+
+                         
+                      +-+
+                      |S|
+                      +-+
+         """)
+    checkEdges(diagram, "F" -> "L",
+      "J" -> "K",
+      "L" -> "K",
+      "K" -> "J",
+      "F" -> "K",
+      "J" -> "F",
+      "K" -> "L")
+  }
+
   private def checkEdges(diagram: Diagram, expectedEdges: (String, String)*) {
-    diagram.allEdges.map(e ⇒ text(e.box1) -> text(e.box2)).toSet should equal(expectedEdges.toSet)
+    val edges = diagram.allEdges.map(e ⇒ text(e.box1) -> text(e.box2))
+    edges.toSet should equal(expectedEdges.toSet)
+    Utils.multisetCompare(edges, expectedEdges.toList) should be(true)
   }
 
   private def text(box: Box) = box.text.trim

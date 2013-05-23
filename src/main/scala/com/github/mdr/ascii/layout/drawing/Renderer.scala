@@ -4,8 +4,8 @@ import scala.annotation.tailrec
 import scala.PartialFunction.condOpt
 
 import com.github.mdr.ascii.common._
-import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.common.Direction._
+import com.github.mdr.ascii.util.Utils
 
 object Renderer {
 
@@ -13,7 +13,10 @@ object Renderer {
 
 }
 
-class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded: Boolean = true) {
+/**
+ * @param explicitAsciiBends -- use '/' and '\' characters to mark edge bends (can reduce ambiguity)
+ */
+class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded: Boolean = true, explicitAsciiBends: Boolean = true) {
 
   def render(drawing: Drawing): String = {
     val grid = new Grid(drawing.dimension)
@@ -112,10 +115,10 @@ class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded
   private def lineHorizontalChar = if (unicode) '│' else '|'
   private def lineVerticalChar = if (unicode) '─' else '-'
 
-  private def bendChar1 = if (unicode) (if (rounded) '╭' else '┌') else '-'
-  private def bendChar2 = if (unicode) (if (rounded) '╮' else '┐') else '-'
-  private def bendChar3 = if (unicode) (if (rounded) '╰' else '└') else '-'
-  private def bendChar4 = if (unicode) (if (rounded) '╯' else '┘') else '-'
+  private def bendChar1 = if (unicode) (if (rounded) '╭' else '┌') else if (explicitAsciiBends) '/' else '-'
+  private def bendChar2 = if (unicode) (if (rounded) '╮' else '┐') else if (explicitAsciiBends) '\\' else '-'
+  private def bendChar3 = if (unicode) (if (rounded) '╰' else '└') else if (explicitAsciiBends) '\\' else '-'
+  private def bendChar4 = if (unicode) (if (rounded) '╯' else '┘') else if (explicitAsciiBends) '/' else '-'
 
   private def intersectionCharOpt = if (unicode) Some('┼') else Some('-') // None
 

@@ -15,7 +15,7 @@ object GraphLayout {
     renderGraph(graph, ToStringVertexRenderingStrategy)
 
   def renderGraph[V](graph: Graph[V], vertexRenderingStrategy: VertexRenderingStrategy[V], removeKinks: Boolean = true,
-    compactify: Boolean = true, unicode: Boolean = true, vertical: Boolean = false): String = {
+    compactify: Boolean = true, unicode: Boolean = false, vertical: Boolean = false): String = {
     val cycleRemovalResult = CycleRemover.removeCycles(graph)
     val (layering, _) = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
