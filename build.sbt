@@ -59,3 +59,5 @@ pomExtra := {
       </developer>
     </developers>
   }
+
+scalacOptions in (Compile, doc) += "-diagrams"
