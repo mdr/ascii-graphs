@@ -9,7 +9,9 @@ import com.github.mdr.ascii.common.Point
  */
 class Grid(dimension: Dimension) {
 
-  val chars: Array[Array[Char]] = Array.fill(dimension.height, dimension.width)(' ')
+  val backgroundChar = ' '
+
+  val chars: Array[Array[Char]] = Array.fill(dimension.height, dimension.width)(backgroundChar)
 
   def apply(point: Point): Char =
     try

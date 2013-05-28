@@ -7,6 +7,7 @@ import javax.swing.event._
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.layout.coordAssign._
 import com.github.mdr.ascii.layout._
+import com.github.mdr.ascii.layout.prefs.LayoutPrefsImpl
 
 object GUI extends App {
 
@@ -52,9 +53,7 @@ object Frame extends JFrame {
       val edges = pieces.flatMap { chunks ⇒ chunks.zip(chunks.tail) }
       val vertices = if (text.trim.isEmpty) Set[String]() else pieces.flatten.toSet
       val graph = Graph(vertices, edges)
-      outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy,
-        OptionsPanel.removeKinksBox.isSelected, OptionsPanel.compactifyBox.isSelected,
-        OptionsPanel.unicodeBox.isSelected, OptionsPanel.verticalBox.isSelected))
+      outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy, OptionsPanel.layoutPrefs))
     } catch {
       case e: Throwable ⇒
         outputTextPane.setText(e.getMessage)
@@ -76,30 +75,34 @@ object Frame extends JFrame {
 
     setLayout(new BoxLayout(this, BoxLayout.Y_AXIS))
 
-    val removeKinksBox = new JCheckBox("Remove kinks")
-    val compactifyBox = new JCheckBox("Compactify")
-    val unicodeBox = new JCheckBox("Unicode")
-    val verticalBox = new JCheckBox("Vertical")
-
-    add(removeKinksBox)
-    add(compactifyBox)
-    add(unicodeBox)
-    add(verticalBox)
-
-    val refreshListener = new ActionListener() {
-      def actionPerformed(e: ActionEvent) {
-        refreshDiagram()
-      }
+    def addBox(name: String, default: Boolean) = {
+      val checkBox = new JCheckBox(name)
+      add(checkBox)
+      checkBox.setSelected(default)
+      checkBox.addActionListener(refreshListener)
+      checkBox
     }
 
-    removeKinksBox.setSelected(true)
-    removeKinksBox.addActionListener(refreshListener)
-    compactifyBox.setSelected(true)
-    compactifyBox.addActionListener(refreshListener)
-    unicodeBox.setSelected(true)
-    unicodeBox.addActionListener(refreshListener)
-    verticalBox.setSelected(true)
-    verticalBox.addActionListener(refreshListener)
+    val removeKinksBox = addBox("Remove kinks", true)
+    val compactifyBox = addBox("Compactify", true)
+    val unicodeBox = addBox("Unicode", true)
+    val verticalBox = addBox("Vertical", true)
+    val doubleVerticesBox = addBox("Double Vertices", false)
+    val roundedBox = addBox("Rounded", true)
+    val explicitAsciiBendsBox = addBox("Explicit ASCII bends", true)
+
+    def refreshListener = new ActionListener() { def actionPerformed(e: ActionEvent) = refreshDiagram() }
+
+    def layoutPrefs =
+      LayoutPrefsImpl(
+        removeKinks = removeKinksBox.isSelected,
+        compactify = compactifyBox.isSelected,
+        unicode = unicodeBox.isSelected,
+        vertical = verticalBox.isSelected,
+        doubleVertices = doubleVerticesBox.isSelected,
+        rounded = roundedBox.isSelected,
+        explicitAsciiBends = explicitAsciiBendsBox.isSelected)
+
   }
 
 }

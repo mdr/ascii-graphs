@@ -4,7 +4,8 @@ case class LayoutPrefsImpl(
   removeKinks: Boolean = true,
   compactify: Boolean = true,
   vertical: Boolean = true,
-  unicode: Boolean = false,
+  unicode: Boolean = true,
   doubleVertices: Boolean = false,
-  rounded: Boolean = false,
-  explicitAsciiBends: Boolean = true) extends LayoutPrefs
+  rounded: Boolean = false, // Typical Windows fonts don't render bend characters correctly
+  explicitAsciiBends: Boolean = false)
+    extends LayoutPrefs

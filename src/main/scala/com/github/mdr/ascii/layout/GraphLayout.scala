@@ -6,6 +6,7 @@ import com.github.mdr.ascii.layout.cycles.CycleRemover
 import com.github.mdr.ascii.layout.drawing._
 import com.github.mdr.ascii.layout.layering._
 import com.github.mdr.ascii.layout.prefs.LayoutPrefsImpl
+import com.github.mdr.ascii.layout.prefs.LayoutPrefs
 
 object GraphLayout {
 
@@ -13,27 +14,24 @@ object GraphLayout {
    * Layout a graph as a String using toString() on the vertices
    */
   def renderGraph[V](graph: Graph[V]): String =
-    renderGraph(graph, ToStringVertexRenderingStrategy)
+    renderGraph(graph, ToStringVertexRenderingStrategy, LayoutPrefsImpl())
 
   def renderGraph[V](
     graph: Graph[V],
     vertexRenderingStrategy: VertexRenderingStrategy[V] = ToStringVertexRenderingStrategy,
-    removeKinks: Boolean = true,
-    compactify: Boolean = true,
-    unicode: Boolean = false,
-    vertical: Boolean = true): String = {
+    layoutPrefs: LayoutPrefs): String = {
     val cycleRemovalResult = CycleRemover.removeCycles(graph)
     val (layering, _) = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
-    val layouter = new Layouter(ToStringVertexRenderingStrategy, vertical)
+    val layouter = new Layouter(ToStringVertexRenderingStrategy, layoutPrefs.vertical)
     var drawing = layouter.layout(reorderedLayering)
-    if (removeKinks)
+    if (layoutPrefs.removeKinks)
       drawing = KinkRemover.removeKinks(drawing)
-    if (compactify)
+    if (layoutPrefs.compactify)
       drawing = Compactifier.compactify(drawing)
-    if (!vertical)
+    if (!layoutPrefs.vertical)
       drawing = drawing.transpose
-    Renderer.render(drawing, LayoutPrefsImpl(unicode = unicode))
+    Renderer.render(drawing, layoutPrefs)
   }
 
 }
