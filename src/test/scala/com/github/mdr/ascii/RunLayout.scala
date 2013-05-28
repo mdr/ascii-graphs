@@ -10,6 +10,7 @@ import com.github.mdr.ascii.layout.layering.LayeringCalculator
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.layout.drawing._
 import scala.util.Random
+import com.github.mdr.ascii.layout.prefs.LayoutPrefsImpl
 
 object RunLayout extends App {
 
@@ -143,7 +144,7 @@ object RunLayout extends App {
   val drawing0 = layouter.layout(reorderedLayering)
   val updatedDrawing1 = KinkRemover.removeKinks(drawing0)
   val updatedDrawing2 = Compactifier.compactify(updatedDrawing1)
-  val rendered = Renderer.render(updatedDrawing2)
+  val rendered = Renderer.render(updatedDrawing2, LayoutPrefsImpl())
   // println(rendered)
   println(GraphLayout.renderGraph(graph))
   if (true)

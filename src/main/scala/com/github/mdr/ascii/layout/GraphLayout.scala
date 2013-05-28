@@ -5,6 +5,7 @@ import com.github.mdr.ascii.layout.coordAssign._
 import com.github.mdr.ascii.layout.cycles.CycleRemover
 import com.github.mdr.ascii.layout.drawing._
 import com.github.mdr.ascii.layout.layering._
+import com.github.mdr.ascii.layout.prefs.LayoutPrefsImpl
 
 object GraphLayout {
 
@@ -32,7 +33,7 @@ object GraphLayout {
       drawing = Compactifier.compactify(drawing)
     if (!vertical)
       drawing = drawing.transpose
-    Renderer.render(drawing, unicode)
+    Renderer.render(drawing, LayoutPrefsImpl(unicode = unicode))
   }
 
 }

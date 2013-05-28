@@ -2,25 +2,23 @@ package com.github.mdr.ascii.layout.drawing
 
 import scala.annotation.tailrec
 import scala.PartialFunction.condOpt
-
 import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.common.Direction._
 import com.github.mdr.ascii.util.Utils
+import com.github.mdr.ascii.layout.prefs.RendererPrefs
 
 object Renderer {
 
-  def render(drawing: Drawing, unicode: Boolean = true) = new Renderer(unicode = unicode).render(drawing)
+  def render(drawing: Drawing, rendererPrefs: RendererPrefs) = new Renderer(rendererPrefs).render(drawing)
 
 }
 
 /**
  * @param explicitAsciiBends -- use '/' and '\' characters to mark edge bends (can reduce ambiguity)
  */
-class Renderer(
-    unicode: Boolean = true,
-    doubleVertices: Boolean = false,
-    rounded: Boolean = true,
-    explicitAsciiBends: Boolean = true) {
+class Renderer(rendererPrefs: RendererPrefs) {
+
+  import rendererPrefs._
 
   def render(drawing: Drawing): String = {
     val grid = new Grid(drawing.dimension)
