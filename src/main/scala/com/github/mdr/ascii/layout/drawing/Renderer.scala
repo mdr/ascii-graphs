@@ -16,7 +16,11 @@ object Renderer {
 /**
  * @param explicitAsciiBends -- use '/' and '\' characters to mark edge bends (can reduce ambiguity)
  */
-class Renderer(unicode: Boolean = true, doubleVertices: Boolean = false, rounded: Boolean = true, explicitAsciiBends: Boolean = true) {
+class Renderer(
+    unicode: Boolean = true,
+    doubleVertices: Boolean = false,
+    rounded: Boolean = true,
+    explicitAsciiBends: Boolean = true) {
 
   def render(drawing: Drawing): String = {
     val grid = new Grid(drawing.dimension)

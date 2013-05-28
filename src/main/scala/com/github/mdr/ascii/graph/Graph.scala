@@ -68,7 +68,10 @@ case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
 
   private def singletonVertices = vertices.filter(v ⇒ inDegree(v) == 0 && outDegree(v) == 0)
 
-  private def asVertexList = singletonVertices.mkString("\n") + "\n" + edges.map(e ⇒ e._1 + "," + e._2).mkString("\n")
+  private def asVertexList: String =
+    singletonVertices.mkString("\n") + "\n" +
+      edges.map(e ⇒ e._1 + "," + e._2).mkString("\n")
+
   override def toString =
     try
       "\n" + GraphLayout.renderGraph(this) + "\n" + asVertexList

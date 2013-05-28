@@ -231,6 +231,30 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
       "K" -> "L")
   }
 
+  it should "support ASCII edge bend characters 4" in {
+    val diagram = Diagram("""                
+         +-----+       
+         |  D  |       
+         +-----+       
+            | +---+ +---+
+            | | I | | R |
+            | +---+ +---+
+            |   |     |  
+            |   \-\   |  
+            \----\|   |  
+          /-----------/  
+          |      ||      
+          v      vv      
+      +-----+ +-----+    
+      |  C  | |  H  |    
+      +-----+ +-----+    
+    """)
+    checkEdges(diagram,
+      "R" -> "C",
+      "I" -> "H",
+      "D" -> "H")
+  }
+
   private def checkEdges(diagram: Diagram, expectedEdges: (String, String)*) {
     val edges = diagram.allEdges.map(e ⇒ text(e.box1) -> text(e.box2))
     edges.toSet should equal(expectedEdges.toSet)

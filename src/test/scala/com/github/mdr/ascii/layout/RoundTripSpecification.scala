@@ -9,9 +9,15 @@ import com.github.mdr.ascii.layout.coordAssign.ToStringVertexRenderingStrategy
 
 object RoundTripSpecification extends Properties("RoundTrip") {
 
-  property("round trip") = forAll { g: Graph[String] ⇒
-    val rendered = GraphLayout.renderGraph(g, ToStringVertexRenderingStrategy, unicode = true,
-      removeKinks = true, compactify = true, vertical = true)
+  property("unicode round trip") = forAll { g: Graph[String] ⇒
+    val rendered = GraphLayout.renderGraph(g, unicode = true, removeKinks = true, compactify = true, vertical = true)
+    val graphAgain = removeWhitespace(Graph.fromDiagram(rendered))
+    val originalGraph = removeWhitespace(g)
+    graphAgain == originalGraph
+  }
+
+  property("ascii round trip") = forAll { g: Graph[String] ⇒
+    val rendered = GraphLayout.renderGraph(g, unicode = false, removeKinks = true, compactify = true, vertical = true)
     val graphAgain = removeWhitespace(Graph.fromDiagram(rendered))
     val originalGraph = removeWhitespace(g)
     graphAgain == originalGraph

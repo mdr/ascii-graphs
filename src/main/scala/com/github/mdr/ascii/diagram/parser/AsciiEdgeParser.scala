@@ -14,7 +14,7 @@ trait AsciiEdgeParser { self: DiagramParser ⇒
     val currentPoint = points.head
     if (!inDiagram(currentPoint))
       return None
-    //println("followAsciiEdge: " + points + ", " + direction + ", " + charAt(currentPoint))
+    // println("followAsciiEdge: " + points + ", " + direction + ", " + charAt(currentPoint))
     if (isBoxEdge(currentPoint))
       return {
         if (points.size <= 2)
@@ -40,9 +40,9 @@ trait AsciiEdgeParser { self: DiagramParser ⇒
     else if (isStraightAhead(c, direction)) {
       if (aheadIsContinuation)
         followAsciiEdge(ahead :: points, direction)
-      else if (leftIsContinuation && !rightIsContinuation)
+      else if (leftIsContinuation && !rightIsContinuation && !isTurn(left))
         followAsciiEdge(left :: points, direction.turnLeft)
-      else if (!leftIsContinuation && rightIsContinuation)
+      else if (!leftIsContinuation && rightIsContinuation && !isTurn(right))
         followAsciiEdge(right :: points, direction.turnRight)
       else
         followAsciiEdge(ahead :: points, direction)
@@ -75,6 +75,10 @@ trait AsciiEdgeParser { self: DiagramParser ⇒
   private def isOrthogonal(c: Char, direction: Direction): Boolean = isStraightAhead(c, direction.turnRight)
 
   private def isCrossing(c: Char): Boolean = c == '+'
+
+  private def isTurn(p: Point): Boolean = charAtOpt(p).exists(isTurn)
+
+  private def isTurn(c: Char): Boolean = c == '\\' || c == '/'
 
   private def isRightTurn(c: Char, direction: Direction): Boolean = cond(c, direction) {
     case ('\\', Left | Right) ⇒ true
