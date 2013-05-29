@@ -9,28 +9,6 @@ object Compactifier {
 
   def compactify(drawing: Drawing): Drawing = removeRedundantRows(elevateEdges(drawing))
 
-  //  private def elevateEdges(drawing: Drawing): Drawing = iterate(drawing, elevateEdge)
-  //
-  //  private def elevateEdge(drawing: Drawing): Option[Drawing] = {
-  //    val grid = new OccupancyGrid(drawing)
-  //    for {
-  //      edgeElement ← drawing.elements.collect { case ede: EdgeDrawingElement ⇒ ede }
-  //      updatedElement ← elevateEdge(edgeElement, grid)
-  //    } {
-  //      val updatedDrawing = drawing.replaceElement(edgeElement, updatedElement)
-  //      return Some(updatedDrawing)
-  //    }
-  //    None
-  //  }
-
-  private def elevateEdge(drawing: Drawing, grid: OccupancyGrid): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
-    for {
-      edgeElement ← drawing.edgeElements
-      updatedElement ← elevateEdge(edgeElement, grid)
-    } return Some(edgeElement -> updatedElement)
-    None
-  }
-
   def elevateEdges(drawing: Drawing): Drawing = {
     val grid = new OccupancyGrid(drawing)
     var currentDrawing = drawing
@@ -46,7 +24,16 @@ object Compactifier {
     return currentDrawing
   }
 
+  private def elevateEdge(drawing: Drawing, grid: OccupancyGrid): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
+    for {
+      edgeElement ← drawing.edgeElements
+      updatedElement ← elevateEdge(edgeElement, grid)
+    } return Some(edgeElement -> updatedElement)
+    None
+  }
+
   private def elevateEdge(edgeElement: EdgeDrawingElement, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
+    val originalEdgePoints = edgeElement.points.toSet
     for {
       (segment1, segment2, segment3) ← adjacentTriples(edgeElement.segments)
       if segment1.direction == Down && segment3.direction == Down
@@ -56,7 +43,7 @@ object Compactifier {
       val alternativeFinish2 = segment2.finish.copy(row = row)
       val fakeElement = new EdgeDrawingElement(
         List(segment1.start, alternativeStart2, alternativeFinish2, segment3.finish), false, false)
-      val newPoints = fakeElement.points.filterNot(edgeElement.points.contains)
+      val newPoints = fakeElement.points.filterNot(originalEdgePoints.contains)
       val allClear = !newPoints.exists(grid.isOccupied)
       if (allClear) {
         val oldBendPoints = edgeElement.bendPoints
@@ -65,7 +52,6 @@ object Compactifier {
         val updated = edgeElement.copy(bendPoints = newBendPoints)
         return Some(updated)
       }
-
     }
     None
   }

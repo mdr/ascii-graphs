@@ -1,6 +1,7 @@
 package com.github.mdr.ascii.util
 
 import scala.annotation.tailrec
+import scala.io.Source
 
 object Utils {
 
@@ -46,6 +47,11 @@ object Utils {
     case _ if x < 0 ⇒ -1
     case 0          ⇒ 0
     case _ if x > 0 ⇒ +1
+  }
+
+  def getResourceAsString(path: String): String = {
+    val inputStream = getClass.getResourceAsStream(path)
+    Source.fromInputStream(inputStream).getLines.mkString("\n")
   }
 
 }

@@ -39,6 +39,8 @@ case class VertexDrawingElement(region: Region, textLines: List[String])
 /**
  * Visual rendering of a directed edge.
  *
+ * Start and finish points of the edge should not intersect the vertex boxes.
+ *
  * @param bendPoints -- points of flex in the edge, includes start and finish points
  */
 case class EdgeDrawingElement(
@@ -47,16 +49,7 @@ case class EdgeDrawingElement(
   hasArrow2: Boolean)
     extends DrawingElement with Translatable[EdgeDrawingElement] with Transposable[EdgeDrawingElement] {
 
-  private def getPoints(segment: EdgeSegment): List[Point] = {
-    @tailrec def scanForPoints(start: Point, direction: Direction, finish: Point, accum: List[Point]): List[Point] =
-      if (start == finish)
-        finish :: accum
-      else
-        scanForPoints(start.go(direction), direction, finish, accum = start :: accum)
-    scanForPoints(segment.start, segment.direction, segment.finish, accum = Nil).reverse
-  }
-
-  lazy val points: List[Point] = segments.flatMap(getPoints).distinct
+  lazy val points: List[Point] = segments.flatMap(_.points).distinct
 
   def translate(down: Int = 0, right: Int = 0) = copy(bendPoints = bendPoints.map(_.translate(down, right)))
 
@@ -86,4 +79,16 @@ case class EdgeDrawingElement(
 
 }
 
-case class EdgeSegment(start: Point, direction: Direction, finish: Point)
+case class EdgeSegment(start: Point, direction: Direction, finish: Point) {
+
+  def points: List[Point] = {
+    @tailrec
+    def scanForPoints(start: Point, direction: Direction, finish: Point, accum: List[Point]): List[Point] =
+      if (start == finish)
+        finish :: accum
+      else
+        scanForPoints(start.go(direction), direction, finish, accum = start :: accum)
+    scanForPoints(start, direction, finish, accum = Nil).reverse
+  }
+
+}

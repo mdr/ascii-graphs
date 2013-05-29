@@ -5,6 +5,7 @@ import org.scalatest.FlatSpec
 import com.github.mdr.ascii.diagram.Diagram
 import com.github.mdr.ascii.diagram.Box
 import com.github.mdr.ascii.util.Utils
+import scala.io.Source
 
 class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
 
@@ -253,6 +254,22 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
       "R" -> "C",
       "I" -> "H",
       "D" -> "H")
+  }
+
+  it should "Parse double-edged boxes" in {
+    val diagram = Diagram("""
+      ╔════════╗
+      ║nekohtml║
+      ╚════════╝        
+    """)
+    val List(box) = diagram.allBoxes
+    box.text should be("nekohtml")
+
+  }
+
+  it should "Parse large diagrams" in {
+    val diagram = Diagram(Utils.getResourceAsString("/large1.graph"))
+    diagram.allBoxes.size should be(39)
   }
 
   private def checkEdges(diagram: Diagram, expectedEdges: (String, String)*) {
