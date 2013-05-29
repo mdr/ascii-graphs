@@ -8,3 +8,11 @@
 * Straighten edge kinks
 * Compact redundant space in edge layers
 
+0.0.3 (9/May/2013)
+
+* Support Scala 2.10
+
+0.0.4 (29/May/2013)
+
+* Support self-loops
+* Parse / render Unicode box-drawing characters

@@ -1,17 +1,13 @@
 package com.github.mdr.ascii.graph
 
-import scala.util.Random.javaRandomToRandom
-
-import org.scalacheck.Arbitrary
-import org.scalacheck.Gen
+import org.scalacheck._
 import org.scalacheck.Gen.Params
-import org.scalacheck.Shrink
-
+import scala.util.Random
 import com.github.mdr.ascii.layout.cycles.CycleRemover
 
 object GraphGenerators {
 
-  implicit val graphGen: Gen[Graph[String]] = Gen { p: Params ⇒ Some(RandomGraph.randomGraph(p.rng)) }
+  implicit val graphGen: Gen[Graph[String]] = Gen { p: Params ⇒ Some(RandomGraph.randomGraph(new Random(p.rng))) }
 
   implicit val arbitraryGraph = Arbitrary(graphGen)
 

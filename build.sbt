@@ -2,7 +2,7 @@ name := "ascii-graphs"
 
 organization := "com.github.mdr"
 
-version := "0.0.4-SNAPSHOT"
+version := "0.0.4"
 
 scalaVersion := "2.10.1"
 
@@ -60,4 +60,4 @@ pomExtra := {
     </developers>
   }
 
-scalacOptions in (Compile, doc) += "-diagrams"
+// scalacOptions in (Compile, doc) += "-diagrams"
