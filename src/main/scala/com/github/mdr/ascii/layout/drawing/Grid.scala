@@ -9,9 +9,9 @@ import com.github.mdr.ascii.common.Point
  */
 class Grid(dimension: Dimension) {
 
-  val backgroundChar = ' '
+  private val backgroundChar = ' '
 
-  val chars: Array[Array[Char]] = Array.fill(dimension.height, dimension.width)(backgroundChar)
+  private val chars: Array[Array[Char]] = Array.fill(dimension.height, dimension.width)(backgroundChar)
 
   def apply(point: Point): Char =
     try
@@ -21,11 +21,12 @@ class Grid(dimension: Dimension) {
         throw new ArrayIndexOutOfBoundsException(point + " is not in " + dimension)
     }
 
-  def update(point: Point, char: Char) {
-    val row = chars(point.row)
-    row(point.column) = char
-  }
+  def update(point: Point, char: Char) =
+    chars(point.row)(point.column) = char
 
+  /**
+   * Write a string into the grid starting at the given point.
+   */
   def update(point: Point, s: String) {
     var p = point
     for (c ← s) {
@@ -34,10 +35,10 @@ class Grid(dimension: Dimension) {
     }
   }
 
-  override def toString = chars.map(new String(_)).mkString("\n")
-
   private def region = Region(Point(0, 0), dimension)
 
   def contains(point: Point) = region.contains(point)
+
+  override def toString = chars.map(new String(_)).mkString("\n")
 
 }

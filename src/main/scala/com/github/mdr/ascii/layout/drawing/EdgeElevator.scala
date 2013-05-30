@@ -5,9 +5,25 @@ import com.github.mdr.ascii.common.Direction._
 
 import scala.annotation.tailrec
 
-object Compactifier {
+/**
+ * Raise edges if there are no conflicting horizontal edge segments above. For example:
+ *
+ *      ╭───────╮           ╭───────╮
+ *      │   A   │           │   A   │
+ *      ╰─┬─┬─┬─╯           ╰─┬─┬─┬─╯
+ *        │ │ │               │ │ │
+ *        │ │ ╰────╮       ╭──╯ ╰╮╰────╮
+ *        │ ╰╮     │   =>  │     │     │
+ *     ╭──╯  │     │       │     │     │
+ *     │     │     │       │     │     │
+ *     v     v     v       v     v     v
+ *   ╭───╮ ╭───╮ ╭───╮   ╭───╮ ╭───╮ ╭───╮
+ *   │ B │ │ C │ │ D │   │ B │ │ C │ │ D │
+ *   ╰───╯ ╰───╯ ╰───╯   ╰───╯ ╰───╯ ╰───╯
+ *
+ */
 
-  def compactify(drawing: Drawing): Drawing = removeRedundantRows(elevateEdges(drawing))
+object EdgeElevator {
 
   def elevateEdges(drawing: Drawing): Drawing = {
     val grid = new OccupancyGrid(drawing)

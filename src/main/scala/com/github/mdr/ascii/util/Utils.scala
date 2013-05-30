@@ -54,4 +54,10 @@ object Utils {
     Source.fromInputStream(inputStream).getLines.mkString("\n")
   }
 
+  /**
+   * Map over a list, optionally transforming some of the elements
+   */
+  def conditionallyMap[T](xs: List[T])(fn: PartialFunction[T, T]): List[T] =
+    xs.map { t ⇒ if (fn isDefinedAt t) fn(t) else t }
+
 }

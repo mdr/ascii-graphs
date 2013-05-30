@@ -133,7 +133,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
       if (vertical)
         (degree + selfEdges) * 2 + 1 + 2
       else {
-        // We could draw horizontal diagrams more compactly , but the PortNudger requires 
+        // We could draw horizontal diagrams more compactly, but the PortNudger requires 
         // space at the moment.
         // degree + selfEdges + 2  
         (degree + selfEdges) * 2 + 1 + 2
@@ -251,20 +251,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
 
     val vertexElements = makeVertexElements(updatedLayerInfo)
     val edgeElements = makeEdgeElements(edgeInfoToPoints)
-    val selfEdgeElements = updatedLayerInfo.vertexInfos.collect {
-      case (realVertex: RealVertex, vertexInfo) ⇒
-        val boxRightEdge = vertexInfo.boxRegion.rightColumn
-        vertexInfo.selfOutPorts.zip(vertexInfo.selfInPorts).reverse.zipWithIndex map {
-          case ((out, in), i) ⇒
-            val p1 = out.down(1)
-            val p2 = p1.down(i + 1)
-            val p3 = p2.right(boxRightEdge - p2.column + i * 2 + 2)
-            val p4 = p3.up(vertexInfo.boxRegion.height + 2 * (i + 1) + 1)
-            val p5 = p4.left(p4.column - in.column)
-            val p6 = in.up(1)
-            EdgeDrawingElement(List(p1, p2, p3, p4, p5, p6), false, true)
-        }
-    }.toList.flatten
+    val selfEdgeElements = makeSelfEdgeElements(updatedLayerInfo)
     LayerLayoutResult(vertexElements ++ edgeElements ++ selfEdgeElements, updatedLayerInfo, updatedIncompleteEdges)
   }
 
@@ -309,7 +296,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
     }.toList.flatten
 
   /**
-   * Trace out a self loop path around the right side of the box:
+   * Trace out a self loop path anticlockwise around the right side of the box:
    *
    * p5 ╭───╮p4
    * p6 v   │
@@ -342,10 +329,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
 
   private def getPreferredSize[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex): Dimension = {
     val preferredSize = vertexRenderingStrategy.getPreferredSize(realVertex.contents.asInstanceOf[V])
-    if (vertical)
-      preferredSize
-    else
-      preferredSize.transpose
+    if (vertical) preferredSize else preferredSize.transpose
   }
 
   private def getText[V](vertexRenderingStrategy: VertexRenderingStrategy[V], realVertex: RealVertex, preferredSize: Dimension) = {
