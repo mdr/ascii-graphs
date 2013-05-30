@@ -8,7 +8,7 @@ import com.github.mdr.ascii.common._
 import com.github.mdr.ascii.util.Utils
 
 /**
- * A visual artifact in a rendered graph.
+ * An element of a visual depiction of a graph.
  */
 sealed trait DrawingElement extends Translatable[DrawingElement] with Transposable[DrawingElement] {
 
@@ -21,12 +21,15 @@ sealed trait DrawingElement extends Translatable[DrawingElement] with Transposab
 }
 
 /**
- * Visual rendering of a graph vertex.
+ * @param textLines -- each element is a row of text to be rendered inside the vertex.
  */
 case class VertexDrawingElement(region: Region, textLines: List[String])
     extends DrawingElement
     with Translatable[VertexDrawingElement]
     with Transposable[VertexDrawingElement] {
+
+  require(textLines.size <= region.height - 2)
+  require(textLines.forall(_.length <= region.width - 2))
 
   def translate(down: Int = 0, right: Int = 0) = copy(region = region.translate(down, right))
 
@@ -37,8 +40,6 @@ case class VertexDrawingElement(region: Region, textLines: List[String])
 }
 
 /**
- * Visual rendering of a directed edge.
- *
  * Start and finish points of the edge should not intersect the vertex boxes.
  *
  * @param bendPoints -- points of flex in the edge, includes start and finish points
@@ -53,23 +54,25 @@ case class EdgeDrawingElement(
 
   def translate(down: Int = 0, right: Int = 0) = copy(bendPoints = bendPoints.map(_.translate(down, right)))
 
-  private def direction(point1: Point, point2: Point): Direction =
-    if (point1.row == point2.row) {
-      if (point1.column < point2.column)
+  private def direction(point1: Point, point2: Point): Direction = {
+    val (Point(r1, c1), Point(r2, c2)) = (point1, point2)
+    if (r1 == r2)
+      if (c1 < c2)
         Right
-      else if (point1.column > point2.column)
+      else if (c1 > c2)
         Left
       else
         throw new RuntimeException("Same point: " + point1)
-    } else if (point1.column == point2.column) {
-      if (point1.row < point2.row)
+    else if (c1 == c2)
+      if (r1 < r2)
         Down
-      else if (point1.row > point2.row)
+      else if (r1 > r2)
         Up
       else
         throw new RuntimeException("Same point")
-    } else
+    else
       throw new RuntimeException("Points not aligned: " + point1 + ", " + point2)
+  }
 
   lazy val segments: List[EdgeSegment] =
     for ((point1, point2) ← Utils.adjacentPairs(bendPoints))
@@ -79,6 +82,10 @@ case class EdgeDrawingElement(
 
 }
 
+/**
+ * A horizontal or vertical segment of an edge. Includes all points in the segment, so overlaps
+ * with other segments on the bend points.
+ */
 case class EdgeSegment(start: Point, direction: Direction, finish: Point) {
 
   def points: List[Point] = {
