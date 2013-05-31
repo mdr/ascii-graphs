@@ -26,8 +26,7 @@ case class VertexInfo(
   /**
    * Region inside the vertex box
    */
-  def contentRegion: Region =
-    boxRegion.copy(topLeft = boxRegion.topLeft.down.right, bottomRight = boxRegion.bottomRight.up.left)
+  def contentRegion: Region = boxRegion.expandRight(-1).expandLeft(-1).expandDown(-1).expandUp(-1)
 
   def translate(down: Int = 0, right: Int = 0): VertexInfo =
     VertexInfo(

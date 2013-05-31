@@ -60,4 +60,7 @@ object Utils {
   def conditionallyMap[T](xs: List[T])(fn: PartialFunction[T, T]): List[T] =
     xs.map { t ⇒ if (fn isDefinedAt t) fn(t) else t }
 
+  def addToMultimap[K, V](m: Map[K, List[V]], k: K, v: V): Map[K, List[V]] =
+    m + (k -> (v :: m.getOrElse(k, Nil)))
+
 }

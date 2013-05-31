@@ -7,11 +7,11 @@ object RandomGraph {
   def randomGraph(implicit random: Random): Graph[String] = {
 
     def mkVertex: String = {
-      //      val chars = "abcdef\n"
-      val chars = "abcdefghijklmnopqrstuvwyx".toUpperCase()
+      val chars = "abcdef\n"
+      //      val chars = "abcdefghijklmnopqrstuvwyx".toUpperCase()
       def mkChar = chars(random.nextInt(chars.length))
-      //      val length = random.nextInt(20) + 1
-      val length = 1
+      val length = random.nextInt(20) + 1
+      //      val length = 1
       List.fill(length)(mkChar).mkString
     }
 

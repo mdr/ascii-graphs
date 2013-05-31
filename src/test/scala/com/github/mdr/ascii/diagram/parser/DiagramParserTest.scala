@@ -166,6 +166,42 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
 
   }
 
+  it should "handle bug" in {
+    val diagram = Diagram("""                
+     ┌───────┐ ┌───┐
+     │   P   │ │ H │
+     └─┬┬──┬─┘ └─┬─┘
+       ││  │     │  
+       ││  │ ┌───┘  
+       ││  │ │      
+       ││  v v      
+       ││┌─────┐    
+       │││  T  │    
+       ││└─┬─┬─┘    
+       └┼┐ │ │      
+      ┌─┘│ │ │      
+      │  v v v      
+      │┌───────┐    
+      ││   O   │    
+      │└────┬──┘    
+      │     │       
+      └───┐ │       
+          │ │       
+          v v       
+        ┌─────┐     
+        │  N  │     
+        └─────┘     
+        """)
+    checkEdges(diagram,
+      "P" -> "T",
+      "P" -> "O",
+      "P" -> "N",
+      "T" -> "O",
+      "H" -> "T",
+      "T" -> "O",
+      "O" -> "N")
+  }
+
   it should "support ASCII edge bend characters" in {
     val diagram = Diagram("""                
                +-+      

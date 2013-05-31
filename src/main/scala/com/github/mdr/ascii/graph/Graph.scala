@@ -1,11 +1,11 @@
 package com.github.mdr.ascii.graph
 
 import scala.PartialFunction.cond
-
 import com.github.mdr.ascii.diagram.Diagram
 import com.github.mdr.ascii.layout.GraphLayout
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.util.Utils._
+import com.github.mdr.ascii.layout.prefs.LayoutPrefsImpl
 
 object Graph {
 
@@ -68,14 +68,16 @@ case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
 
   private def singletonVertices = vertices.filter(v ⇒ inDegree(v) == 0 && outDegree(v) == 0)
 
-  private def asVertexList: String =
-    singletonVertices.mkString("\n") + "\n" +
-      edges.map(e ⇒ e._1 + "," + e._2).mkString("\n")
+  private def asVertexList: String = {
+    singletonVertices.toList.map(_.toString).sorted.mkString("\n") + "\n" +
+      edges.toList.sortBy(e ⇒ (e._1.toString, e._2.toString)).map(e ⇒ e._1 + "," + e._2).mkString("\n")
+  }
 
   override def toString =
-    try
-      "\n" + GraphLayout.renderGraph(this) // + "\n" + asVertexList
-    catch {
+    try {
+      val layoutPrefs = LayoutPrefsImpl(unicode = true, explicitAsciiBends = false)
+      "\n" + GraphLayout.renderGraph(this, layoutPrefs = layoutPrefs) + "\n" + asVertexList
+    } catch {
       case t: Throwable ⇒ asVertexList
     }
 

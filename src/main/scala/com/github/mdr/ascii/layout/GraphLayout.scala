@@ -19,7 +19,7 @@ object GraphLayout {
   def renderGraph[V](
     graph: Graph[V],
     vertexRenderingStrategy: VertexRenderingStrategy[V] = ToStringVertexRenderingStrategy,
-    layoutPrefs: LayoutPrefs): String = {
+    layoutPrefs: LayoutPrefs = LayoutPrefsImpl()): String = {
     val cycleRemovalResult = CycleRemover.removeCycles(graph)
     val (layering, _) = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)

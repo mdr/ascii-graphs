@@ -122,7 +122,7 @@ class Renderer(rendererPrefs: RendererPrefs) {
   private def bendChar3 = if (unicode) (if (rounded) '╰' else '└') else if (explicitAsciiBends) '\\' else '-'
   private def bendChar4 = if (unicode) (if (rounded) '╯' else '┘') else if (explicitAsciiBends) '/' else '-'
 
-  private def intersectionCharOpt = if (unicode) Some('┼') else Some('-') // None
+  private def intersectionCharOpt = if (unicode) Some('┼') else Some('-' /* '+' */ ) // '+' is problematic because it can generate accidental boxes
 
   private def topLeftChar = if (unicode) (if (doubleVertices) '╔' else if (rounded) '╭' else '┌') else '+'
   private def topRightChar = if (unicode) (if (doubleVertices) '╗' else if (rounded) '╮' else '┐') else '+'

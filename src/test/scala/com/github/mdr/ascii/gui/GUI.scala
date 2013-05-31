@@ -33,6 +33,12 @@ object Frame extends JFrame {
                            |B,B
                            |D,E,F
                            |E,G""".stripMargin)
+
+  inputTextPane.setText("""|A,B
+                           |A,C
+                           |A,D
+                           |A,E
+                           |A,F""".stripMargin)
   val outputWrapper = new JPanel(new BorderLayout)
   val outputTextPane = new JTextPane
   inputTextPane.setFont(new Font(Font.MONOSPACED, inputTextPane.getFont.getStyle, inputTextPane.getFont.getSize))
