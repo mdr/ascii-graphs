@@ -1,6 +1,7 @@
 package com.github.mdr.ascii.layout.drawing
 
 import com.github.mdr.ascii.common._
+import com.github.mdr.ascii.layout.prefs.LayoutPrefsImpl
 
 case class Drawing(elements: List[DrawingElement]) extends Transposable[Drawing] {
 
@@ -30,6 +31,8 @@ case class Drawing(elements: List[DrawingElement]) extends Transposable[Drawing]
   }
 
   def transpose: Drawing = Drawing(elements.map(_.transpose))
+
+  override def toString = Renderer.render(this, LayoutPrefsImpl())
 
 }
 

@@ -2,11 +2,11 @@ package com.github.mdr.ascii.layout.drawing
 
 import com.github.mdr.ascii.util.Utils._
 import com.github.mdr.ascii.common.Direction._
-
+import com.github.mdr.ascii.common.Region
 import scala.annotation.tailrec
 
 /**
- * Raise edges if there are no conflicting horizontal edge segments above. For example:
+ * Raise edges if there are no conflicting diagram elements. For example:
  *
  *      ╭───────╮           ╭───────╮
  *      │   A   │           │   A   │
@@ -23,48 +23,71 @@ import scala.annotation.tailrec
  *
  */
 
+case class EdgeSegmentInfo(
+    edgeElement: EdgeDrawingElement, segment1: EdgeSegment, segment2: EdgeSegment, segment3: EdgeSegment) {
+
+  def row = segment2.start.row
+
+}
+
 object EdgeElevator {
 
   def elevateEdges(drawing: Drawing): Drawing = {
-    val grid = new OccupancyGrid(drawing)
+    val edgeTracker = new EdgeTracker(drawing)
     var currentDrawing = drawing
-    while (true) {
-      elevateEdge(currentDrawing, grid) match {
-        case None ⇒
-          return currentDrawing
-        case Some((oldEdge, updatedEdge)) ⇒
-          currentDrawing = currentDrawing.replaceElement(oldEdge, updatedEdge)
-          grid.replace(oldEdge, updatedEdge)
-      }
+    println(currentDrawing)
+    val segmentInfos = for {
+      edgeElement ← drawing.edgeElements
+      triple @ (segment1, segment2, segment3) ← adjacentTriples(edgeElement.segments)
+      if segment2.direction.isHorizontal
+    } yield EdgeSegmentInfo(edgeElement, segment1, segment2, segment3)
+    for {
+      segmentInfo ← segmentInfos.sortBy(_.row)
+      updatedEdge ← elevate(segmentInfo, edgeTracker)
+    } {
+      currentDrawing = currentDrawing.replaceElement(segmentInfo.edgeElement, updatedEdge)
+      println(currentDrawing)
     }
     return currentDrawing
   }
 
-  private def elevateEdge(drawing: Drawing, grid: OccupancyGrid): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
+  private def elevate(segmentInfo: EdgeSegmentInfo, edgeTracker: EdgeTracker): Option[EdgeDrawingElement] = {
+    import segmentInfo._
     for {
-      edgeElement ← drawing.edgeElements
-      updatedElement ← elevateEdge(edgeElement, grid)
-    } return Some(edgeElement -> updatedElement)
-    None
-  }
-
-  private def elevateEdge(edgeElement: EdgeDrawingElement, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
-    val originalEdgePoints = edgeElement.points.toSet
-    for {
-      (segment1, segment2, segment3) ← adjacentTriples(edgeElement.segments)
-      if segment1.direction == Down && segment3.direction == Down
       row ← (segment1.start.row + /* 2 */ 1) to (segment2.start.row - 1)
     } {
-      val alternativeStart2 = segment2.start.copy(row = row)
-      val alternativeFinish2 = segment2.finish.copy(row = row)
-      val fakeElement = new EdgeDrawingElement(
-        List(segment1.start, alternativeStart2, alternativeFinish2, segment3.finish), false, false)
-      val newPoints = fakeElement.points.filterNot(originalEdgePoints.contains)
-      val allClear = !newPoints.exists(grid.isOccupied)
-      if (allClear) {
+      val newStart2 = segment2.start.copy(row = row)
+      val newFinish2 = segment2.finish.copy(row = row)
+
+      val newSegment1 = segment1.copy(finish = newStart2)
+      val newSegment2 = segment2.copy(start = newStart2, finish = newFinish2)
+      val newSegment3 = segment3.copy(start = newFinish2)
+
+      edgeTracker.removeVerticalEdgeSegment(segment1.region)
+      edgeTracker.removeHorizontalEdgeSegment(segment2.region)
+      edgeTracker.removeVerticalEdgeSegment(segment3.region)
+
+      val collides1 = edgeTracker.collidesVertical(newSegment1.region)
+      val collides2 = edgeTracker.collidesHorizontal(newSegment2.region)
+      val collides3 = edgeTracker.collidesVertical(newSegment3.region)
+
+      val collides =
+        edgeTracker.collidesVertical(newSegment1.region) ||
+          edgeTracker.collidesHorizontal(newSegment2.region) ||
+          edgeTracker.collidesVertical(newSegment3.region) ||
+          edgeTracker.collidesVertical(newSegment2.region) && edgeTracker.collidesHorizontal(newSegment3.region)
+
+      if (collides) {
+        edgeTracker.addVerticalEdgeSegment(segment1.region)
+        edgeTracker.addHorizontalEdgeSegment(segment2.region)
+        edgeTracker.addVerticalEdgeSegment(segment3.region)
+      } else {
+        edgeTracker.addVerticalEdgeSegment(newSegment1.region)
+        edgeTracker.addHorizontalEdgeSegment(newSegment2.region)
+        edgeTracker.addVerticalEdgeSegment(newSegment3.region)
         val oldBendPoints = edgeElement.bendPoints
         val oldIndex = oldBendPoints.indexOf(segment2.start).ensuring(_ >= 0)
-        val newBendPoints = oldBendPoints.patch(oldIndex, List(alternativeStart2, alternativeFinish2), 2)
+        val newBendPoints = oldBendPoints.patch(oldIndex, List(newStart2, newFinish2), 2)
         val updated = edgeElement.copy(bendPoints = newBendPoints)
         return Some(updated)
       }
@@ -72,56 +95,68 @@ object EdgeElevator {
     None
   }
 
-  private def removeRedundantRows(drawing: Drawing): Drawing = iterate(drawing, removeRedundantRow)
+}
 
-  private def removeRedundantRow(drawing: Drawing): Option[Drawing] = {
-    for (row ← 0 until drawing.dimension.height if canRemove(drawing, row))
-      return Some(removeRows(drawing, row, row))
-    None
+/**
+ * Keep track of vertex regions, and horizontal and vertical edge segments, so we can detect collisions.
+ */
+class EdgeTracker(drawing: Drawing) {
+
+  private val vertexRegions = drawing.vertexElements.map(_.region)
+
+  private var horizontalEdgeSegments: Set[Region] = Set()
+
+  private var verticalEdgeSegments: Set[Region] = Set()
+
+  for {
+    edge ← drawing.edgeElements
+    segment ← edge.segments
+  } {
+    if (segment.direction.isHorizontal)
+      horizontalEdgeSegments += segment.region
+    else
+      verticalEdgeSegments += segment.region
   }
 
-  private def canRemove(drawing: Drawing, row: Int): Boolean =
-    drawing.elements.forall {
-      case ede: EdgeDrawingElement   ⇒ canRemove(ede, row)
-      case vde: VertexDrawingElement ⇒ row < vde.region.topRow || row > vde.region.bottomRow
-    }
-
-  private def canRemove(ede: EdgeDrawingElement, row: Int): Boolean = {
-    val List(firstBendPoint, secondBendPoint, _*) = ede.bendPoints
-    val wouldLeaveStubbyUpArrow =
-      row == firstBendPoint.row + 1 &&
-        ede.hasArrow1 &&
-        secondBendPoint.row == row + 1 &&
-        ede.bendPoints.size > 2
-
-    val List(lastBendPoint, secondLastBendPoint, _*) = ede.bendPoints.reverse
-    val wouldLeaveStubbyDownArrow =
-      row == lastBendPoint.row - 1 &&
-        ede.hasArrow2 &&
-        secondLastBendPoint.row == row - 1 &&
-        ede.bendPoints.size > 2
-
-    !wouldLeaveStubbyDownArrow && !wouldLeaveStubbyUpArrow && ede.bendPoints.forall(_.row != row)
+  def moveHorizontalEdgeSegment(oldRegion: Region, newRegion: Region) {
+    horizontalEdgeSegments -= oldRegion
+    horizontalEdgeSegments += newRegion
   }
 
-  private def removeRows(drawing: Drawing, fromRow: Int, toRow: Int): Drawing = {
-    val rowsToRemove = (toRow - fromRow + 1).ensuring(_ >= 0)
-    val newElements = drawing.elements map {
-      case ede: EdgeDrawingElement ⇒
-        val newBendPoints = ede.bendPoints.map { point ⇒
-          if (point.row < fromRow)
-            point
-          else
-            point.up(rowsToRemove)
-        }
-        ede.copy(bendPoints = newBendPoints)
-      case vde: VertexDrawingElement ⇒
-        if (vde.region.topRow < fromRow)
-          vde
-        else
-          vde.up(rowsToRemove)
-    }
-    drawing.copy(elements = newElements)
+  def moveVerticalEdgeSegment(oldRegion: Region, newRegion: Region) {
+    verticalEdgeSegments -= oldRegion
+    verticalEdgeSegments += newRegion
+  }
+
+  def addVerticalEdgeSegment(newRegion: Region) {
+    verticalEdgeSegments += newRegion
+  }
+
+  def removeVerticalEdgeSegment(region: Region) {
+    verticalEdgeSegments -= region
+  }
+
+  def addHorizontalEdgeSegment(newRegion: Region) {
+    horizontalEdgeSegments += newRegion
+  }
+
+  def removeHorizontalEdgeSegment(region: Region) {
+    horizontalEdgeSegments -= region
+  }
+
+  def collidesHorizontal(region: Region) =
+    vertexRegions.exists(region.intersects) || horizontalEdgeSegments.exists(region.intersects)
+
+  def collidesVertical(region: Region) =
+    vertexRegions.exists(region.intersects) || verticalEdgeSegments.exists(region.intersects)
+
+  override def toString = {
+    val els = vertexRegions.map(VertexDrawingElement(_, Nil))
+    def segmentDrawing(r: Region) = EdgeDrawingElement(List(r.topLeft, r.bottomRight), false, false)
+    Drawing(vertexRegions.map(VertexDrawingElement(_, Nil)) ++
+      horizontalEdgeSegments.map(segmentDrawing) ++
+      verticalEdgeSegments.map(segmentDrawing)).toString
   }
 
 }
+

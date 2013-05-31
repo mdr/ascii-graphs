@@ -74,7 +74,7 @@ case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
 
   override def toString =
     try
-      "\n" + GraphLayout.renderGraph(this) // + "\n" + asVertexList
+      "\n" + GraphLayout.renderGraph(this) + "\n" + asVertexList
     catch {
       case t: Throwable ⇒ asVertexList
     }

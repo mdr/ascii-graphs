@@ -10,6 +10,7 @@ object Region {
 }
 
 case class Region(topLeft: Point, bottomRight: Point) extends Translatable[Region] with Transposable[Region] {
+  require(width >= 0 && height >= 0)
 
   def bottomLeft = Point(bottomRight.row, topLeft.column)
 
@@ -38,14 +39,11 @@ case class Region(topLeft: Point, bottomRight: Point) extends Translatable[Regio
 
   def contains(region: Region): Boolean = contains(region.topLeft) && contains(region.bottomRight)
 
-  def intersects(region: Region): Boolean = {
-    val disjoint =
-      this.rightColumn < region.leftColumn ||
-        region.rightColumn < this.leftColumn ||
-        this.bottomRow < region.topRow ||
-        region.bottomRow < this.topRow
-    !disjoint
-  }
+  def intersects(that: Region): Boolean = !isDisjoint(that)
+
+  def isDisjoint(that: Region): Boolean =
+    this.rightColumn < that.leftColumn || that.rightColumn < this.leftColumn ||
+      this.bottomRow < that.topRow || that.bottomRow < this.topRow
 
   def width = rightColumn - leftColumn + 1
 

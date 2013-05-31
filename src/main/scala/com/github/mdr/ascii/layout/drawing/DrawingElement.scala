@@ -28,8 +28,8 @@ case class VertexDrawingElement(region: Region, textLines: List[String])
     with Translatable[VertexDrawingElement]
     with Transposable[VertexDrawingElement] {
 
-  require(textLines.size <= region.height - 2)
-  require(textLines.forall(_.length <= region.width - 2))
+  //  require(textLines.size <= region.height - 2)
+  //  require(textLines.forall(_.length <= region.width - 2))
 
   def translate(down: Int = 0, right: Int = 0) = copy(region = region.translate(down, right))
 
@@ -97,5 +97,7 @@ case class EdgeSegment(start: Point, direction: Direction, finish: Point) {
         scanForPoints(start.go(direction), direction, finish, accum = start :: accum)
     scanForPoints(start, direction, finish, accum = Nil).reverse
   }
+
+  def region = if (start.column < finish.column || start.row < finish.row) Region(start, finish) else Region(finish, start)
 
 }
