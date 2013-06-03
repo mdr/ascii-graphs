@@ -8,6 +8,7 @@ import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.layout.coordAssign._
 import com.github.mdr.ascii.layout._
 import com.github.mdr.ascii.layout.prefs.LayoutPrefsImpl
+import com.github.mdr.ascii.graph.GraphFromText
 
 object GUI extends App {
 
@@ -55,10 +56,7 @@ object Frame extends JFrame {
   private def refreshDiagram() {
     try {
       val text = inputTextPane.getText
-      val pieces = text.split("\n").toList.map(_.split(",").toList.map(_.replace("\\n", "\n")))
-      val edges = pieces.flatMap { chunks ⇒ chunks.zip(chunks.tail) }
-      val vertices = if (text.trim.isEmpty) Set[String]() else pieces.flatten.toSet
-      val graph = Graph(vertices, edges)
+      val graph = GraphFromText(text)
       outputTextPane.setText(GraphLayout.renderGraph(graph, ToStringVertexRenderingStrategy, OptionsPanel.layoutPrefs))
     } catch {
       case e: Throwable ⇒

@@ -10,9 +10,10 @@ import com.github.mdr.ascii.layout.prefs.LayoutPrefs
 
 object RoundTripSpecification extends Properties("RoundTrip") {
 
+  val unicodeLayoutPrefs = LayoutPrefsImpl(unicode = true, removeKinks = true, compactify = true, vertical = true)
+
   property("unicode round trip") = forAll { g: Graph[String] ⇒
-    val layoutPrefs = LayoutPrefsImpl(unicode = true, removeKinks = true, compactify = true, vertical = true)
-    checkRoundTrip(g, layoutPrefs)
+    checkRoundTrip(g, unicodeLayoutPrefs)
   }
 
   if (false) // Shake out some bugs, probably compacting edges too eagerly in ASCII mode
@@ -21,7 +22,7 @@ object RoundTripSpecification extends Properties("RoundTrip") {
       checkRoundTrip(g, layoutPrefs)
     }
 
-  private def checkRoundTrip(g: Graph[String], layoutPrefs: LayoutPrefs): Boolean = {
+  def checkRoundTrip(g: Graph[String], layoutPrefs: LayoutPrefs): Boolean = {
     val rendered = GraphLayout.renderGraph(g, layoutPrefs = layoutPrefs)
     val graphAgain = removeWhitespace(Graph.fromDiagram(rendered))
     val originalGraph = removeWhitespace(g)

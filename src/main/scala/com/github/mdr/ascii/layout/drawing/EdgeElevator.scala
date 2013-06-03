@@ -105,6 +105,11 @@ class EdgeTracker(drawing: Drawing) {
 
   private var verticalEdgeSegments: Set[Region] = Set()
 
+  private val arrowRegions = drawing.edgeElements.map(arrowRegion)
+
+  private def arrowRegion(edgeElement: EdgeDrawingElement): Region =
+    if (edgeElement.hasArrow1) edgeElement.startPoint.region else edgeElement.finishPoint.region
+
   for {
     edge ← drawing.edgeElements
     segment ← edge.segments
@@ -121,10 +126,10 @@ class EdgeTracker(drawing: Drawing) {
   def removeHorizontalEdgeSegment(region: Region) = horizontalEdgeSegments -= region
 
   def collidesHorizontal(region: Region) =
-    vertexRegions.exists(region.intersects) || horizontalEdgeSegments.exists(region.intersects)
+    vertexRegions.exists(region.intersects) || arrowRegions.exists(region.intersects) || horizontalEdgeSegments.exists(region.intersects)
 
   def collidesVertical(region: Region) =
-    vertexRegions.exists(region.intersects) || verticalEdgeSegments.exists(region.intersects)
+    vertexRegions.exists(region.intersects) || arrowRegions.exists(region.intersects) || verticalEdgeSegments.exists(region.intersects)
 
   override def toString = {
     val els = vertexRegions.map(VertexDrawingElement(_, Nil))

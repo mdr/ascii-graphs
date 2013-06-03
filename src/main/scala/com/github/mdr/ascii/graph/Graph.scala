@@ -69,8 +69,9 @@ case class Graph[V](vertices: Set[V], edges: List[(V, V)]) {
   private def singletonVertices = vertices.filter(v ⇒ inDegree(v) == 0 && outDegree(v) == 0)
 
   private def asVertexList: String = {
-    singletonVertices.toList.map(_.toString).sorted.mkString("\n") + "\n" +
-      edges.toList.sortBy(e ⇒ (e._1.toString, e._2.toString)).map(e ⇒ e._1 + "," + e._2).mkString("\n")
+    def render(v: V) = v.toString.replaceAll("\n", "\\\\n")
+    singletonVertices.toList.map(render).sorted.mkString("\n") + "\n" +
+      edges.toList.sortBy(e ⇒ (render(e._1), render(e._2))).map(e ⇒ render(e._1) + "," + render(e._2)).mkString("\n")
   }
 
   override def toString =

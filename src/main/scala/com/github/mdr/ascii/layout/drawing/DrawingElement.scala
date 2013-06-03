@@ -42,7 +42,9 @@ case class VertexDrawingElement(region: Region, textLines: List[String])
 /**
  * Start and finish points of the edge should not intersect the vertex boxes.
  *
- * @param bendPoints -- points of flex in the edge, includes start and finish points
+ * @param bendPoints -- points of flex in the edge, includes start (first) and finish (last) points
+ * @param hasArrow1 -- has an arrow at the start point.
+ * @param hasArrow2 -- has an arrow at the finish point.
  */
 case class EdgeDrawingElement(
   bendPoints: List[Point],
@@ -86,6 +88,10 @@ case class EdgeDrawingElement(
     val newBendPoints = bendPoints.patch(oldIndex, List(newStart, newFinish), 2)
     copy(bendPoints = newBendPoints)
   }
+
+  def startPoint = points.head
+
+  def finishPoint = points.last
 
 }
 

@@ -30,4 +30,6 @@ case class Point(row: Int, column: Int) extends Translatable[Point] with Transpo
 
   def withColumn(newColumn: Int) = copy(column = newColumn)
 
+  def region: Region = Region(this, this)
+
 }
