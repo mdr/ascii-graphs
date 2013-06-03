@@ -7,7 +7,7 @@ import com.github.mdr.ascii.layout.RoundTripSpecification._
 
 class RoundTripTest extends FlatSpec with ShouldMatchers {
 
-  "Round trip" should ("work") in {
+  "Round trip" should ("not overwrite an arrow") in {
     checkRoundTrip(Graph.fromDiagram("""
         ╭────╮   ╭──────╮    
         │aaff│   │afcfad│    
@@ -22,7 +22,7 @@ class RoundTripTest extends FlatSpec with ShouldMatchers {
       │ddabcfabcbe│ │eeed │ │
       │   ccfda   │ │ cb  │ │
       ╰────┬──────╯ ╰──┬──╯ │
-           │           │ ^  │
+           │           │ ^  │  <-- was a bug where the edge segment below would be elevated into the arrow
            │   ╭───────┼─┼──╯
            │   │       │ │   
            v   v       │ │   
