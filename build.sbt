@@ -2,7 +2,7 @@ name := "ascii-graphs"
 
 organization := "com.github.mdr"
 
-version := "0.0.4"
+version := "0.0.5-SNAPSHOT"
 
 scalaVersion := "2.10.1"
 
