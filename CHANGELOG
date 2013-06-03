@@ -16,3 +16,6 @@
 
 * Support self-loops
 * Parse / render Unicode box-drawing characters
+
+0.0.5 (3/June/2013)
+* Performance improvements
