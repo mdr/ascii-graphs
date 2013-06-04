@@ -2,20 +2,23 @@ package com.github.mdr.ascii.java;
 
 import com.github.mdr.ascii.graph.Graph;
 import com.github.mdr.ascii.layout.prefs.LayoutPrefs;
+import com.github.mdr.ascii.layout.prefs.LayoutPrefsImpl;
 
 /**
  * Java-friendly utility to configure layout preferences, and layout a grpah.
  */
 public class GraphLayouter<V> implements LayoutPrefs {
 
-    private boolean removeKinks = true;
-    private boolean compactify = true;
-    private boolean elevateEdges = true;
-    private boolean vertical = true;
-    private boolean unicode = true;
-    private boolean doubleVertices = false;
-    private boolean rounded = false;
-    private boolean explicitAsciiBends = false;
+    private static LayoutPrefsImpl DEFAULT = LayoutPrefsImpl.DEFAULT();
+
+    private boolean removeKinks = DEFAULT.removeKinks();
+    private boolean compactify = DEFAULT.compactify();
+    private boolean elevateEdges = DEFAULT.elevateEdges();
+    private boolean vertical = DEFAULT.vertical();
+    private boolean unicode = DEFAULT.unicode();
+    private boolean doubleVertices = DEFAULT.doubleVertices();
+    private boolean rounded = DEFAULT.rounded();
+    private boolean explicitAsciiBends = DEFAULT.explicitAsciiBends();
 
     public boolean removeKinks() {
         return removeKinks;

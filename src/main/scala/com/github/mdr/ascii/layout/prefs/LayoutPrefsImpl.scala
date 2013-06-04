@@ -1,5 +1,14 @@
 package com.github.mdr.ascii.layout.prefs
 
+object LayoutPrefsImpl {
+
+  /**
+   * For easy access to the defaults from Java
+   */
+  val DEFAULT = LayoutPrefsImpl()
+
+}
+
 case class LayoutPrefsImpl(
   removeKinks: Boolean = true,
   compactify: Boolean = true,

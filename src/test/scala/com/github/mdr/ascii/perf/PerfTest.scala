@@ -6,7 +6,11 @@ import com.github.mdr.ascii.graph.Graph
 
 object PerfTest extends App {
 
-  val graph = Graph.fromDiagram(Utils.getResourceAsString("/large1.graph"))
+  val graph = Graph.fromDiagram(Utils.getResourceAsString("/large2.graph"))
+  println("Parsed")
+  println("Vertex = " + graph.vertices.size)
+  println("Edges = " + graph.edges.size)
+
   val start = System.currentTimeMillis
   val s = graph.toString
   val duration = System.currentTimeMillis - start
