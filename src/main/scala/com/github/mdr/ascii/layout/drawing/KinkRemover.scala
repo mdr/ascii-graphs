@@ -62,7 +62,7 @@ object KinkRemover {
         val fakeEdge = new EdgeDrawingElement(List(start, alternativeMiddle, end), false, false)
         val newPoints = fakeEdge.points.filterNot(edge.points.contains)
         val allPointsVacant = !newPoints.exists(grid.isOccupied)
-        if (allPointsVacant && checkVertexConnection(drawing, end, alternativeMiddle, Direction.Up))
+        if (allPointsVacant && checkVertexConnection(drawing, start, alternativeMiddle, Direction.Up))
           return Some(removeKink(edge, start, alternativeMiddle))
 
       //                    .
@@ -86,14 +86,14 @@ object KinkRemover {
   }
 
   /**
-   * Check that the vertex connection won't be changed, and that we won't be connecting to the extreme
-   * left or right of the vertex (since that would look rubbish).
+   * Check that the vertex connection won't be changed, and that we don't want to connect to the extreme
+   * left or right of the vertex.
    */
   private def checkVertexConnection(drawing: Drawing, end: Point, alternativeMiddle: Point, direction: Direction): Boolean = {
     drawing.vertexElementAt(end.go(direction)).forall { vertex ⇒
-      val connectedToSameVertex = drawing.vertexElementAt(alternativeMiddle.go(direction).go(direction)) == Some(vertex)
-      val extremeLeftOfVertex = vertex.region.leftColumn == alternativeMiddle.column
-      val extremeRightOfVertex = vertex.region.rightColumn == alternativeMiddle.column
+      val connectedToSameVertex = drawing.vertexElementAt(alternativeMiddle.go(direction)) == Some(vertex)
+      val extremeLeftOfVertex = alternativeMiddle.column == vertex.region.leftColumn
+      val extremeRightOfVertex = alternativeMiddle.column == vertex.region.rightColumn
       connectedToSameVertex && !extremeLeftOfVertex && !extremeRightOfVertex
     }
   }
