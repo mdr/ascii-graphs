@@ -55,103 +55,25 @@ object EdgeElevator {
 
   private def elevate(segmentInfo: EdgeSegmentInfo, edgeTracker: EdgeTracker): Option[EdgeSegment] = {
     import segmentInfo._
-    for (row ← (segment1.start.row + /* 2 */ 1) to (segment2.start.row - 1)) {
-      val newStart2 = segment2.start.copy(row = row)
-      val newFinish2 = segment2.finish.copy(row = row)
-
-      val newSegment1 = segment1.copy(finish = newStart2)
-      val newSegment2 = segment2.copy(start = newStart2, finish = newFinish2)
-      val newSegment3 = segment3.copy(start = newFinish2)
-
-      edgeTracker.removeVerticalEdgeSegment(segment1.region)
-      edgeTracker.removeHorizontalEdgeSegment(segment2.region)
-      edgeTracker.removeVerticalEdgeSegment(segment3.region)
-
-      val collides1 = edgeTracker.collidesVertical(newSegment1.region)
-      val collides2 = edgeTracker.collidesHorizontal(newSegment2.region)
-      val collides3 = edgeTracker.collidesVertical(newSegment3.region)
-
-      val collides =
-        edgeTracker.collidesVertical(newSegment1.region) ||
-          edgeTracker.collidesHorizontal(newSegment2.region) ||
-          edgeTracker.collidesVertical(newSegment3.region) ||
-          edgeTracker.collidesVertical(newSegment2.region) && edgeTracker.collidesHorizontal(newSegment3.region)
-
-      if (collides) {
-        edgeTracker.addVerticalEdgeSegment(segment1.region)
-        edgeTracker.addHorizontalEdgeSegment(segment2.region)
-        edgeTracker.addVerticalEdgeSegment(segment3.region)
-      } else {
-        edgeTracker.addVerticalEdgeSegment(newSegment1.region)
-        edgeTracker.addHorizontalEdgeSegment(newSegment2.region)
-        edgeTracker.addVerticalEdgeSegment(newSegment3.region)
-
-        return Some(newSegment2)
-      }
-    }
+    val firstRow = segmentInfo.segment1.start.row + 1 /* 2 */
+    val lastRow = segmentInfo.segment2.start.row - 1
+    for {
+      row ← firstRow to lastRow
+      segment ← elevate(row, segmentInfo, edgeTracker)
+    } return Some(segment)
     None
   }
 
-}
-
-/**
- * Keep track of vertex regions, and horizontal and vertical edge segments, so we can detect collisions.
- */
-class EdgeTracker(drawing: Drawing) {
-
-  private val vertexRegions = drawing.vertexElements.map(_.region)
-
-  private var horizontalEdgeSegments: Set[Region] = Set()
-
-  private var verticalEdgeSegments: Set[Region] = Set()
-
-  private val arrowRegions = drawing.edgeElements.map(arrowRegion)
-
-  private def arrowRegion(edgeElement: EdgeDrawingElement): Region =
-    if (edgeElement.hasArrow1) edgeElement.startPoint.region else edgeElement.finishPoint.region
-
-  for {
-    edge ← drawing.edgeElements
-    segment ← edge.segments
-  } {
-    if (segment.direction.isHorizontal)
-      horizontalEdgeSegments += segment.region
-    else
-      verticalEdgeSegments += segment.region
+  private def elevate(row: Int, segmentInfo: EdgeSegmentInfo, edgeTracker: EdgeTracker): Option[EdgeSegment] = {
+    edgeTracker.removeEdgeSegments(segmentInfo)
+    val newSegmentInfo = segmentInfo.withRow(row)
+    if (edgeTracker collidesWith newSegmentInfo) {
+      edgeTracker.addEdgeSegments(segmentInfo)
+      None
+    } else {
+      edgeTracker.addEdgeSegments(newSegmentInfo)
+      Some(newSegmentInfo.segment2)
+    }
   }
-
-  def addVerticalEdgeSegment(newRegion: Region) = verticalEdgeSegments += newRegion
-  def removeVerticalEdgeSegment(region: Region) = verticalEdgeSegments -= region
-  def addHorizontalEdgeSegment(newRegion: Region) = horizontalEdgeSegments += newRegion
-  def removeHorizontalEdgeSegment(region: Region) = horizontalEdgeSegments -= region
-
-  def collidesHorizontal(region: Region) =
-    vertexRegions.exists(region.intersects) || arrowRegions.exists(region.intersects) || horizontalEdgeSegments.exists(region.intersects)
-
-  def collidesVertical(region: Region) =
-    vertexRegions.exists(region.intersects) || arrowRegions.exists(region.intersects) || verticalEdgeSegments.exists(region.intersects)
-
-  override def toString = {
-    val els = vertexRegions.map(VertexDrawingElement(_, Nil))
-    def segmentDrawing(r: Region) = EdgeDrawingElement(List(r.topLeft, r.bottomRight), false, false)
-    Drawing(vertexRegions.map(VertexDrawingElement(_, Nil)) ++
-      horizontalEdgeSegments.map(segmentDrawing) ++
-      verticalEdgeSegments.map(segmentDrawing)).toString
-  }
-
-}
-
-/**
- * Information about a horizontal edge segment (segment2) and the previous and next vertical segments
- * (segment2 and segment3 respectively).
- *
- *   1 │      2
- *     ╰────────────╮
- *                  │ 3
- */
-case class EdgeSegmentInfo(
-    edgeElement: EdgeDrawingElement, segment1: EdgeSegment, segment2: EdgeSegment, segment3: EdgeSegment) {
-
-  def row = segment2.start.row
 
 }

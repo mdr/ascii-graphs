@@ -27,10 +27,10 @@ object GraphLayout {
     var drawing = layouter.layout(reorderedLayering)
     if (layoutPrefs.removeKinks)
       drawing = KinkRemover.removeKinks(drawing)
-    if (layoutPrefs.compactify) {
+    if (layoutPrefs.elevateEdges)
       drawing = EdgeElevator.elevateEdges(drawing)
+    if (layoutPrefs.compactify)
       drawing = RedundantRowRemover.removeRedundantRows(drawing)
-    }
     if (!layoutPrefs.vertical)
       drawing = drawing.transpose
     Renderer.render(drawing, layoutPrefs)

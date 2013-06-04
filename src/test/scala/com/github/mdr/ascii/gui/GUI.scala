@@ -89,6 +89,7 @@ object Frame extends JFrame {
 
     val removeKinksBox = addBox("Remove kinks", true)
     val compactifyBox = addBox("Compactify", true)
+    val elevateEdgesBox = addBox("Elevate edges", true)
     val unicodeBox = addBox("Unicode", true)
     val verticalBox = addBox("Vertical", true)
     val doubleVerticesBox = addBox("Double Vertices", false)
@@ -101,6 +102,7 @@ object Frame extends JFrame {
       LayoutPrefsImpl(
         removeKinks = removeKinksBox.isSelected,
         compactify = compactifyBox.isSelected,
+        elevateEdges = elevateEdgesBox.isSelected,
         unicode = unicodeBox.isSelected,
         vertical = verticalBox.isSelected,
         doubleVertices = doubleVerticesBox.isSelected,

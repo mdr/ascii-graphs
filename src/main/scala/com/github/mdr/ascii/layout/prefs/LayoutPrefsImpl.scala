@@ -3,6 +3,7 @@ package com.github.mdr.ascii.layout.prefs
 case class LayoutPrefsImpl(
   removeKinks: Boolean = true,
   compactify: Boolean = true,
+  elevateEdges: Boolean = true,
   vertical: Boolean = true,
   unicode: Boolean = true,
   doubleVertices: Boolean = false,

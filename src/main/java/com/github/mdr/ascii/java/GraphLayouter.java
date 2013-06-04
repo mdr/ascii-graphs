@@ -8,72 +8,81 @@ import com.github.mdr.ascii.layout.prefs.LayoutPrefs;
  */
 public class GraphLayouter<V> implements LayoutPrefs {
 
-	private boolean removeKinks = true;
-	private boolean compactify = true;
-	private boolean vertical = true;
-	private boolean unicode = true;
-	private boolean doubleVertices = false;
-	private boolean rounded = false;
-	private boolean explicitAsciiBends = false;
+    private boolean removeKinks = true;
+    private boolean compactify = true;
+    private boolean elevateEdges = true;
+    private boolean vertical = true;
+    private boolean unicode = true;
+    private boolean doubleVertices = false;
+    private boolean rounded = false;
+    private boolean explicitAsciiBends = false;
 
-	public boolean removeKinks() {
-		return removeKinks;
-	}
+    public boolean removeKinks() {
+        return removeKinks;
+    }
 
-	public void setRemoveKinks(boolean removeKinks) {
-		this.removeKinks = removeKinks;
-	}
+    public void setRemoveKinks(boolean removeKinks) {
+        this.removeKinks = removeKinks;
+    }
 
-	public boolean compactify() {
-		return compactify;
-	}
+    public boolean compactify() {
+        return compactify;
+    }
 
-	public void setCompactify(boolean compactify) {
-		this.compactify = compactify;
-	}
+    public void setCompactify(boolean compactify) {
+        this.compactify = compactify;
+    }
 
-	public boolean vertical() {
-		return vertical;
-	}
+    public boolean elevateEdges() {
+        return elevateEdges;
+    }
 
-	public void setVertical(boolean vertical) {
-		this.vertical = vertical;
-	}
+    public void setElevateEdges(boolean elevateEdges) {
+        this.elevateEdges = elevateEdges;
+    }
 
-	public boolean unicode() {
-		return unicode;
-	}
+    public boolean vertical() {
+        return vertical;
+    }
 
-	public void setUnicode(boolean unicode) {
-		this.unicode = unicode;
-	}
+    public void setVertical(boolean vertical) {
+        this.vertical = vertical;
+    }
 
-	public boolean doubleVertices() {
-		return doubleVertices;
-	}
+    public boolean unicode() {
+        return unicode;
+    }
 
-	public void setDoubleVertices(boolean doubleVertices) {
-		this.doubleVertices = doubleVertices;
-	}
+    public void setUnicode(boolean unicode) {
+        this.unicode = unicode;
+    }
 
-	public boolean rounded() {
-		return rounded;
-	}
+    public boolean doubleVertices() {
+        return doubleVertices;
+    }
 
-	public void setRounded(boolean rounded) {
-		this.rounded = rounded;
-	}
+    public void setDoubleVertices(boolean doubleVertices) {
+        this.doubleVertices = doubleVertices;
+    }
 
-	public boolean explicitAsciiBends() {
-		return explicitAsciiBends;
-	}
+    public boolean rounded() {
+        return rounded;
+    }
 
-	public void setExplicitAsciiBends(boolean explicitAsciiBends) {
-		this.explicitAsciiBends = explicitAsciiBends;
-	}
+    public void setRounded(boolean rounded) {
+        this.rounded = rounded;
+    }
 
-	public String layout(Graph<V> graph) {
-		return ScalaJavaHelper.renderGraph(graph, this);
-	}
+    public boolean explicitAsciiBends() {
+        return explicitAsciiBends;
+    }
+
+    public void setExplicitAsciiBends(boolean explicitAsciiBends) {
+        this.explicitAsciiBends = explicitAsciiBends;
+    }
+
+    public String layout(Graph<V> graph) {
+        return ScalaJavaHelper.renderGraph(graph, this);
+    }
 
 }
