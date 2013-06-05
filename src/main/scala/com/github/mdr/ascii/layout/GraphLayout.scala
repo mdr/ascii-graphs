@@ -25,12 +25,20 @@ object GraphLayout {
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
     val layouter = new Layouter(ToStringVertexRenderingStrategy, layoutPrefs.vertical)
     var drawing = layouter.layout(reorderedLayering)
+
     if (layoutPrefs.removeKinks)
       drawing = KinkRemover.removeKinks(drawing)
     if (layoutPrefs.elevateEdges)
       drawing = EdgeElevator.elevateEdges(drawing)
+
+    //    if (layoutPrefs.removeKinks)
+    //      drawing = KinkRemover.removeKinks(drawing)
+    //    if (layoutPrefs.elevateEdges)
+    //      drawing = EdgeElevator.elevateEdges(drawing)
+    //
     if (layoutPrefs.compactify)
       drawing = RedundantRowRemover.removeRedundantRows(drawing)
+
     if (!layoutPrefs.vertical)
       drawing = drawing.transpose
     Renderer.render(drawing, layoutPrefs)

@@ -23,64 +23,104 @@ import com.github.mdr.ascii.common.Direction
 object KinkRemover {
 
   def removeKinks(drawing: Drawing): Drawing = {
-    val grid = new OccupancyGrid(drawing)
+    val edgeTracker = new KinkEdgeTracker(drawing)
     var currentDrawing = drawing
     var continue = true
     while (continue)
-      removeKink(currentDrawing, grid) match {
+      removeKink(currentDrawing, edgeTracker) match {
         case None ⇒
           continue = false
         case Some((oldEdge, updatedEdge)) ⇒
           currentDrawing = currentDrawing.replaceElement(oldEdge, updatedEdge)
-          grid.replace(oldEdge, updatedEdge)
       }
     return currentDrawing
   }
 
-  private def removeKink(drawing: Drawing, grid: OccupancyGrid): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
+  private def removeKink(drawing: Drawing, edgeTracker: KinkEdgeTracker): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
     for {
       edgeElement ← drawing.edgeElements
-      newEdgeElement ← removeKink(edgeElement, drawing, grid)
+      newEdgeElement ← removeKink(edgeElement, drawing, edgeTracker)
     } return Some(edgeElement -> newEdgeElement)
     None
   }
 
-  private def removeKink(edge: EdgeDrawingElement, drawing: Drawing, grid: OccupancyGrid): Option[EdgeDrawingElement] = {
+  private def removeKink(edge: EdgeDrawingElement, drawing: Drawing, edgeTracker: KinkEdgeTracker): Option[EdgeDrawingElement] = {
     val segments: List[EdgeSegment] = edge.segments
-    adjacentPairs(segments) collect {
+    adjacentPairsWithPreviousAndNext(segments) collect {
 
-      // ...──start──╮.............. alternativeMiddle
-      //             │             .
-      //   segment1  │             .
-      //             │             .
-      //     middle  ╰─────────────╮ end
-      //                segment2   │
-      //                           .
-      //                           .
-      case (segment1 @ EdgeSegment(start, Down, middle), segment2 @ EdgeSegment(_, Left | Right, end)) ⇒
+      //   segment1
+      // ...──start─╮.............. alternativeMiddle
+      //            │             .
+      //   segment2 │             .
+      //            │             .
+      //     middle ╰─────────────╮ end
+      //               segment3   │
+      //                          │ segment4
+      //                          │
+      //                          .
+      //                          .
+      case (segment1Opt, segment2 @ EdgeSegment(start, Down, middle), segment3 @ EdgeSegment(_, Left | Right, end), segment4Opt) ⇒
         val alternativeMiddle = Point(start.row, end.column)
-        val fakeEdge = new EdgeDrawingElement(List(start, alternativeMiddle, end), false, false)
-        val newPoints = fakeEdge.points.filterNot(edge.points.contains)
-        val allPointsVacant = !newPoints.exists(grid.isOccupied)
-        if (allPointsVacant && checkVertexConnection(drawing, start, alternativeMiddle, Direction.Up))
+
+        segment1Opt.foreach(edgeTracker.removeHorizontalSegment)
+        edgeTracker.removeVerticalSegment(segment2)
+        edgeTracker.removeHorizontalSegment(segment3)
+        segment4Opt.foreach(edgeTracker.removeVerticalSegment)
+
+        val newSegment1Opt = segment1Opt.map { segment1 ⇒
+          EdgeSegment(segment1.start, segment1.direction, alternativeMiddle)
+        }
+        val newSegment4Opt = segment4Opt.map { segment4 ⇒
+          EdgeSegment(alternativeMiddle, segment4.direction, segment4.finish)
+        }
+        val collision = newSegment1Opt.exists(edgeTracker.collidesHorizontal) || newSegment4Opt.exists(edgeTracker.collidesVertical)
+        if (!collision && checkVertexConnection(drawing, start, alternativeMiddle, Direction.Up)) {
+          segment1Opt.foreach(edgeTracker.addHorizontalSegment)
+          segment4Opt.foreach(edgeTracker.addVerticalSegment)
           return Some(removeKink(edge, start, alternativeMiddle))
+        } else {
+          segment1Opt.foreach(edgeTracker.addHorizontalSegment)
+          edgeTracker.addVerticalSegment(segment2)
+          edgeTracker.addHorizontalSegment(segment3)
+          segment4Opt.foreach(edgeTracker.addVerticalSegment)
+        }
 
       //                    .
       //                    .
-      //                    │  segment1
-      //              start ╰────────────╮  middle 
+      //                    │ 
+      //           segment1 │ 
+      //                    │  segment2
+      //              start ╰────────────╮ middle 
       //                    .            │
-      //                    .            │  segment2
-      //                    .            │  
-      //  alternativeMiddle .............╰──end──...
+      //                    .            │ segment3
+      //                    .            │ 
+      //  alternativeMiddle .............╰─end───────────...
+      //                                      segment4
       //                       
-      case (segment1 @ EdgeSegment(start, Left | Right, middle), segment2 @ EdgeSegment(_, Down, end)) ⇒
+      case (segment1Opt, segment2 @ EdgeSegment(start, Left | Right, middle), segment3 @ EdgeSegment(_, Down, end), segment4Opt) ⇒
         val alternativeMiddle = Point(end.row, start.column)
-        val fakeEdge = new EdgeDrawingElement(List(start, alternativeMiddle, end), false, false)
-        val newPoints = fakeEdge.points.filterNot(edge.points.contains)
-        val allPointsVacant = !newPoints.exists(grid.isOccupied)
-        if (allPointsVacant && checkVertexConnection(drawing, end, alternativeMiddle, Direction.Down))
+        segment1Opt.foreach(edgeTracker.removeVerticalSegment)
+        edgeTracker.removeHorizontalSegment(segment2)
+        edgeTracker.removeVerticalSegment(segment3)
+        segment4Opt.foreach(edgeTracker.removeHorizontalSegment)
+
+        val newSegment1Opt = segment1Opt.map { segment1 ⇒
+          EdgeSegment(segment1.start, segment1.direction, alternativeMiddle)
+        }
+        val newSegment4Opt = segment4Opt.map { segment4 ⇒
+          EdgeSegment(alternativeMiddle, segment4.direction, segment4.finish)
+        }
+        val collision = newSegment1Opt.exists(edgeTracker.collidesVertical) || newSegment4Opt.exists(edgeTracker.collidesHorizontal)
+        if (!collision && checkVertexConnection(drawing, end, alternativeMiddle, Direction.Down)) {
+          segment1Opt.foreach(edgeTracker.addVerticalSegment)
+          segment4Opt.foreach(edgeTracker.addHorizontalSegment)
           return Some(removeKink(edge, start, alternativeMiddle))
+        } else {
+          segment1Opt.foreach(edgeTracker.addVerticalSegment)
+          edgeTracker.addHorizontalSegment(segment2)
+          edgeTracker.addVerticalSegment(segment3)
+          segment4Opt.foreach(edgeTracker.addHorizontalSegment)
+        }
     }
     None
   }
