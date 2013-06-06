@@ -26,7 +26,8 @@ sealed trait DrawingElement extends Translatable[DrawingElement] with Transposab
 case class VertexDrawingElement(region: Region, textLines: List[String])
     extends DrawingElement
     with Translatable[VertexDrawingElement]
-    with Transposable[VertexDrawingElement] {
+    with Transposable[VertexDrawingElement]
+    with HasRegion {
 
   //  require(textLines.size <= region.height - 2)
   //  require(textLines.forall(_.length <= region.width - 2))
@@ -99,7 +100,7 @@ case class EdgeDrawingElement(
  * A horizontal or vertical segment of an edge. Includes all points in the segment, so overlaps
  * with other segments on the bend points.
  */
-case class EdgeSegment(start: Point, direction: Direction, finish: Point) {
+case class EdgeSegment(start: Point, direction: Direction, finish: Point) extends HasRegion {
 
   def points: List[Point] = {
     @tailrec

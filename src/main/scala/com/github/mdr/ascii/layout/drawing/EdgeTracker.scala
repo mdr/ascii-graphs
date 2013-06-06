@@ -1,12 +1,16 @@
 package com.github.mdr.ascii.layout.drawing
 
 import com.github.mdr.ascii.common.Region
+import com.github.mdr.ascii.util.QuadTree
 
 /**
  * Keep track of vertex regions, and horizontal and vertical edge segments as we move them around, so we can detect
  *  collisions.
  */
 class EdgeTracker(drawing: Drawing) {
+
+  private val horizontalQuadTree: QuadTree[Region] = new QuadTree(drawing.dimension)
+  private val verticalQuadTree: QuadTree[Region] = new QuadTree(drawing.dimension)
 
   private val vertexRegions: List[Region] = drawing.vertexElements.map(_.region)
 
@@ -20,37 +24,36 @@ class EdgeTracker(drawing: Drawing) {
       edgeElement.finishPoint.region
   }
 
-  private var horizontalEdgeSegments: Set[Region] = Set()
+  arrowRegions.foreach(horizontalQuadTree.add)
 
-  private var verticalEdgeSegments: Set[Region] = Set()
+  vertexRegions.foreach(horizontalQuadTree.add)
+  vertexRegions.foreach(verticalQuadTree.add)
 
   for {
     edge ← drawing.edgeElements
     segment ← edge.segments
   } {
     if (segment.direction.isHorizontal)
-      horizontalEdgeSegments += segment.region
+      horizontalQuadTree.add(segment.region)
     else
-      verticalEdgeSegments += segment.region
+      verticalQuadTree.add(segment.region)
   }
 
   def addEdgeSegments(segmentInfo: EdgeSegmentInfo) {
-    verticalEdgeSegments += segmentInfo.segment1.region
-    horizontalEdgeSegments += segmentInfo.segment2.region
-    verticalEdgeSegments += segmentInfo.segment3.region
+    verticalQuadTree.add(segmentInfo.segment1.region)
+    horizontalQuadTree.add(segmentInfo.segment2.region)
+    verticalQuadTree.add(segmentInfo.segment3.region)
   }
 
   def removeEdgeSegments(segmentInfo: EdgeSegmentInfo) {
-    verticalEdgeSegments -= segmentInfo.segment1.region
-    horizontalEdgeSegments -= segmentInfo.segment2.region
-    verticalEdgeSegments -= segmentInfo.segment3.region
+    verticalQuadTree.remove(segmentInfo.segment1.region)
+    horizontalQuadTree.remove(segmentInfo.segment2.region)
+    verticalQuadTree.remove(segmentInfo.segment3.region)
   }
 
-  private def collidesHorizontal(region: Region): Boolean =
-    vertexRegions.exists(region.intersects) || arrowRegions.exists(region.intersects) || horizontalEdgeSegments.exists(region.intersects)
+  private def collidesHorizontal(region: Region): Boolean = horizontalQuadTree.collides(region)
 
-  private def collidesVertical(region: Region): Boolean =
-    vertexRegions.exists(region.intersects) || verticalEdgeSegments.exists(region.intersects)
+  private def collidesVertical(region: Region): Boolean = verticalQuadTree.collides(region)
 
   /**
    * Check that the segments won't overwrite existing segments, collide with vertices or arrows, and that it won't cause
@@ -74,12 +77,12 @@ class EdgeTracker(drawing: Drawing) {
       collidesVertical(segmentInfo.segment3.region) ||
       collidesVertical(segmentInfo.segment2.region) && collidesHorizontal(segmentInfo.segment3.region)
 
-  override def toString = {
+  /*  override def toString = {
     val vertexDrawingElements = vertexRegions.map(VertexDrawingElement(_, Nil))
     def drawSegment(r: Region) = EdgeDrawingElement(List(r.topLeft, r.bottomRight), false, false)
     val drawing = Drawing(vertexDrawingElements ++
       horizontalEdgeSegments.map(drawSegment) ++ verticalEdgeSegments.map(drawSegment))
     drawing.toString
   }
-
+*/
 }

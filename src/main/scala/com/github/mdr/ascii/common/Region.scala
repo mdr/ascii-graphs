@@ -9,8 +9,10 @@ object Region {
 
 }
 
-case class Region(topLeft: Point, bottomRight: Point) extends Translatable[Region] with Transposable[Region] {
+case class Region(topLeft: Point, bottomRight: Point) extends Translatable[Region] with Transposable[Region] with HasRegion {
   require(width >= 0 && height >= 0)
+
+  def region = this
 
   def bottomLeft = Point(bottomRight.row, topLeft.column)
 
