@@ -112,7 +112,6 @@ class DiagramParser(s: String)
    */
   private def collectText(container: ContainerImpl): String = {
     val childBoxPoints = container.childBoxes.flatMap(_.region.points).toSet
-    val occupiedPoints = childBoxPoints ++ allEdgePoints ++ allLabelPoints
 
     val sb = new StringBuilder
     val region = container.contentsRegion
@@ -120,7 +119,9 @@ class DiagramParser(s: String)
       for {
         column ← region.topLeft.column to region.bottomRight.column
         point = Point(row, column)
-        if !occupiedPoints.contains(point)
+        if !childBoxPoints.contains(point)
+        if !allEdgePoints.contains(point)
+        if !allLabelPoints.contains(point)
       } sb.append(charAt(point))
       sb.append("\n")
     }

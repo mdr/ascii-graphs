@@ -156,7 +156,6 @@ class QuadTree[T <: HasRegion](dimension: Dimension) {
       Set()
 
   override def toString = {
-
     val grid: Array[Array[Char]] = Array.fill(dimension.height, dimension.width)(' ')
     var c = 'a'
     def rec(n: Node): Unit = n match {

@@ -23,7 +23,7 @@ import com.github.mdr.ascii.common.Direction
 object KinkRemover {
 
   def removeKinks(drawing: Drawing): Drawing = {
-    val edgeTracker = new KinkEdgeTracker(drawing)
+    val edgeTracker = new EdgeTracker(drawing)
     var currentDrawing = drawing
     var continue = true
     while (continue)
@@ -36,7 +36,7 @@ object KinkRemover {
     return currentDrawing
   }
 
-  private def removeKink(drawing: Drawing, edgeTracker: KinkEdgeTracker): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
+  private def removeKink(drawing: Drawing, edgeTracker: EdgeTracker): Option[(EdgeDrawingElement, EdgeDrawingElement)] = {
     for {
       edgeElement ← drawing.edgeElements
       newEdgeElement ← removeKink(edgeElement, drawing, edgeTracker)
@@ -44,7 +44,7 @@ object KinkRemover {
     None
   }
 
-  private def removeKink(edge: EdgeDrawingElement, drawing: Drawing, edgeTracker: KinkEdgeTracker): Option[EdgeDrawingElement] = {
+  private def removeKink(edge: EdgeDrawingElement, drawing: Drawing, edgeTracker: EdgeTracker): Option[EdgeDrawingElement] = {
     val segments: List[EdgeSegment] = edge.segments
     adjacentPairsWithPreviousAndNext(segments) collect {
 

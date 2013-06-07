@@ -51,6 +51,26 @@ class EdgeTracker(drawing: Drawing) {
     verticalQuadTree.remove(segmentInfo.segment3.region)
   }
 
+  def addHorizontalSegment(edgeSegment: EdgeSegment) {
+    horizontalQuadTree.add(edgeSegment.region)
+  }
+
+  def addVerticalSegment(edgeSegment: EdgeSegment) {
+    verticalQuadTree.add(edgeSegment.region)
+  }
+
+  def removeHorizontalSegment(edgeSegment: EdgeSegment) {
+    horizontalQuadTree.remove(edgeSegment.region)
+  }
+
+  def removeVerticalSegment(edgeSegment: EdgeSegment) {
+    verticalQuadTree.remove(edgeSegment.region)
+  }
+
+  def collidesHorizontal(edgeSegment: EdgeSegment): Boolean = collidesHorizontal(edgeSegment.region)
+
+  def collidesVertical(edgeSegment: EdgeSegment): Boolean = collidesVertical(edgeSegment.region)
+
   private def collidesHorizontal(region: Region): Boolean = horizontalQuadTree.collides(region)
 
   private def collidesVertical(region: Region): Boolean = verticalQuadTree.collides(region)
@@ -77,12 +97,7 @@ class EdgeTracker(drawing: Drawing) {
       collidesVertical(segmentInfo.segment3.region) ||
       collidesVertical(segmentInfo.segment2.region) && collidesHorizontal(segmentInfo.segment3.region)
 
-  /*  override def toString = {
-    val vertexDrawingElements = vertexRegions.map(VertexDrawingElement(_, Nil))
-    def drawSegment(r: Region) = EdgeDrawingElement(List(r.topLeft, r.bottomRight), false, false)
-    val drawing = Drawing(vertexDrawingElements ++
-      horizontalEdgeSegments.map(drawSegment) ++ verticalEdgeSegments.map(drawSegment))
-    drawing.toString
+  override def toString = {
+    horizontalQuadTree + "\n------------------------------------------------------------\n" + verticalQuadTree
   }
-*/
 }
