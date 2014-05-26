@@ -2,19 +2,19 @@ name := "ascii-graphs"
 
 organization := "com.github.mdr"
 
-version := "0.0.6"
+version := "0.0.7-SNAPSHOT"
 
-scalaVersion := "2.10.1"
+scalaVersion := "2.11.1"
 
-crossScalaVersions := Seq("2.9.1", "2.9.2", "2.10.1")
+crossScalaVersions := Seq("2.10.1", "2.11.0", "2.11.1")
 
 scalacOptions ++= Seq("-deprecation")
 
 javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.6" % "test"
 
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.4" % "test"
 
 // Screen-sized dependency graph:
 // libraryDependencies += "org.vert-x" % "vertx-core" % "1.3.1.final"

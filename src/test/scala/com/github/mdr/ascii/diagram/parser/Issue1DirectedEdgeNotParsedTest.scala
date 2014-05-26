@@ -1,11 +1,10 @@
 package com.github.mdr.ascii.diagram.parser
 
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.FlatSpec
+import org.scalatest.{ Matchers, FlatSpec }
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.diagram.Diagram
 
-class Issue1DirectedEdgeNotParsedTest extends FlatSpec with ShouldMatchers {
+class Issue1DirectedEdgeNotParsedTest extends FlatSpec with Matchers {
 
   "Parser" should "detect directed edge" in {
 

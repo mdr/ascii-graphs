@@ -1,11 +1,10 @@
 package com.github.mdr.ascii.layout
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{ Matchers, FlatSpec }
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.layout.RoundTripSpecification._
 
-class RoundTripTest extends FlatSpec with ShouldMatchers {
+class RoundTripTest extends FlatSpec with Matchers {
 
   "Round trip" should ("not overwrite an arrow") in {
     checkRoundTrip(Graph.fromDiagram("""

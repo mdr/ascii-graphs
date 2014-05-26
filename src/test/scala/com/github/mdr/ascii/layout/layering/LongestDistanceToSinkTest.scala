@@ -1,12 +1,11 @@
 package com.github.mdr.ascii.layout.layering
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{ Matchers, FlatSpec }
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.graph.GraphUtils
 import com.github.mdr.ascii.util.Utils
 
-class LongestDistanceToSinkTest extends FlatSpec with ShouldMatchers {
+class LongestDistanceToSinkTest extends FlatSpec with Matchers {
 
   distancesToSinks("""
          +-+   +-+   +-+ 

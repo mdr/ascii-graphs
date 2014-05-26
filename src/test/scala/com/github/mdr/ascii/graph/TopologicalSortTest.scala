@@ -1,10 +1,9 @@
 package com.github.mdr.ascii.graph
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{ Matchers, FlatSpec }
 import org.scalatest.prop.Checkers
 
-class TopologicalSortTest extends FlatSpec with ShouldMatchers with Checkers {
+class TopologicalSortTest extends FlatSpec with Matchers with Checkers {
 
   check("""
          +-+   +-+ 
