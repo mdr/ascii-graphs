@@ -6,7 +6,8 @@ You can use it via sbt:
 
 # Graph layout
 
-    import com.github.mdr.ascii.layout._
+    import com.github.mdr.ascii.graph.Graph
+    import com.github.mdr.ascii.layout.GraphLayout
 
     val graph = Graph(
       vertices = List(
@@ -19,7 +20,7 @@ You can use it via sbt:
         "V2" -> "V5",
         "V2" -> "V6"))
 
-    val ascii = Layouter.renderGraph(graph)
+    val ascii = GraphLayout.renderGraph(graph)
 
     println(ascii)
 
