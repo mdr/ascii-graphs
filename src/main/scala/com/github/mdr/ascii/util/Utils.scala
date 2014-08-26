@@ -1,5 +1,7 @@
 package com.github.mdr.ascii.util
 
+import java.net.URL
+
 import scala.annotation.tailrec
 import scala.io.Source
 
@@ -21,7 +23,9 @@ object Utils {
   }
 
   def adjacentPairs[T](xs: List[T]): List[(T, T)] = xs zip xs.drop(1)
+
   def adjacentTriples[T](xs: List[T]): List[(T, T, T)] = xs zip xs.drop(1) zip xs.drop(2) map { case ((x, y), z) ⇒ (x, y, z) }
+
   def adjacentPairsWithPreviousAndNext[T](xs: List[T]): List[(Option[T], T, T, Option[T])] =
     (None :: xs.init.map(Some(_))) zip xs zip xs.drop(1) zip (xs.drop(2).map(Some(_)) :+ None) map {
       case (((x, y), z), u) ⇒ (x, y, z, u)
@@ -53,8 +57,8 @@ object Utils {
   }
 
   def getResourceAsString(path: String): String = {
-    val inputStream = getClass.getResourceAsStream(path)
-    Source.fromInputStream(inputStream).getLines.mkString("\n")
+    val url: URL = getClass.getResource(path)
+    Source.fromURL(url, "utf-8").mkString
   }
 
   /**

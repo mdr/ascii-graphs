@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.layout.layering
 
-import org.scalatest.FlatSpec
+import org.scalatest.{ Matchers, FlatSpec }
 import org.scalatest.matchers.ShouldMatchers
 
 import com.github.mdr.ascii.graph.GraphUtils
@@ -8,7 +8,7 @@ import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.util.Utils
 import com.github.mdr.ascii.layout.cycles.CycleRemover
 
-class CrossingCalculatorTest extends FlatSpec with ShouldMatchers {
+class CrossingCalculatorTest extends FlatSpec with Matchers {
 
   // Note: layer ordering in test data is done alphabetically
 

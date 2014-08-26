@@ -1,10 +1,10 @@
 package com.github.mdr.ascii.util
 
-import org.scalatest.FlatSpec
+import org.scalatest.{ Matchers, FlatSpec }
 import org.scalatest.matchers.ShouldMatchers
 import com.github.mdr.ascii.common._
 
-class QuadTreeTest extends FlatSpec with ShouldMatchers {
+class QuadTreeTest extends FlatSpec with Matchers {
 
   "A QuadTree" should "work with one element" in {
     val tree = new QuadTree[Region](Dimension(16, 16))

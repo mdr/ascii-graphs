@@ -6,3 +6,5 @@ target/
 .project
 .classpath
 .idea*
+
+src/main/.DS_Store
