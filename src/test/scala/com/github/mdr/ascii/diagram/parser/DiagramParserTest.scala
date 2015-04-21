@@ -1,13 +1,12 @@
 package com.github.mdr.ascii.diagram.parser
 
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.FlatSpec
+import org.scalatest.{ Matchers, FlatSpec }
 import com.github.mdr.ascii.diagram.Diagram
 import com.github.mdr.ascii.diagram.Box
 import com.github.mdr.ascii.util.Utils
 import scala.io.Source
 
-class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
+class GraphDiagramParserTest extends FlatSpec with Matchers {
 
   "Parser" should "parse labels" in {
 

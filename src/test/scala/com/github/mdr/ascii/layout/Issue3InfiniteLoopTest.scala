@@ -1,11 +1,10 @@
 package com.github.mdr.ascii.layout
 
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.FlatSpec
+import org.scalatest.{ Matchers, FlatSpec }
 import com.github.mdr.ascii.graph.Graph
 
 // https://github.com/mdr/ascii-graphs/issues/3
-class Issue3InfiniteLoopTest extends FlatSpec with ShouldMatchers {
+class Issue3InfiniteLoopTest extends FlatSpec with Matchers {
 
   "Layouter" should "not go into an infinite loop" in {
     val v = Set("1", "2", "3", "7", "9")

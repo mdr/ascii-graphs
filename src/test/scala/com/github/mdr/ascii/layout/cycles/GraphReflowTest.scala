@@ -1,12 +1,11 @@
 package com.github.mdr.ascii.layout.cycles
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{ Matchers, FlatSpec }
 
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.util.Utils
 
-class GraphReflowTest extends FlatSpec with ShouldMatchers {
+class GraphReflowTest extends FlatSpec with Matchers {
 
   reflowingGraph("""
          +-+   +-+ 

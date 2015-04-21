@@ -2,7 +2,6 @@ package com.github.mdr.ascii.layout.layering
 
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
-import org.scalacheck.Gen.Params
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Properties
 import org.scalacheck.Shrink
