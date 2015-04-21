@@ -1,6 +1,6 @@
 name := "ascii-graphs"
 
-organization := "com.github.mdr"
+organization := "com.github.jlmauduy"
 
 version := "0.0.7-SNAPSHOT"
 
@@ -41,7 +41,7 @@ publishTo <<= isSnapshot(
 
 pomExtra := {
     <inceptionYear>2012</inceptionYear>
-    <url>http://github.com/mdr/ascii-graphs</url>
+    <url>http://github.com/jlmauduy/ascii-graphs</url>
     <licenses>
       <license>
         <name>MIT License</name>
@@ -50,8 +50,8 @@ pomExtra := {
       </license>
     </licenses>
     <scm>
-      <url>git@github.com:mdr/ascii-graphs.git</url>
-      <connection>scm:git:git@github.com:mdr/ascii-graphs</connection>
+      <url>git@github.com:jlmauduy/ascii-graphs.git</url>
+      <connection>scm:git:git@github.com:jlmauduy/ascii-graphs</connection>
     </scm>
     <developers>
       <developer>
