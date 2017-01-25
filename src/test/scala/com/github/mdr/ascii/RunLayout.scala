@@ -18,16 +18,19 @@ object RunLayout extends App {
 
   val graph1 = Graph(
     vertices = Set(
-      1, 2, 3, 4, 5, 6, 7, 8123, 9, 120),
+      1, 2, 3, 4, 5, 6, 7, 8123, 9, 120
+    ),
     edges = List(
-      1 -> 3,
-      1 -> 4,
-      3 -> 8123,
-      2 -> 5,
-      2 -> 6,
-      3 -> 7,
-      5 -> 9,
-      7 -> 9))
+      1 → 3,
+      1 → 4,
+      3 → 8123,
+      2 → 5,
+      2 → 6,
+      3 → 7,
+      5 → 9,
+      7 → 9
+    )
+  )
 
   val V1 = "111111"
   val V2 = "22222222"
@@ -39,16 +42,19 @@ object RunLayout extends App {
 
   val graph2 = Graph(
     vertices = Set(
-      V1, V2, V3, V4, V5, V6, V7),
+      V1, V2, V3, V4, V5, V6, V7
+    ),
     edges = List(
-      V1 -> V2,
-      V7 -> V1,
-      V1 -> V3,
-      V1 -> V4,
-      V2 -> V5,
-      V2 -> V6,
-      V6 -> V1,
-      V3 -> V7))
+      V1 → V2,
+      V7 → V1,
+      V1 → V3,
+      V1 → V4,
+      V2 → V5,
+      V2 → V6,
+      V6 → V1,
+      V3 → V7
+    )
+  )
 
   val graph3 = Graph.fromDiagram(
     """
@@ -108,7 +114,8 @@ object RunLayout extends App {
   |org.apache.geronimo.specs| |org.apache.lucene| |org.scala-lang|    
   |          1.1.1          | |      3.5.0      | |    2.9.1     |    
   +-------------------------+ +-----------------+ +--------------+    
-""")
+"""
+  )
 
   val v1 = """Person
              |────────────
@@ -123,7 +130,7 @@ object RunLayout extends App {
               |name = "Thingies Ltd"
               |employees = 123""".stripMargin
   val vertices4 = Set(v1, v2, v3)
-  val edges4 = List(v1 -> v2, v3 -> v1, v3 -> v2)
+  val edges4 = List(v1 → v2, v3 → v1, v3 → v2)
 
   val graph4 = Graph(vertices4, edges4)
 

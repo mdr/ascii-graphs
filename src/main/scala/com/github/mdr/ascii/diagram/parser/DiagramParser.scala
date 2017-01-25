@@ -35,7 +35,7 @@ class DiagramParser(s: String)
       innerBox ← diagram.allBoxes
       if outerBox != innerBox
       if outerBox.region contains innerBox.region
-    } yield outerBox -> innerBox).toMap
+    } yield outerBox → innerBox).toMap
 
   for {
     (box, containingBoxMap) ← boxContains.groupBy(_._2)

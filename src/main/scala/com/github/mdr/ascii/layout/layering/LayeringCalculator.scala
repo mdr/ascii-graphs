@@ -70,7 +70,7 @@ class LayeringCalculator[V] {
           if (count == 1)
             revEdges -= graphEdge
           else
-            revEdges += graphEdge -> (count - 1)
+            revEdges += graphEdge → (count - 1)
           true
         case None ⇒
           false
@@ -83,7 +83,7 @@ class LayeringCalculator[V] {
   private def makeRealVertices(cycleRemovalResult: CycleRemovalResult[V]): Map[V, RealVertex] =
     cycleRemovalResult.dag.vertices.map { v ⇒
       val selfEdges = cycleRemovalResult.countSelfEdges(v)
-      v -> new RealVertex(v, selfEdges)
+      v → new RealVertex(v, selfEdges)
     }.toMap
 
 }

@@ -1,13 +1,13 @@
 package com.github.mdr.ascii.diagram.parser
 
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers}
 import com.github.mdr.ascii.diagram.Diagram
 import com.github.mdr.ascii.diagram.Box
 import com.github.mdr.ascii.util.Utils
+
 import scala.io.Source
 
-class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
+class GraphDiagramParserTest extends FlatSpec with Matchers {
 
   "Parser" should "parse labels" in {
 
@@ -47,7 +47,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
             |C| |D|  
             +-+ +-+
     """)
-    checkEdges(diagram, "A" -> "D", "B" -> "C")
+    checkEdges(diagram, "A" → "D", "B" → "C")
   }
 
   it should "support Unicode box-drawing characters" in {
@@ -65,7 +65,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
      ╰───╯ ╰───╯""")
 
     diagram.allBoxes.map(text).toSet should equal(Set("A", "B", "C"))
-    checkEdges(diagram, "A" -> "B", "A" -> "C")
+    checkEdges(diagram, "A" → "B", "A" → "C")
   }
 
   it should "support Unicode box-drawing characters 2" in {
@@ -79,7 +79,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
                ╰─>│fb│
                   ╰──╯
        """)
-    checkEdges(diagram, "feadda" -> "ee", "feadda" -> "db\nfb")
+    checkEdges(diagram, "feadda" → "ee", "feadda" → "db\nfb")
   }
 
   it should "support Unicode box-drawing characters 3" in {
@@ -93,7 +93,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
      ╰──────╯
         
        """)
-    checkEdges(diagram, "foobar" -> "xx", "foobar" -> "yy")
+    checkEdges(diagram, "foobar" → "xx", "foobar" → "yy")
   }
 
   it should "parse an empty box" in {
@@ -113,7 +113,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
      ╰─╯╰─╯
     """)
     diagram.allBoxes.map(text).toSet should equal(Set("A", "B"))
-    checkEdges(diagram, "A" -> "B")
+    checkEdges(diagram, "A" → "B")
   }
 
   it should "not find an edge between adjacent connected boxes (ASCII)" in {
@@ -133,7 +133,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
      │foobar├──╯   │yyy│              
      ╰──────╯      ╰───╯
        """)
-    checkEdges(diagram, "foobar" -> "yyy")
+    checkEdges(diagram, "foobar" → "yyy")
   }
 
   it should "handle misc arrows" in {
@@ -154,15 +154,17 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
                │      │            ╰────┤  │    
                ╰──────╯                 ╰──╯    
    """)
-    checkEdges(diagram,
-      "AA" -> "FF",
-      "AA" -> "D",
-      "BB" -> "AA",
-      "BB" -> "EE",
-      "CC" -> "D",
-      "D" -> "BB",
-      "D" -> "EE",
-      "EE" -> "D")
+    checkEdges(
+      diagram,
+      "AA" → "FF",
+      "AA" → "D",
+      "BB" → "AA",
+      "BB" → "EE",
+      "CC" → "D",
+      "D" → "BB",
+      "D" → "EE",
+      "EE" → "D"
+    )
 
   }
 
@@ -192,14 +194,16 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
         │  N  │     
         └─────┘     
         """)
-    checkEdges(diagram,
-      "P" -> "T",
-      "P" -> "O",
-      "P" -> "N",
-      "T" -> "O",
-      "H" -> "T",
-      "T" -> "O",
-      "O" -> "N")
+    checkEdges(
+      diagram,
+      "P" → "T",
+      "P" → "O",
+      "P" → "N",
+      "T" → "O",
+      "H" → "T",
+      "T" → "O",
+      "O" → "N"
+    )
   }
 
   it should "support ASCII edge bend characters" in {
@@ -213,7 +217,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
     | |-----/           
     +-+             
        """)
-    checkEdges(diagram, "I" -> "H", "H" -> "D", "I" -> "D")
+    checkEdges(diagram, "I" → "H", "H" → "D", "I" → "D")
   }
 
   it should "support ASCII edge bend characters 2" in {
@@ -236,7 +240,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
          | |        
          +-+
     """)
-    checkEdges(diagram, "A" -> "D", "E" -> "W", "D" -> "A", "A" -> "M", "A" -> "M", "M" -> "W")
+    checkEdges(diagram, "A" → "D", "E" → "W", "D" → "A", "A" → "M", "A" → "M", "M" → "W")
   }
 
   it should "support ASCII edge bend characters 3" in {
@@ -259,13 +263,13 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
                       |S|
                       +-+
          """)
-    checkEdges(diagram, "F" -> "L",
-      "J" -> "K",
-      "L" -> "K",
-      "K" -> "J",
-      "F" -> "K",
-      "J" -> "F",
-      "K" -> "L")
+    checkEdges(diagram, "F" → "L",
+      "J" → "K",
+      "L" → "K",
+      "K" → "J",
+      "F" → "K",
+      "J" → "F",
+      "K" → "L")
   }
 
   it should "support ASCII edge bend characters 4" in {
@@ -286,10 +290,12 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
       |  C  | |  H  |    
       +-----+ +-----+    
     """)
-    checkEdges(diagram,
-      "R" -> "C",
-      "I" -> "H",
-      "D" -> "H")
+    checkEdges(
+      diagram,
+      "R" → "C",
+      "I" → "H",
+      "D" → "H"
+    )
   }
 
   it should "Parse double-edged boxes" in {
@@ -309,7 +315,7 @@ class GraphDiagramParserTest extends FlatSpec with ShouldMatchers {
   }
 
   private def checkEdges(diagram: Diagram, expectedEdges: (String, String)*) {
-    val edges = diagram.allEdges.map(e ⇒ text(e.box1) -> text(e.box2))
+    val edges = diagram.allEdges.map(e ⇒ text(e.box1) → text(e.box2))
     edges.toSet should equal(expectedEdges.toSet)
     Utils.multisetCompare(edges, expectedEdges.toList) should be(true)
   }

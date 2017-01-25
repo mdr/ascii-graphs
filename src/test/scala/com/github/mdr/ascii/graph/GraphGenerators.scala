@@ -1,13 +1,15 @@
 package com.github.mdr.ascii.graph
 
 import org.scalacheck._
-import org.scalacheck.Gen.Params
+import org.scalacheck.Gen.Parameters
+
 import scala.util.Random
 import com.github.mdr.ascii.layout.cycles.CycleRemover
+import org.scalacheck.rng.Seed
 
 object GraphGenerators {
 
-  implicit val graphGen: Gen[Graph[String]] = Gen { p: Params ⇒ Some(RandomGraph.randomGraph(new Random(p.rng))) }
+  implicit val graphGen: Gen[Graph[String]] = Gen.choose(0, 9999999).map { seed ⇒ RandomGraph.randomGraph(new Random(scala.util.Random.nextLong)) }
 
   implicit val arbitraryGraph = Arbitrary(graphGen)
 

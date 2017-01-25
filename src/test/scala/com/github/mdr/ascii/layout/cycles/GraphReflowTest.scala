@@ -1,12 +1,10 @@
 package com.github.mdr.ascii.layout.cycles
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
-
+import org.scalatest.{FlatSpec, Matchers}
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.util.Utils
 
-class GraphReflowTest extends FlatSpec with ShouldMatchers {
+class GraphReflowTest extends FlatSpec with Matchers {
 
   reflowingGraph("""
          +-+   +-+ 
@@ -28,7 +26,7 @@ class GraphReflowTest extends FlatSpec with ShouldMatchers {
          +-+   +-+ 
          |A|-->|B| 
          +-+   +-+ """).
-    havingReversedEdges("A" -> "B")
+    havingReversedEdges("A" → "B")
 
   reflowingGraph("""
          +-+   +-+   +-+ 
@@ -45,7 +43,7 @@ class GraphReflowTest extends FlatSpec with ShouldMatchers {
           ^           |  
           |           |  
           -------------  """).
-    havingReversedEdges("B" -> "A", "C" -> "B")
+    havingReversedEdges("B" → "A", "C" → "B")
 
   reflowingGraph("""
          +-+   +-+ 
@@ -62,7 +60,7 @@ class GraphReflowTest extends FlatSpec with ShouldMatchers {
           |     ^  
           |     |  
           -------  """).
-    havingReversedEdges("A" -> "C")
+    havingReversedEdges("A" → "C")
 
   reflowingGraph("""
           +-+   +-+     
@@ -81,7 +79,7 @@ class GraphReflowTest extends FlatSpec with ShouldMatchers {
        |   |     |   |  
        |   -------   |  
        ---------------  """).
-    havingReversedEdges("A" -> "C", "A" -> "C")
+    havingReversedEdges("A" → "C", "A" → "C")
 
   reflowingGraph("""
                +-+ 

@@ -33,7 +33,8 @@ class QuadTree[T <: HasRegion](dimension: Dimension) {
   }
 
   private case class QuadNode(
-    region: Region, items: Set[T], topLeft: Node, topRight: Node, bottomLeft: Node, bottomRight: Node)
+    region: Region, items: Set[T], topLeft: Node, topRight: Node, bottomLeft: Node, bottomRight: Node
+  )
       extends Node {
 
     override def childNodes: List[Node] = List(topLeft, topRight, bottomLeft, bottomRight)

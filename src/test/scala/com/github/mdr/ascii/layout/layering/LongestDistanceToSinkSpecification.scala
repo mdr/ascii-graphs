@@ -1,15 +1,10 @@
 package com.github.mdr.ascii.layout.layering
 
-import org.scalacheck.Arbitrary
-import org.scalacheck.Gen
-import org.scalacheck.Gen.Params
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Properties
-import org.scalacheck.Shrink
 
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.graph.GraphGenerators._
-import com.github.mdr.ascii.layout.cycles.CycleRemover
 
 object LongestDistanceToSinkSpecification extends Properties("LongestDistanceToSink") {
 

@@ -44,7 +44,7 @@ object Utils {
   }
 
   def makeMap[T, U](s: Iterable[T], f: T ⇒ U): Map[T, U] =
-    s.map(t ⇒ t -> f(t))(collection.breakOut)
+    s.map(t ⇒ t → f(t))(collection.breakOut)
 
   def signum(x: Int) = x match {
     case _ if x < 0 ⇒ -1
@@ -64,6 +64,6 @@ object Utils {
     xs.map { t ⇒ if (fn isDefinedAt t) fn(t) else t }
 
   def addToMultimap[K, V](m: Map[K, List[V]], k: K, v: V): Map[K, List[V]] =
-    m + (k -> (v :: m.getOrElse(k, Nil)))
+    m + (k → (v :: m.getOrElse(k, Nil)))
 
 }

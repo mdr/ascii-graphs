@@ -1,6 +1,6 @@
 package com.github.mdr.ascii.java
 
-import java.{ util ⇒ ju }
+import java.{util ⇒ ju}
 import scala.collection.JavaConverters._
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.layout.GraphLayout

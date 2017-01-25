@@ -17,5 +17,6 @@ case class LayoutPrefsImpl(
   unicode: Boolean = true,
   doubleVertices: Boolean = false,
   rounded: Boolean = false, // Typical Windows fonts don't render bend characters correctly
-  explicitAsciiBends: Boolean = false)
+  explicitAsciiBends: Boolean = false
+)
     extends LayoutPrefs

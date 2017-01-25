@@ -1,13 +1,11 @@
 package com.github.mdr.ascii.layout.cycles
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
-
+import org.scalatest.{FlatSpec, Matchers}
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.graph.GraphUtils
 import com.github.mdr.ascii.util.Utils
 
-class CycleRemoverTest extends FlatSpec with ShouldMatchers {
+class CycleRemoverTest extends FlatSpec with Matchers {
 
   check("""
          +-+   +-+ 

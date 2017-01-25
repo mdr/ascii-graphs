@@ -20,7 +20,7 @@ object LongestDistancesToSinkCalculator {
     /**
      * The current known longest distances to a sink.
      */
-    var distances: Map[V, Int] = graph.vertices.map(_ -> 0).toMap
+    var distances: Map[V, Int] = graph.vertices.map(_ → 0).toMap
 
     var boundary = finalisedVertices
 
@@ -31,7 +31,7 @@ object LongestDistancesToSinkCalculator {
         v1 ← graph.inVertices(v2)
       } {
         val newDistance = math.max(distances(v1), distances(v2) + 1)
-        distances += v1 -> newDistance
+        distances += v1 → newDistance
         if (graph.outVertices(v1).forall(finalisedVertices)) {
           finalisedVertices += v1
           newBoundary += v1

@@ -1,18 +1,10 @@
 package com.github.mdr.ascii.layout.cycles
 
-import scala.util.Random._
-
-import org.scalacheck.Arbitrary
-import org.scalacheck.Gen
-import org.scalacheck.Gen.Params
+import com.github.mdr.ascii.graph.{Graph, GraphUtils}
+import com.github.mdr.ascii.graph.GraphGenerators._
+import com.github.mdr.ascii.util.Utils
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Properties
-import org.scalacheck.Shrink
-
-import com.github.mdr.ascii.graph.Graph
-import com.github.mdr.ascii.graph.GraphUtils
-import com.github.mdr.ascii.util.Utils
-import com.github.mdr.ascii.graph.GraphGenerators._
 
 object CycleRemoverSpecification extends Properties("CycleRemover") {
 

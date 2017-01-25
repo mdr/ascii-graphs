@@ -107,7 +107,8 @@ object Frame extends JFrame {
         vertical = verticalBox.isSelected,
         doubleVertices = doubleVerticesBox.isSelected,
         rounded = roundedBox.isSelected,
-        explicitAsciiBends = explicitAsciiBendsBox.isSelected)
+        explicitAsciiBends = explicitAsciiBendsBox.isSelected
+      )
 
   }
 

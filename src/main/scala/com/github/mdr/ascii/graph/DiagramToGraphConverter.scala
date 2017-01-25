@@ -17,9 +17,9 @@ object DiagramToGraphConvertor {
         vertex2 ← boxToVertexMap.get(edge.box2)
       } yield {
         if (edge.hasArrow2)
-          vertex1 -> vertex2
+          vertex1 → vertex2
         else
-          vertex2 -> vertex1
+          vertex2 → vertex1
       }
     Graph(vertices, edges)
   }

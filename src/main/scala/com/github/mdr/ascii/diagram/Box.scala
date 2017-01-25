@@ -15,6 +15,6 @@ trait Box extends Container {
       edge ← edges
       if edgeType.includeEdge(edge, this)
       otherBox = edge.otherBox(this)
-    } yield edge -> otherBox
+    } yield edge → otherBox
 
 }

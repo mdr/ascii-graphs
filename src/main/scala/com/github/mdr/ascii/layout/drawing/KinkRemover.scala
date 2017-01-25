@@ -40,7 +40,7 @@ object KinkRemover {
     for {
       edgeElement ← drawing.edgeElements
       newEdgeElement ← removeKink(edgeElement, drawing, edgeTracker)
-    } return Some(edgeElement -> newEdgeElement)
+    } return Some(edgeElement → newEdgeElement)
     None
   }
 

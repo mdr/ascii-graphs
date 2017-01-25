@@ -50,7 +50,8 @@ case class VertexDrawingElement(region: Region, textLines: List[String])
 case class EdgeDrawingElement(
   bendPoints: List[Point],
   hasArrow1: Boolean,
-  hasArrow2: Boolean)
+  hasArrow2: Boolean
+)
     extends DrawingElement with Translatable[EdgeDrawingElement] with Transposable[EdgeDrawingElement] {
 
   lazy val points: List[Point] = segments.flatMap(_.points).distinct

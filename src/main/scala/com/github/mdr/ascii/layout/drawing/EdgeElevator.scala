@@ -38,7 +38,7 @@ object EdgeElevator {
     for {
       segmentInfo ← segmentInfos.sortBy(_.row)
       updatedEdgeSegment ← elevate(segmentInfo, edgeTracker)
-    } segmentUpdates = addToMultimap(segmentUpdates, segmentInfo.edgeElement, segmentInfo.segment2 -> updatedEdgeSegment)
+    } segmentUpdates = addToMultimap(segmentUpdates, segmentInfo.edgeElement, segmentInfo.segment2 → updatedEdgeSegment)
 
     for ((edge, updates) ← segmentUpdates)
       currentDrawing = currentDrawing.replaceElement(edge, updateEdge(edge, updates))

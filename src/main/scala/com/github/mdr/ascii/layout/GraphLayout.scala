@@ -19,7 +19,8 @@ object GraphLayout {
   def renderGraph[V](
     graph: Graph[V],
     vertexRenderingStrategy: VertexRenderingStrategy[V] = ToStringVertexRenderingStrategy,
-    layoutPrefs: LayoutPrefs = LayoutPrefsImpl()): String = {
+    layoutPrefs: LayoutPrefs = LayoutPrefsImpl()
+  ): String = {
     val cycleRemovalResult = CycleRemover.removeCycles(graph)
     val (layering, _) = new LayeringCalculator[V].assignLayers(cycleRemovalResult)
     val reorderedLayering = LayerOrderingCalculator.reorder(layering)
@@ -30,12 +31,6 @@ object GraphLayout {
       drawing = KinkRemover.removeKinks(drawing)
     if (layoutPrefs.elevateEdges)
       drawing = EdgeElevator.elevateEdges(drawing)
-
-    //    if (layoutPrefs.removeKinks)
-    //      drawing = KinkRemover.removeKinks(drawing)
-    //    if (layoutPrefs.elevateEdges)
-    //      drawing = EdgeElevator.elevateEdges(drawing)
-    //
     if (layoutPrefs.compactify)
       drawing = RedundantRowRemover.removeRedundantRows(drawing)
 

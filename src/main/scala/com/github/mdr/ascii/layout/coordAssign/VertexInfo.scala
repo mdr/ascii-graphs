@@ -20,7 +20,8 @@ case class VertexInfo(
   inEdgeToPortMap: Map[Edge, Point],
   outEdgeToPortMap: Map[Edge, Point],
   selfInPorts: List[Point],
-  selfOutPorts: List[Point])
+  selfOutPorts: List[Point]
+)
     extends Translatable[VertexInfo] {
 
   /**
@@ -35,7 +36,8 @@ case class VertexInfo(
       Utils.transformValues(inEdgeToPortMap)(_.translate(down, right)),
       Utils.transformValues(outEdgeToPortMap)(_.translate(down, right)),
       selfInPorts.map(_.translate(down, right)),
-      selfOutPorts.map(_.translate(down, right)))
+      selfOutPorts.map(_.translate(down, right))
+    )
 
   def setLeft(column: Int): VertexInfo = translate(right = column - boxRegion.leftColumn)
 

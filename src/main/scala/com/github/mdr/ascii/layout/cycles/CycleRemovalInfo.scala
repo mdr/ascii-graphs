@@ -68,8 +68,8 @@ class CycleRemovalInfo[V](graph: Graph[V]) {
   }
 
   private def addVertexToDegreeDiffMaps(v: V, degreeDiff: Int) = {
-    degreeDiffToVertices += degreeDiff -> (v :: degreeDiffToVertices.getOrElse(degreeDiff, Nil))
-    verticesToDegreeDiff += v -> degreeDiff
+    degreeDiffToVertices += degreeDiff → (v :: degreeDiffToVertices.getOrElse(degreeDiff, Nil))
+    verticesToDegreeDiff += v → degreeDiff
   }
 
   private def removeVertexFromDegreeDiffMaps(v: V): Int = {
@@ -79,7 +79,7 @@ class CycleRemovalInfo[V](graph: Graph[V]) {
     if (updatedVertices.isEmpty)
       degreeDiffToVertices -= degreeDiff
     else
-      degreeDiffToVertices += degreeDiff -> updatedVertices
+      degreeDiffToVertices += degreeDiff → updatedVertices
     verticesToDegreeDiff -= v
     degreeDiff
   }

@@ -90,8 +90,8 @@ class EdgeBendCalculator(edgeInfos: List[EdgeInfo], edgeZoneTopRow: Int, selfEdg
         if row1 > row2
         if !swappedEdges.contains((edgeInfo1, edgeInfo2)) // Prevents more involved infinite loops
       } {
-        updatedEdgeToRowMap += edgeInfo1 -> row2
-        updatedEdgeToRowMap += edgeInfo2 -> row1
+        updatedEdgeToRowMap += edgeInfo1 → row2
+        updatedEdgeToRowMap += edgeInfo2 → row1
         swappedEdges += ((edgeInfo1, edgeInfo2))
         continue = true
       }

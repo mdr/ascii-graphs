@@ -11,7 +11,8 @@ package com.github.mdr.ascii.layout.drawing
  *                   v
  */
 case class EdgeSegmentInfo(
-    edgeElement: EdgeDrawingElement, segment1: EdgeSegment, segment2: EdgeSegment, segment3: EdgeSegment) {
+    edgeElement: EdgeDrawingElement, segment1: EdgeSegment, segment2: EdgeSegment, segment3: EdgeSegment
+) {
 
   def row = segment2.start.row
 

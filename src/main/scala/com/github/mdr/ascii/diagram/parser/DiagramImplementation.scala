@@ -95,10 +95,13 @@ trait DiagramImplementation { self: DiagramParser ⇒
       Region(
         Point(
           points.map(_.row).min,
-          points.map(_.column).min),
+          points.map(_.column).min
+        ),
         Point(
           points.map(_.row).max,
-          points.map(_.column).max))
+          points.map(_.column).max
+        )
+      )
 
   }
 

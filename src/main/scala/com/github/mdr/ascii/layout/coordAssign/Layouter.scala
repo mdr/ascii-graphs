@@ -45,7 +45,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
     var layerInfos: Map[Layer, LayerInfo] = Map()
     for ((previousLayerOpt, currentLayer, nextLayerOpt) ← Utils.withPreviousAndNext(layering.layers)) {
       val layerInfo = calculateLayerInfo(currentLayer, layering.edges, previousLayerOpt, nextLayerOpt)
-      layerInfos += currentLayer -> layerInfo
+      layerInfos += currentLayer → layerInfo
     }
     PortNudger.nudge(layering, spaceVertices(layerInfos))
   }
@@ -99,8 +99,8 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
   private def makeVertexInfo(vertex: DummyVertex, boxRegion: Region, greaterRegion: Region, inEdges: List[Edge], outEdges: List[Edge]): VertexInfo = {
     val (List(inVertex), List(outVertex)) = (inEdges, outEdges)
     val port = boxRegion.topLeft
-    val inEdgeToPortMap = Map(inVertex -> port)
-    val outEdgeToPortMap = Map(outVertex -> port)
+    val inEdgeToPortMap = Map(inVertex → port)
+    val outEdgeToPortMap = Map(outVertex → port)
     VertexInfo(boxRegion, greaterRegion, inEdgeToPortMap, outEdgeToPortMap, Nil, Nil)
   }
 
@@ -164,7 +164,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
         case _                                                  ⇒ 0
       }
       val greaterRegion = boxRegion.expandRight(selfEdgesSpacing).expandUp(selfEdgesSpacing).expandDown(selfEdgesSpacing)
-      regions += vertex -> (boxRegion, greaterRegion)
+      regions += vertex → (boxRegion, greaterRegion)
       nextVertexTopLeft = boxRegion.topRight.right(selfEdgesSpacing + 2)
     }
     regions
@@ -185,7 +185,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
 
   private def spaceVertices(layerInfos: Map[Layer, LayerInfo]): Map[Layer, LayerInfo] = {
     val diagramWidth = calculateDiagramWidth(layerInfos)
-    layerInfos.map { case (layer, info) ⇒ layer -> spaceVertices(layer, info, diagramWidth) }
+    layerInfos.map { case (layer, info) ⇒ layer → spaceVertices(layer, info, diagramWidth) }
   }
 
   /**
@@ -209,7 +209,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
         leftColumn += vertexInfo.greaterRegion.width
         leftColumn += horizontalSpacing
         val verticalCenteringOffset = (layerHeight - vertexInfo.boxRegion.height) / 2
-        v -> vertexInfo.setLeft(oldLeftColumn).down(verticalCenteringOffset)
+        v → vertexInfo.setLeft(oldLeftColumn).down(verticalCenteringOffset)
       }
     LayerInfo(newVertexInfos.toMap)
   }
@@ -217,7 +217,8 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
   private case class LayerLayoutResult(
     drawingElements: List[DrawingElement],
     layerInfo: LayerInfo,
-    updatedIncompletedEdges: Map[DummyVertex, List[Point]])
+    updatedIncompletedEdges: Map[DummyVertex, List[Point]]
+  )
 
   /**
    * 1) Decide the (vertical) order of edges coming into the currentLayer -- that is, what row they bend on (if required)
@@ -233,7 +234,8 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
     previousLayerInfo: LayerInfo,
     currentLayerInfo: LayerInfo,
     edges: List[Edge],
-    incompleteEdges: Map[DummyVertex, List[Point]]): LayerLayoutResult = {
+    incompleteEdges: Map[DummyVertex, List[Point]]
+  ): LayerLayoutResult = {
 
     val edgeInfos: List[EdgeInfo] = makeEdgeInfos(edges, previousLayerInfo, currentLayerInfo)
 
@@ -245,7 +247,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
 
     val updatedIncompleteEdges: Map[DummyVertex, List[Point]] =
       for ((EdgeInfo(_, finishVertex: DummyVertex, _, _, _), points) ← edgeInfoToPoints)
-        yield finishVertex -> points
+        yield finishVertex → points
 
     val updatedLayerInfo = currentLayerInfo.down(edgeBendCalculator.edgeZoneBottomRow + 1)
 
@@ -317,7 +319,7 @@ class Layouter(vertexRenderingStrategy: VertexRenderingStrategy[_], vertical: Bo
     val p4 = p3.up(vertexInfo.boxRegion.height + 2 * (selfEdgeIndex + 1) + 1)
     val p5 = p4.left(p4.column - inPort.column)
     val p6 = inPort.up(1)
-    EdgeDrawingElement(List(p1, p2, p3, p4, p5, p6), false, true)
+    EdgeDrawingElement(List(p1, p2, p3, p4, p5, p6), hasArrow1 = false, hasArrow2 = true)
   }
 
   private def makeVertexElements(layerInfo: LayerInfo): List[VertexDrawingElement] =
