@@ -1,10 +1,10 @@
 package com.github.mdr.ascii.layout.drawing
 
-import scala.annotation.tailrec
-import com.github.mdr.ascii.common.Direction._
+import com.github.mdr.ascii.common.Direction
 import com.github.mdr.ascii.common.Point
 import com.github.mdr.ascii.util.Utils._
-import com.github.mdr.ascii.common.Direction
+import scala.annotation.tailrec
+import com.github.mdr.ascii.common.Direction._
 
 /**
  * Remove kinks in edges where this can be achieved by removing an edge segment. For example:
@@ -26,13 +26,12 @@ object KinkRemover {
     val edgeTracker = new EdgeTracker(drawing)
     var currentDrawing = drawing
     var continue = true
-    while (continue)
-      removeKink(currentDrawing, edgeTracker) match {
-        case None ⇒
-          continue = false
-        case Some((oldEdge, updatedEdge)) ⇒
-          currentDrawing = currentDrawing.replaceElement(oldEdge, updatedEdge)
-      }
+    while (continue) removeKink(currentDrawing, edgeTracker) match {
+      case None ⇒
+        continue = false
+      case Some((oldEdge, updatedEdge)) ⇒
+        currentDrawing = currentDrawing.replaceElement(oldEdge, updatedEdge)
+    }
     return currentDrawing
   }
 
@@ -44,9 +43,14 @@ object KinkRemover {
     None
   }
 
-  private def removeKink(edge: EdgeDrawingElement, drawing: Drawing, edgeTracker: EdgeTracker): Option[EdgeDrawingElement] = {
+  private def removeKink(
+    edge: EdgeDrawingElement,
+    drawing: Drawing,
+    edgeTracker: EdgeTracker
+  ): Option[EdgeDrawingElement] = {
     val segments: List[EdgeSegment] = edge.segments
-    adjacentPairsWithPreviousAndNext(segments) collect {
+    val test = adjacentPairsWithPreviousAndNext(segments)
+    test.collect {
 
       //   segment1
       // ...──start─╮.............. alternativeMiddle
@@ -59,45 +63,27 @@ object KinkRemover {
       //                          │
       //                          .
       //                          .
-      case (segment1Opt, segment2 @ EdgeSegment(start, Down, middle), segment3 @ EdgeSegment(_, Left | Right, end), segment4Opt) ⇒
-        val alternativeMiddle = Point(start.row, end.column)
-
-        segment1Opt.foreach(edgeTracker.removeHorizontalSegment)
-        edgeTracker.removeVerticalSegment(segment2)
-        edgeTracker.removeHorizontalSegment(segment3)
-        segment4Opt.foreach(edgeTracker.removeVerticalSegment)
-
-        val newSegment1Opt = segment1Opt.map { segment1 ⇒
-          EdgeSegment(segment1.start, segment1.direction, alternativeMiddle)
-        }
-        val newSegment4Opt = segment4Opt.map { segment4 ⇒
-          EdgeSegment(alternativeMiddle, segment4.direction, segment4.finish)
-        }
-        val collision = newSegment1Opt.exists(edgeTracker.collidesHorizontal) || newSegment4Opt.exists(edgeTracker.collidesVertical)
-        if (!collision && checkVertexConnection(drawing, start, alternativeMiddle, Direction.Up)) {
-          segment1Opt.foreach(edgeTracker.addHorizontalSegment)
-          segment4Opt.foreach(edgeTracker.addVerticalSegment)
-          return Some(removeKink(edge, start, alternativeMiddle))
-        } else {
-          segment1Opt.foreach(edgeTracker.addHorizontalSegment)
-          edgeTracker.addVerticalSegment(segment2)
-          edgeTracker.addHorizontalSegment(segment3)
-          segment4Opt.foreach(edgeTracker.addVerticalSegment)
-        }
+      case (segment1Opt,
+        segment2 @ EdgeSegment(start, Down, middle),
+        segment3 @ EdgeSegment(_, Left | Right, end),
+        segment4Opt) ⇒ funcMethodExtraction1(segment1Opt, segment2, segment3, segment4Opt, start, middle, end, edge, drawing, edgeTracker)
 
       //                    .
       //                    .
-      //                    │ 
-      //           segment1 │ 
+      //                    │
+      //           segment1 │
       //                    │  segment2
-      //              start ╰────────────╮ middle 
+      //              start ╰────────────╮ middle
       //                    .            │
       //                    .            │ segment3
-      //                    .            │ 
+      //                    .            │
       //  alternativeMiddle .............╰─end───────────...
       //                                      segment4
-      //                       
-      case (segment1Opt, segment2 @ EdgeSegment(start, Left | Right, middle), segment3 @ EdgeSegment(_, Down, end), segment4Opt) ⇒
+      //
+      case (segment1Opt,
+        segment2 @ EdgeSegment(start, Left | Right, middle),
+        segment3 @ EdgeSegment(_, Down, end),
+        segment4Opt) ⇒
         val alternativeMiddle = Point(end.row, start.column)
         segment1Opt.foreach(edgeTracker.removeVerticalSegment)
         edgeTracker.removeHorizontalSegment(segment2)
@@ -110,8 +96,14 @@ object KinkRemover {
         val newSegment4Opt = segment4Opt.map { segment4 ⇒
           EdgeSegment(alternativeMiddle, segment4.direction, segment4.finish)
         }
-        val collision = newSegment1Opt.exists(edgeTracker.collidesVertical) || newSegment4Opt.exists(edgeTracker.collidesHorizontal)
-        if (!collision && checkVertexConnection(drawing, end, alternativeMiddle, Direction.Down)) {
+        val collision = newSegment1Opt.exists(edgeTracker.collidesVertical) || newSegment4Opt
+          .exists(edgeTracker.collidesHorizontal)
+        if (!collision && checkVertexConnection(
+          drawing,
+          end,
+          alternativeMiddle,
+          Direction.Down
+        )) {
           segment1Opt.foreach(edgeTracker.addVerticalSegment)
           segment4Opt.foreach(edgeTracker.addHorizontalSegment)
           return Some(removeKink(edge, start, alternativeMiddle))
@@ -125,23 +117,81 @@ object KinkRemover {
     None
   }
 
+  private def funcMethodExtraction1(
+    segment1Opt: Option[EdgeSegment],
+    segment2: EdgeSegment,
+    segment3: EdgeSegment,
+    segment4Opt: Option[EdgeSegment],
+    start: Point,
+    middle: Point,
+    end: Point,
+    edge: EdgeDrawingElement,
+    drawing: Drawing,
+    edgeTracker: EdgeTracker
+  ): Option[EdgeDrawingElement] = {
+    val alternativeMiddle = Point(start.row, end.column)
+
+    segment1Opt.foreach(edgeTracker.removeHorizontalSegment)
+    edgeTracker.removeVerticalSegment(segment2)
+    edgeTracker.removeHorizontalSegment(segment3)
+    segment4Opt.foreach(edgeTracker.removeVerticalSegment)
+
+    val newSegment1Opt = segment1Opt.map { segment1 ⇒
+      EdgeSegment(segment1.start, segment1.direction, alternativeMiddle)
+    }
+    val newSegment4Opt = segment4Opt.map { segment4 ⇒
+      EdgeSegment(alternativeMiddle, segment4.direction, segment4.finish)
+    }
+    val collision = newSegment1Opt.exists(edgeTracker.collidesHorizontal) || newSegment4Opt
+      .exists(edgeTracker.collidesVertical)
+    if (!collision && checkVertexConnection(
+      drawing,
+      start,
+      alternativeMiddle,
+      Direction.Up
+    )) {
+      segment1Opt.foreach(edgeTracker.addHorizontalSegment)
+      segment4Opt.foreach(edgeTracker.addVerticalSegment)
+      return Some(removeKink(edge, start, alternativeMiddle))
+    } else {
+      segment1Opt.foreach(edgeTracker.addHorizontalSegment)
+      edgeTracker.addVerticalSegment(segment2)
+      edgeTracker.addHorizontalSegment(segment3)
+      segment4Opt.foreach(edgeTracker.addVerticalSegment)
+      return None
+    }
+  }
+
   /**
    * Check that the vertex connection won't be changed, and that we don't want to connect to the extreme
    * left or right of the vertex.
    */
-  private def checkVertexConnection(drawing: Drawing, end: Point, alternativeMiddle: Point, direction: Direction): Boolean = {
+  private def checkVertexConnection(
+    drawing: Drawing,
+    end: Point,
+    alternativeMiddle: Point,
+    direction: Direction
+  ): Boolean = {
     drawing.vertexElementAt(end.go(direction)).forall { vertex ⇒
-      val connectedToSameVertex = drawing.vertexElementAt(alternativeMiddle.go(direction)) == Some(vertex)
+      val connectedToSameVertex = drawing.vertexElementAt(
+        alternativeMiddle.go(direction)
+      ) == Some(vertex)
       val extremeLeftOfVertex = alternativeMiddle.column == vertex.region.leftColumn
       val extremeRightOfVertex = alternativeMiddle.column == vertex.region.rightColumn
       connectedToSameVertex && !extremeLeftOfVertex && !extremeRightOfVertex
     }
   }
 
-  private def removeKink(edge: EdgeDrawingElement, start: Point, alternativeMiddle: Point): EdgeDrawingElement = {
+  private def removeKink(
+    edge: EdgeDrawingElement,
+    start: Point,
+    alternativeMiddle: Point
+  ): EdgeDrawingElement = {
     val oldBendPoints = edge.bendPoints
     val oldIndex = oldBendPoints.indexOf(start)
-    val newBendPoints = Point.removeRedundantPoints(oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct)
+    val newBendPoints = Point.removeRedundantPoints(
+      oldBendPoints.patch(oldIndex, List(alternativeMiddle), 3).distinct
+    )
     return edge.copy(bendPoints = newBendPoints)
   }
 

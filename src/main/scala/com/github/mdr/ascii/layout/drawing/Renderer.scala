@@ -9,7 +9,8 @@ import com.github.mdr.ascii.layout.prefs.RendererPrefs
 
 object Renderer {
 
-  def render(drawing: Drawing, rendererPrefs: RendererPrefs) = new Renderer(rendererPrefs).render(drawing)
+  def render(drawing: Drawing, rendererPrefs: RendererPrefs) =
+    new Renderer(rendererPrefs).render(drawing)
 
 }
 
@@ -28,25 +29,43 @@ class Renderer(rendererPrefs: RendererPrefs) {
   }
 
   @tailrec
-  private def drawLine(grid: Grid, point1: Point, direction: Direction, point2: Point) {
+  private def drawLine(
+    grid: Grid,
+    point1: Point,
+    direction: Direction,
+    point2: Point
+  ) {
     val lineChar = direction match {
       case Up | Down    ⇒ lineHorizontalChar
       case Right | Left ⇒ lineVerticalChar
     }
-    grid(point1) = if (grid(point1) == backgroundChar) lineChar else intersectionCharOpt.getOrElse(lineChar)
+    grid(point1) =
+      if (grid(point1) == backgroundChar) lineChar
+      else intersectionCharOpt.getOrElse(lineChar)
     if (point1 != point2)
       drawLine(grid, point1.go(direction), direction, point2)
   }
 
-  private def render(grid: Grid, element: EdgeDrawingElement, drawing: Drawing) {
-    for ((previousSegmentOpt, segment @ EdgeSegment(point1, direction, point2)) ← Utils.withPrevious(element.segments)) {
-      val startPoint = point1
-      val endPoint = if (point2 == element.bendPoints.last) point2 else point2.go(direction.opposite)
+  private def render(
+    grid: Grid,
+    element: EdgeDrawingElement,
+    drawing: Drawing
+  ) {
+    for (
+      (previousSegmentOpt, segment @ EdgeSegment(point1, direction, point2)) ← Utils
+        .withPrevious(element.segments)
+    ) {
+      val endPoint =
+        if (point2 == element.bendPoints.last) point2
+        else point2.go(direction.opposite)
 
-      try
-        drawLine(grid, startPoint, direction, endPoint)
+      try drawLine(grid, point1, direction, endPoint)
       catch {
-        case e: Throwable ⇒ throw new RuntimeException("Problem drawing segment " + segment + " in edge " + element, e)
+        case e: Throwable ⇒
+          throw new RuntimeException(
+            "Problem drawing segment " + segment + " in edge " + element,
+            e
+          )
       }
 
       condOpt(previousSegmentOpt.map(_.direction), direction) {
@@ -58,7 +77,9 @@ class Renderer(rendererPrefs: RendererPrefs) {
     }
 
     def drawBoxIntersection(intersectionPoint: Point, direction: Direction) =
-      if (unicode && drawing.vertexElementAt(intersectionPoint).isDefined && grid.contains(intersectionPoint))
+      if (unicode && drawing
+        .vertexElementAt(intersectionPoint)
+        .isDefined && grid.contains(intersectionPoint))
         grid(intersectionPoint) = direction match {
           case Up    ⇒ joinChar1
           case Down  ⇒ joinChar2
@@ -117,20 +138,43 @@ class Renderer(rendererPrefs: RendererPrefs) {
   private def lineHorizontalChar = if (unicode) '│' else '|'
   private def lineVerticalChar = if (unicode) '─' else '-'
 
-  private def bendChar1 = if (unicode) (if (rounded) '╭' else '┌') else if (explicitAsciiBends) '/' else '-'
-  private def bendChar2 = if (unicode) (if (rounded) '╮' else '┐') else if (explicitAsciiBends) '\\' else '-'
-  private def bendChar3 = if (unicode) (if (rounded) '╰' else '└') else if (explicitAsciiBends) '\\' else '-'
-  private def bendChar4 = if (unicode) (if (rounded) '╯' else '┘') else if (explicitAsciiBends) '/' else '-'
+  private def bendChar1 =
+    if (unicode) (if (rounded) '╭' else '┌')
+    else if (explicitAsciiBends) '/'
+    else '-'
+  private def bendChar2 =
+    if (unicode) (if (rounded) '╮' else '┐')
+    else if (explicitAsciiBends) '\\'
+    else '-'
+  private def bendChar3 =
+    if (unicode) (if (rounded) '╰' else '└')
+    else if (explicitAsciiBends) '\\'
+    else '-'
+  private def bendChar4 =
+    if (unicode) (if (rounded) '╯' else '┘')
+    else if (explicitAsciiBends) '/'
+    else '-'
 
-  private def intersectionCharOpt = if (unicode) Some('┼') else Some('-' /* '+' */ ) // '+' is problematic because it can generate accidental boxes
+  private def intersectionCharOpt =
+    if (unicode) Some('┼') else Some('-' /* '+' */ ) // '+' is problematic because it can generate accidental boxes
 
-  private def topLeftChar = if (unicode) (if (doubleVertices) '╔' else if (rounded) '╭' else '┌') else '+'
-  private def topRightChar = if (unicode) (if (doubleVertices) '╗' else if (rounded) '╮' else '┐') else '+'
-  private def bottomLeftChar = if (unicode) (if (doubleVertices) '╚' else if (rounded) '╰' else '└') else '+'
-  private def bottomRightChar = if (unicode) (if (doubleVertices) '╝' else if (rounded) '╯' else '┘') else '+'
+  private def topLeftChar =
+    if (unicode) (if (doubleVertices) '╔' else if (rounded) '╭' else '┌')
+    else '+'
+  private def topRightChar =
+    if (unicode) (if (doubleVertices) '╗' else if (rounded) '╮' else '┐')
+    else '+'
+  private def bottomLeftChar =
+    if (unicode) (if (doubleVertices) '╚' else if (rounded) '╰' else '└')
+    else '+'
+  private def bottomRightChar =
+    if (unicode) (if (doubleVertices) '╝' else if (rounded) '╯' else '┘')
+    else '+'
 
-  private def boxHorizontalChar = if (unicode) (if (doubleVertices) '═' else '─') else '-'
-  private def boxVerticalChar = if (unicode) (if (doubleVertices) '║' else '│') else '|'
+  private def boxHorizontalChar =
+    if (unicode) (if (doubleVertices) '═' else '─') else '-'
+  private def boxVerticalChar =
+    if (unicode) (if (doubleVertices) '║' else '│') else '|'
 
   private def joinChar1 = if (doubleVertices) '╤' else '┬'
   private def joinChar2 = if (doubleVertices) '╧' else '┴'
@@ -147,4 +191,3 @@ class Renderer(rendererPrefs: RendererPrefs) {
   }
 
 }
-
