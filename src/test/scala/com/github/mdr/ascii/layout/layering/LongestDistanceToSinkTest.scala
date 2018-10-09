@@ -3,6 +3,8 @@ package com.github.mdr.ascii.layout.layering
 import org.scalatest.{FlatSpec, Matchers}
 import com.github.mdr.ascii.graph.Graph
 
+import scala.language.reflectiveCalls
+
 class LongestDistanceToSinkTest extends FlatSpec with Matchers {
 
   distancesToSinks("""

@@ -57,7 +57,7 @@ case class Region(topLeft: Point, bottomRight: Point) extends Translatable[Regio
 
   def points: List[Point] =
     for {
-      row ← (topRow to bottomRow toList)
+      row ← (topRow to bottomRow).toList
       column ← leftColumn to rightColumn
     } yield Point(row, column)
 

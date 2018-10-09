@@ -30,7 +30,7 @@ trait DiagramImplementation { self: DiagramParser ⇒
     val row = start.row
 
     def points: List[Point] =
-      for (column ← start.column to end.column toList)
+      for (column ← (start.column to end.column).toList)
         yield Point(row, column)
 
     val text: String = {
@@ -62,10 +62,10 @@ trait DiagramImplementation { self: DiagramParser ⇒
 
     def contentsRegion: Region = Region(topLeft.right.down, bottomRight.up.left)
 
-    val leftBoundary: List[Point] = for (row ← topLeft.row to bottomRight.row toList) yield Point(row, topLeft.column)
-    val rightBoundary: List[Point] = for (row ← topLeft.row to bottomRight.row toList) yield Point(row, bottomRight.column)
-    val topBoundary: List[Point] = for (column ← topLeft.column to bottomRight.column toList) yield Point(topLeft.row, column)
-    val bottomBoundary: List[Point] = for (column ← topLeft.column to bottomRight.column toList) yield Point(bottomRight.row, column)
+    val leftBoundary: List[Point] = for (row ← (topLeft.row to bottomRight.row).toList) yield Point(row, topLeft.column)
+    val rightBoundary: List[Point] = for (row ← (topLeft.row to bottomRight.row).toList) yield Point(row, bottomRight.column)
+    val topBoundary: List[Point] = for (column ← (topLeft.column to bottomRight.column).toList) yield Point(topLeft.row, column)
+    val bottomBoundary: List[Point] = for (column ← (topLeft.column to bottomRight.column).toList) yield Point(bottomRight.row, column)
 
     val boundaryPoints: Set[Point] = leftBoundary.toSet ++ rightBoundary.toSet ++ topBoundary.toSet ++ bottomBoundary.toSet
 

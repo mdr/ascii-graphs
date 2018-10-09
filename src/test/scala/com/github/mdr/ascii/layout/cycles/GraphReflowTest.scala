@@ -4,6 +4,8 @@ import org.scalatest.{FlatSpec, Matchers}
 import com.github.mdr.ascii.graph.Graph
 import com.github.mdr.ascii.util.Utils
 
+import scala.language.reflectiveCalls
+
 class GraphReflowTest extends FlatSpec with Matchers {
 
   reflowingGraph("""

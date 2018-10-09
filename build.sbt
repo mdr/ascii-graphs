@@ -2,64 +2,35 @@ name := "ascii-graphs"
 
 organization := "com.github.mdr"
 
-version := "0.0.6"
+version := "0.0.7-SNAPSHOT"
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.6"
 
-crossScalaVersions := Seq("2.9.1", "2.9.2", "2.10.1")
+//crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.3")
 
-scalacOptions ++= Seq("-deprecation")
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-encoding",
+  "UTF-8",
+  "-feature",
+  "-unchecked"
+)
 
-javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "3.0.1" % Test,
+  "org.scalacheck" %% "scalacheck" % "1.13.4" % Test
+)
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+startYear := Some(2012)
 
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
+homepage := Some(url("http://github.com/mdr/ascii-graphs"))
 
-// Screen-sized dependency graph:
-// libraryDependencies += "org.vert-x" % "vertx-core" % "1.3.1.final"
+developers +=
+  Developer(
+    "mdr",
+    "Matt Russell",
+    "MattRussellUK@gmail.com",
+    url("https://github.com/mdr/")
+  )
 
-EclipseKeys.withSource := true
-
-EclipseKeys.eclipseOutput := Some("bin")
-
-//net.virtualvoid.sbt.graph.Plugin.graphSettings
-
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-
-ScalariformKeys.preferences <<= baseDirectory.apply { dir => 
-  scalariform.formatter.preferences.PreferencesImporterExporter.loadPreferences((dir / "formatterPreferences.properties").getPath)
-}
-
-publishMavenStyle := true
-
-publishArtifact in Test := false
-
-publishTo <<= isSnapshot(
-  if (_) Some("snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/") 
-  else   Some("releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2/"))
-
-pomExtra := {
-    <inceptionYear>2012</inceptionYear>
-    <url>http://github.com/mdr/ascii-graphs</url>
-    <licenses>
-      <license>
-        <name>MIT License</name>
-        <url>http://www.opensource.org/licenses/mit-license.php</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
-    <scm>
-      <url>git@github.com:mdr/ascii-graphs.git</url>
-      <connection>scm:git:git@github.com:mdr/ascii-graphs</connection>
-    </scm>
-    <developers>
-      <developer>
-        <id>mdr</id>
-        <name>Matt Russell</name>
-        <url>https://github.com/mdr/</url>
-      </developer>
-    </developers>
-  }
-
-// scalacOptions in (Compile, doc) += "-diagrams"
+licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
